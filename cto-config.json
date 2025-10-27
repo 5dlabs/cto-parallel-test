@@ -5,7 +5,7 @@
       "model": "claude-3-5-sonnet-20241022",
       "githubApp": "5DLabs-Morgan",
       "includeCodebase": false,
-      "sourceBranch": "main"
+      "sourceBranch": "master"
     },
     "code": {
       "model": "claude-3-5-sonnet-20241022",
