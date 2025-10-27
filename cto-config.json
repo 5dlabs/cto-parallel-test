@@ -5,6 +5,7 @@
       "qualityAgent": "5DLabs-Cleo", 
       "testingAgent": "5DLabs-Tess",
       "securityAgent": "5DLabs-Cipher",
+      "model": "claude-3-5-sonnet-20241022",
       "maxRetries": 10,
       "implementationMaxRetries": 10,
       "qualityMaxRetries": 5,

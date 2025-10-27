@@ -2,6 +2,8 @@
   "mcpServers": {
     "cto": {
       "command": "cto-mcp",
+      "args": [],
+      "cwd": "/Users/jonathonfritz/code/work-projects/5dlabs/cto-parallel-test",
       "env": {
         "ANTHROPIC_API_KEY": "",
         "PERPLEXITY_API_KEY": "",
