@@ -1,22 +1,68 @@
 {
+  "version": "1.0",
   "defaults": {
+    "docs": {
+      "model": "claude-3-5-sonnet-20241022",
+      "githubApp": "5DLabs-Morgan",
+      "includeCodebase": false,
+      "sourceBranch": "main"
+    },
+    "code": {
+      "model": "claude-3-5-sonnet-20241022",
+      "githubApp": "5DLabs-Rex",
+      "continueSession": false,
+      "workingDirectory": ".",
+      "overwriteMemory": false,
+      "repository": "5dlabs/cto-parallel-test",
+      "docsRepository": "5dlabs/cto-parallel-test",
+      "docsProjectDirectory": "docs",
+      "service": "parallel-test",
+      "cli": "claude",
+      "maxRetries": 10
+    },
+    "intake": {
+      "githubApp": "5DLabs-Morgan",
+      "primary": {
+        "model": "claude-3-5-sonnet-20241022",
+        "provider": "anthropic"
+      },
+      "research": {
+        "model": "claude-3-opus-20240229",
+        "provider": "anthropic"
+      },
+      "fallback": {
+        "model": "claude-3-5-sonnet-20241022",
+        "provider": "anthropic"
+      }
+    },
     "play": {
+      "model": "claude-3-5-sonnet-20241022",
+      "cli": "factory",
       "implementationAgent": "5DLabs-Rex",
       "qualityAgent": "5DLabs-Cleo", 
       "testingAgent": "5DLabs-Tess",
       "securityAgent": "5DLabs-Cipher",
-      "model": "claude-3-5-sonnet-20241022",
-      "cli": "claude",
+      "repository": "5dlabs/cto-parallel-test",
+      "service": "parallel-test",
+      "docsRepository": "5dlabs/cto-parallel-test",
+      "docsProjectDirectory": "docs",
+      "workingDirectory": ".",
       "maxRetries": 10,
       "implementationMaxRetries": 10,
       "qualityMaxRetries": 5,
+      "securityMaxRetries": 5,
       "testingMaxRetries": 5,
       "autoMerge": true,
       "parallelExecution": true
+    },
+    "docs_ingest": {
+      "model": "claude-3-5-sonnet-20241022",
+      "docServerUrl": "http://doc-server-agent-docs-server.mcp.svc.cluster.local:80"
     }
   },
   "agents": {
     "rex": {
+      "githubApp": "5DLabs-Rex",
       "cli": "factory",
       "model": "claude-3-5-sonnet-20241022",
       "modelRotation": {
@@ -24,12 +70,16 @@
         "models": [
           "claude-3-5-sonnet-20241022",
           "claude-3-5-sonnet-20240620", 
-          "claude-3-opus-20240229",
-          "glm-4.6"
+          "claude-3-opus-20240229"
         ]
+      },
+      "tools": {
+        "remote": [],
+        "localServers": {}
       }
     },
     "cleo": {
+      "githubApp": "5DLabs-Cleo",
       "cli": "claude",
       "model": "claude-3-5-sonnet-20241022",
       "modelRotation": {
@@ -39,9 +89,14 @@
           "claude-3-5-sonnet-20240620",
           "claude-3-opus-20240229"
         ]
+      },
+      "tools": {
+        "remote": [],
+        "localServers": {}
       }
     },
     "cipher": {
+      "githubApp": "5DLabs-Cipher",
       "cli": "claude", 
       "model": "claude-3-5-sonnet-20241022",
       "modelRotation": {
@@ -50,9 +105,14 @@
           "claude-3-5-sonnet-20241022",
           "claude-3-opus-20240229"
         ]
+      },
+      "tools": {
+        "remote": [],
+        "localServers": {}
       }
     },
     "tess": {
+      "githubApp": "5DLabs-Tess",
       "cli": "claude",
       "model": "claude-3-5-sonnet-20241022", 
       "modelRotation": {
@@ -62,23 +122,11 @@
           "claude-3-5-sonnet-20240620",
           "claude-3-opus-20240229"
         ]
+      },
+      "tools": {
+        "remote": [],
+        "localServers": {}
       }
-    }
-  },
-  "project": {
-    "name": "CTO Parallel Execution Test",
-    "description": "Test project for validating parallel task execution in the CTO platform",
-    "version": "1.0.0",
-    "repository": "5dlabs/cto-parallel-test"
-  },
-  "testing": {
-    "parallelExecution": {
-      "enabled": true,
-      "expectedLevels": 3,
-      "expectedMaxParallelTasks": 4,
-      "expectedSpeedup": 2.33,
-      "integrationPRs": true,
-      "conflictDetection": true
     }
   }
 }
