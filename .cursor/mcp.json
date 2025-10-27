@@ -1,8 +1,7 @@
 {
   "mcpServers": {
     "cto": {
-      "command": "node",
-      "args": ["/Users/jonathonfritz/code/work-projects/5dlabs/cto/mcp/dist/index.js"],
+      "command": "cto-mcp",
       "env": {
         "ANTHROPIC_API_KEY": "",
         "PERPLEXITY_API_KEY": "",
