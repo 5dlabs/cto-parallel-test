@@ -19,7 +19,7 @@ CREATE TABLE products (
 -- Create carts table
 CREATE TABLE carts (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id),
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -27,12 +27,12 @@ CREATE TABLE carts (
 CREATE TABLE cart_items (
     id SERIAL PRIMARY KEY,
     cart_id INTEGER NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
-    product_id INTEGER NOT NULL REFERENCES products(id),
-    quantity INTEGER NOT NULL DEFAULT 1,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
     UNIQUE(cart_id, product_id)
 );
 
--- Create indexes for foreign keys
+-- Create indexes for better query performance
 CREATE INDEX idx_carts_user_id ON carts(user_id);
 CREATE INDEX idx_cart_items_cart_id ON cart_items(cart_id);
 CREATE INDEX idx_cart_items_product_id ON cart_items(product_id);
