@@ -101,36 +101,45 @@ impl ProductService {
     /// # Panics
     /// Panics if the mutex is poisoned
     #[must_use]
-    pub fn filter(&self, filter: &ProductFilter) -> Vec<Product> {
+    pub fn filter(&self, filter: ProductFilter) -> Vec<Product> {
+        let ProductFilter {
+            name_contains,
+            min_price,
+            max_price,
+            in_stock,
+        } = filter;
+
+        let name_contains_lower = name_contains.map(|pattern| pattern.to_lowercase());
+
         let products = self.products.lock().expect("Products mutex poisoned");
 
         products
             .iter()
             .filter(|product| {
-                // Check name_contains (case-insensitive)
-                let name_match = filter.name_contains.as_ref().is_none_or(|pattern| {
-                    product
-                        .name
-                        .to_lowercase()
-                        .contains(&pattern.to_lowercase())
-                });
+                let name_match = if let Some(pattern) = name_contains_lower.as_ref() {
+                    product.name.to_lowercase().contains(pattern)
+                } else {
+                    true
+                };
 
-                // Check min_price
-                let min_price_match = filter
-                    .min_price
-                    .is_none_or(|min_price| product.price >= min_price);
+                let min_price_match = if let Some(min) = min_price.as_ref() {
+                    product.price >= *min
+                } else {
+                    true
+                };
 
-                // Check max_price
-                let max_price_match = filter
-                    .max_price
-                    .is_none_or(|max_price| product.price <= max_price);
+                let max_price_match = if let Some(max) = max_price.as_ref() {
+                    product.price <= *max
+                } else {
+                    true
+                };
 
-                // Check in_stock
-                let in_stock_match = filter
-                    .in_stock
-                    .is_none_or(|in_stock| (product.inventory_count > 0) == in_stock);
+                let in_stock_match = if let Some(expected) = in_stock {
+                    (product.inventory_count > 0) == expected
+                } else {
+                    true
+                };
 
-                // All filters must pass (AND logic)
                 name_match && min_price_match && max_price_match && in_stock_match
             })
             .cloned()
@@ -176,14 +185,14 @@ mod tests {
     fn test_get_all_returns_all_products() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Product A".to_string(),
             description: "Description A".to_string(),
             price: Decimal::from_str("5.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Product B".to_string(),
             description: "Description B".to_string(),
             price: Decimal::from_str("15.00").unwrap(),
@@ -247,14 +256,14 @@ mod tests {
     fn test_filter_by_name_contains() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Blue Widget".to_string(),
             description: "Blue colored widget".to_string(),
             price: Decimal::from_str("10.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Red Gadget".to_string(),
             description: "Red colored gadget".to_string(),
             price: Decimal::from_str("20.00").unwrap(),
@@ -277,21 +286,21 @@ mod tests {
     fn test_filter_by_price_range() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Cheap Item".to_string(),
             description: "Low price".to_string(),
             price: Decimal::from_str("5.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Mid Item".to_string(),
             description: "Medium price".to_string(),
             price: Decimal::from_str("15.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Expensive Item".to_string(),
             description: "High price".to_string(),
             price: Decimal::from_str("50.00").unwrap(),
@@ -314,14 +323,14 @@ mod tests {
     fn test_filter_by_in_stock() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Available".to_string(),
             description: "In stock".to_string(),
             price: Decimal::from_str("10.00").unwrap(),
             inventory_count: 5,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Out of Stock".to_string(),
             description: "Not available".to_string(),
             price: Decimal::from_str("10.00").unwrap(),
@@ -344,21 +353,21 @@ mod tests {
     fn test_filter_combines_all_criteria() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Blue Widget".to_string(),
             description: "Match all".to_string(),
             price: Decimal::from_str("15.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Blue Gadget".to_string(),
             description: "Wrong price".to_string(),
             price: Decimal::from_str("50.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Red Widget".to_string(),
             description: "Wrong name".to_string(),
             price: Decimal::from_str("15.00").unwrap(),
@@ -381,14 +390,14 @@ mod tests {
     fn test_empty_filter_returns_all() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Product 1".to_string(),
             description: "First".to_string(),
             price: Decimal::from_str("10.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Product 2".to_string(),
             description: "Second".to_string(),
             price: Decimal::from_str("20.00").unwrap(),
@@ -414,7 +423,7 @@ mod tests {
         let service_clone = service.clone();
 
         let handle = thread::spawn(move || {
-            service_clone.create(NewProduct {
+            let _ = service_clone.create(NewProduct {
                 name: "Thread Product".to_string(),
                 description: "Created in thread".to_string(),
                 price: Decimal::from_str("10.00").unwrap(),
