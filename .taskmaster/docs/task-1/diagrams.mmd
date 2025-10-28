@@ -1,0 +1,33 @@
+erDiagram
+    USERS ||--o{ CARTS : owns
+    CARTS ||--o{ CART_ITEMS : contains
+    PRODUCTS ||--o{ CART_ITEMS : "included in"
+
+    USERS {
+        integer id PK
+        varchar username
+        varchar email
+        varchar password_hash
+        timestamp created_at
+    }
+
+    PRODUCTS {
+        integer id PK
+        varchar name
+        text description
+        numeric price
+        integer inventory_count
+    }
+
+    CARTS {
+        integer id PK
+        integer user_id FK
+        timestamp created_at
+    }
+
+    CART_ITEMS {
+        integer id PK
+        integer cart_id FK
+        integer product_id FK
+        integer quantity
+    }

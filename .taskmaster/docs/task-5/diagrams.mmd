@@ -1,0 +1,343 @@
+`
+
+``mermaid
+graph TB
+    subgraph "Shopping Cart Module Architecture"
+        ModRS[src/cart/mod.rs<br/>Module Exports]
+        ServiceRS[src/cart/service.rs<br/>Business Logic & Models]
+        RoutesRS[src/api/cart_routes.rs<br/>API Endpoints]
+
+        ModRS -->|pub use| ServiceRS
+        RoutesRS -->|uses| ServiceRS
+    end
+
+    subgraph "Data Models"
+        CartItem[CartItem<br/>product_id: i32<br/>quantity: i32<br/>product_name: String<br/>unit_price: Decimal<br/><br/>Product Snapshot]
+        Cart[Cart<br/>id: i32<br/>user_id: i32<br/>items: Vec&lt;CartItem&gt;<br/><br/>User's Cart]
+
+        ServiceRS --> CartItem
+        ServiceRS --> Cart
+        Cart --> CartItem
+    end
+
+    subgraph "CartService"
+        Service[CartService<br/>carts: Arc&lt;Mutex&lt;HashMap&lt;i32,Cart&gt;&gt;&gt;<br/>next_id: Arc&lt;Mutex&lt;i32&gt;&gt;]
+
+        GetOrCreate[get_or_create_cart&#40;user_id&#41; → Cart<br/>Find or create cart for user]
+        AddItem[add_item&#40;user_id, product, qty&#41; → Cart<br/>Add/accumulate product]
+        RemoveItem[remove_item&#40;user_id, product_id&#41; → Option&lt;Cart&gt;<br/>Remove product]
+        GetCart[get_cart&#40;user_id&#41; → Option&lt;Cart&gt;<br/>Retrieve cart]
+        ClearCart[clear_cart&#40;user_id&#41; → Option&lt;Cart&gt;<br/>Empty cart]
+
+        ServiceRS --> Service
+        Service --> GetOrCreate
+        Service --> AddItem
+        Service --> RemoveItem
+        Service --> GetCart
+        Service --> ClearCart
+    end
+
+    subgraph "API Endpoints"
+        GetRoute[GET /api/cart<br/>Get user's cart]
+        AddRoute[POST /api/cart/add<br/>Add item to cart]
+        RemoveRoute[DELETE /api/cart/remove/{id}<br/>Remove item]
+        ClearRoute[POST /api/cart/clear<br/>Clear cart]
+
+        RoutesRS --> GetRoute
+        RoutesRS --> AddRoute
+        RoutesRS --> RemoveRoute
+        RoutesRS --> ClearRoute
+    end
+
+    subgraph "Dependencies"
+        Auth[Task 3: Authentication<br/>validate_token&#40;&#41;<br/>JWT Claims]
+        Catalog[Task 4: Product Catalog<br/>ProductService<br/>get_by_id&#40;&#41;]
+
+        RoutesRS -.->|uses| Auth
+        RoutesRS -.->|uses| Catalog
+        AddItem -.->|validates| Catalog
+    end
+
+    subgraph "Integration Tests"
+        Task7[Task 7: Integration Tests<br/>Full user flow testing]
+        Task7 -.->|tests| RoutesRS
+        Task7 -.->|uses| Auth
+        Task7 -.->|uses| Catalog
+    end
+
+    style ModRS fill:#e1f5ff
+    style ServiceRS fill:#e1f5ff
+    style RoutesRS fill:#e1f5ff
+    style Service fill:#fff3e0
+    style GetOrCreate fill:#c8e6c9
+    style AddItem fill:#c8e6c9
+    style RemoveItem fill:#c8e6c9
+    style GetCart fill:#c8e6c9
+    style ClearCart fill:#c8e6c9
+    style CartItem fill:#f3e5f5
+    style Cart fill:#f3e5f5
+    style Auth fill:#ffebee
+    style Catalog fill:#ffebee
+    style Task7 fill:#fce4ec
+```
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as Cart API<br/>(cart_routes)
+    participant Auth as JWT Validation<br/>(Task 3)
+    participant CartSvc as CartService
+    participant ProdSvc as ProductService<br/>(Task 4)
+    participant Storage as Arc<Mutex<HashMap>>
+
+    Note over Client,Storage: Add Item to Cart Flow
+
+    Client->>API: POST /api/cart/add<br/>Header: Bearer token<br/>Body: {product_id, quantity}
+    API->>API: Extract Authorization header
+    API->>API: Check "Bearer " prefix
+    API->>Auth: validate_token(token)
+
+    alt Invalid Token
+        Auth-->>API: Error
+        API-->>Client: 401 Unauthorized
+    end
+
+    Auth-->>API: Ok(Claims)
+    API->>API: Parse user_id from claims.sub
+    API->>ProdSvc: get_by_id(product_id)
+
+    alt Product Not Found
+        ProdSvc-->>API: None
+        API-->>Client: 404 Not Found<br/>{"error": "Product not found"}
+    end
+
+    ProdSvc-->>API: Some(Product)
+    API->>API: Check inventory_count >= quantity
+
+    alt Insufficient Inventory
+        API-->>Client: 400 Bad Request<br/>{"error": "Not enough inventory"}
+    end
+
+    API->>CartSvc: add_item(user_id, product, quantity)
+    CartSvc->>Storage: lock()
+    Storage-->>CartSvc: MutexGuard
+    CartSvc->>CartSvc: Find/create cart for user
+    CartSvc->>CartSvc: Check if product in cart
+
+    alt Product Already in Cart
+        CartSvc->>CartSvc: Increment quantity
+    else New Product
+        CartSvc->>CartSvc: Create CartItem with snapshot
+        CartSvc->>Storage: Push to cart.items
+    end
+
+    CartSvc->>CartSvc: Clone cart
+    CartSvc->>Storage: unlock
+    CartSvc-->>API: Cart
+    API-->>Client: 200 OK<br/>Cart JSON
+
+    Note over Client,Storage: Get Cart Flow
+
+    Client->>API: GET /api/cart<br/>Header: Bearer token
+    API->>Auth: validate_token(token)
+    Auth-->>API: Ok(Claims)
+    API->>API: Parse user_id
+    API->>CartSvc: get_cart(user_id)
+    CartSvc->>Storage: lock()
+    Storage-->>CartSvc: Find cart by user_id
+
+    alt Cart Exists
+        CartSvc-->>API: Some(Cart)
+        API-->>Client: 200 OK<br/>Cart JSON
+    else No Cart
+        CartSvc-->>API: None
+        API->>CartSvc: get_or_create_cart(user_id)
+        CartSvc-->>API: Cart (empty)
+        API-->>Client: 200 OK<br/>Empty Cart JSON
+    end
+
+    Note over Client,Storage: Remove Item Flow
+
+    Client->>API: DELETE /api/cart/remove/5<br/>Header: Bearer token
+    API->>Auth: validate_token(token)
+    Auth-->>API: Ok(Claims)
+    API->>API: Parse user_id and product_id
+    API->>CartSvc: remove_item(user_id, product_id)
+    CartSvc->>Storage: lock() [mutable]
+    CartSvc->>CartSvc: Find cart by user_id
+    CartSvc->>CartSvc: retain(|item| item.product_id != 5)
+    CartSvc->>CartSvc: Clone cart
+    CartSvc->>Storage: unlock
+    CartSvc-->>API: Some(Cart)
+    API-->>Client: 200 OK<br/>Updated Cart JSON
+```
+
+```mermaid
+flowchart TD
+    Start([API Request]) --> ExtractHeader{Authorization<br/>Header Exists?}
+    ExtractHeader -->|No| Unauth1[Return 401<br/>Unauthorized]
+    ExtractHeader -->|Yes| CheckBearer{Starts with<br/>'Bearer '?}
+    CheckBearer -->|No| Unauth2[Return 401<br/>Unauthorized]
+    CheckBearer -->|Yes| ExtractToken[Extract Token<br/>Skip 'Bearer ' prefix]
+
+    ExtractToken --> ValidateToken[Call validate_token&#40;token&#41;<br/>from Task 3]
+    ValidateToken --> TokenValid{Token Valid?}
+    TokenValid -->|No| Unauth3[Return 401<br/>Unauthorized]
+    TokenValid -->|Yes| ParseUser[Parse user_id<br/>from claims.sub]
+
+    ParseUser --> CheckEndpoint{Which Endpoint?}
+
+    CheckEndpoint -->|GET /cart| GetCart[Call get_cart&#40;user_id&#41;]
+    GetCart --> CartExists{Cart Exists?}
+    CartExists -->|Yes| Return200Cart[Return 200 OK<br/>Cart JSON]
+    CartExists -->|No| CreateCart[Call get_or_create_cart&#40;user_id&#41;]
+    CreateCart --> Return200Empty[Return 200 OK<br/>Empty Cart]
+
+    CheckEndpoint -->|POST /add| ValidateProduct[Call ProductService<br/>get_by_id&#40;product_id&#41;]
+    ValidateProduct --> ProductExists{Product<br/>Exists?}
+    ProductExists -->|No| Return404[Return 404<br/>Product not found]
+    ProductExists -->|Yes| CheckInventory{Inventory<br/>Sufficient?}
+    CheckInventory -->|No| Return400[Return 400<br/>Not enough inventory]
+    CheckInventory -->|Yes| AddToCart[Call add_item&#40;user_id,<br/>product, quantity&#41;]
+    AddToCart --> Return200Add[Return 200 OK<br/>Updated Cart]
+
+    CheckEndpoint -->|DELETE /remove/:id| RemoveFromCart[Call remove_item&#40;user_id,<br/>product_id&#41;]
+    RemoveFromCart --> ItemFound{Item in<br/>Cart?}
+    ItemFound -->|Yes| Return200Remove[Return 200 OK<br/>Updated Cart]
+    ItemFound -->|No| Return404Item[Return 404<br/>Item not found]
+
+    CheckEndpoint -->|POST /clear| ClearItems[Call clear_cart&#40;user_id&#41;]
+    ClearItems --> Return200Clear[Return 200 OK<br/>Cleared Cart]
+
+    style Start fill:#e3f2fd
+    style Unauth1 fill:#ffcdd2
+    style Unauth2 fill:#ffcdd2
+    style Unauth3 fill:#ffcdd2
+    style Return404 fill:#ffcc80
+    style Return404Item fill:#ffcc80
+    style Return400 fill:#ffcc80
+    style Return200Cart fill:#c8e6c9
+    style Return200Empty fill:#c8e6c9
+    style Return200Add fill:#c8e6c9
+    style Return200Remove fill:#c8e6c9
+    style Return200Clear fill:#c8e6c9
+```
+
+```mermaid
+graph TB
+    subgraph "Task Dependencies - Level View"
+        subgraph "Level 0 - Parallel"
+            Task1[Task 1: Database Schema<br/>30 min]
+            Task3[Task 3: User Auth<br/>JWT + validate_token&#40;&#41;<br/>45 min]
+            Task4[Task 4: Product Catalog<br/>ProductService<br/>40 min]
+            Task6[Task 6: Frontend<br/>35 min]
+        end
+
+        subgraph "Level 1 - Depends on Level 0"
+            Task2[Task 2: API Endpoints<br/>Depends: Task 1<br/>50 min]
+            Task5[Task 5: Shopping Cart API<br/>Depends: Tasks 3, 4<br/>45 min]
+        end
+
+        subgraph "Level 2 - Final Integration"
+            Task7[Task 7: Integration Tests<br/>Depends: Tasks 2, 5, 6<br/>60 min]
+        end
+
+        Task3 -->|provides JWT| Task5
+        Task4 -->|provides Products| Task5
+        Task1 --> Task2
+        Task2 --> Task7
+        Task5 --> Task7
+        Task6 --> Task7
+    end
+
+    subgraph "Task 5 Integrations"
+        direction LR
+        T5[Task 5:<br/>Shopping Cart API]
+        T3Dep[Task 3 Provides:<br/>- validate_token&#40;&#41;<br/>- JWT Claims<br/>- User auth]
+        T4Dep[Task 4 Provides:<br/>- ProductService<br/>- get_by_id&#40;&#41;<br/>- Product model]
+        T7Use[Task 7 Uses:<br/>- CartService<br/>- Full user flow<br/>- API testing]
+
+        T3Dep -.->|requires| T5
+        T4Dep -.->|requires| T5
+        T5 -.->|enables| T7Use
+    end
+
+    style Task5 fill:#ffd54f,stroke:#f57c00,stroke-width:4px
+    style Task3 fill:#ffecb3,stroke:#f57c00,stroke-width:2px
+    style Task4 fill:#ffecb3,stroke:#f57c00,stroke-width:2px
+    style Task7 fill:#ffecb3,stroke:#f57c00,stroke-width:2px
+    style T5 fill:#ffd54f,stroke:#f57c00,stroke-width:4px
+
+    classDef level0 fill:#e1f5fe
+    classDef level1 fill:#fff3e0
+    classDef level2 fill:#f3e5f5
+
+    class Task1,Task3,Task4,Task6 level0
+    class Task2,Task5 level1
+    class Task7 level2
+```
+
+```mermaid
+graph LR
+    subgraph "CartItem - Product Snapshot"
+        direction TB
+        CI[CartItem]
+        ProdID[product_id: i32<br/>Reference to Product]
+        Qty[quantity: i32<br/>Number of items]
+        Name[product_name: String<br/>Snapshot of name]
+        Price[unit_price: Decimal<br/>Snapshot of price]
+
+        CI --> ProdID
+        CI --> Qty
+        CI --> Name
+        CI --> Price
+
+        Note1[Why Snapshot?<br/>If product is deleted<br/>or price changes,<br/>cart still valid]
+    end
+
+    subgraph "Cart Storage Structure"
+        direction TB
+        HMS[HashMap&lt;i32, Cart&gt;]
+        C1[Cart id=1<br/>user_id=42]
+        C2[Cart id=2<br/>user_id=87]
+        C3[Cart id=3<br/>user_id=15]
+
+        HMS --> C1
+        HMS --> C2
+        HMS --> C3
+
+        C1 --> I1[items: Vec&lt;CartItem&gt;]
+        I1 --> I1A[Product 5, qty 2]
+        I1 --> I1B[Product 8, qty 1]
+
+        C2 --> I2[items: Vec&lt;CartItem&gt;]
+        I2 --> I2A[Product 3, qty 5]
+
+        C3 --> I3[items: Vec&lt;CartItem&gt;]
+        I3 --> I3Empty[Empty cart]
+
+        Note2[Lookup Pattern:<br/>Iterate HashMap values<br/>Find cart where<br/>user_id matches]
+    end
+
+    subgraph "Add Item Logic"
+        direction TB
+        AddReq[Add Product ID 5,<br/>Quantity 3<br/>for User 42]
+        FindCart[Find cart for<br/>user_id 42]
+        CheckItem{Product 5<br/>in cart?}
+        IncQty[Increment quantity<br/>2 + 3 = 5]
+        NewItem[Create new CartItem<br/>with snapshot]
+
+        AddReq --> FindCart
+        FindCart --> CheckItem
+        CheckItem -->|Yes| IncQty
+        CheckItem -->|No| NewItem
+    end
+
+    style CI fill:#bbdefb
+    style Note1 fill:#fff9c4
+    style HMS fill:#c8e6c9
+    style Note2 fill:#fff9c4
+    style AddReq fill:#ffccbc
+    style IncQty fill:#c5e1a5
+    style NewItem fill:#c5e1a5
+```

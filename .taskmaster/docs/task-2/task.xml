@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prompt>
+    <role>You are a senior Rust backend developer specializing in REST API development with Actix-web framework and async programming.</role>
+    <task>
+        <id>2</id>
+        <title>API Endpoints</title>
+        <description>Create REST API endpoints for core operations using Actix-web framework. Implement HTTP server, routing configuration, health check endpoint, and placeholder routes for user and product functionality. Establish modular API structure ready for extension by dependent tasks.</description>
+        <priority>high</priority>
+        <status>pending</status>
+        <dependencies>1</dependencies>
+        <level>1</level>
+        <estimated_time>50 minutes</estimated_time>
+    </task>
+    <technical_specifications>
+        <spec>Use Actix-web 4.3.1 as the web framework with async runtime</spec>
+        <spec>Implement hierarchical routing with /api base scope containing /users and /products subscopes</spec>
+        <spec>Create health check endpoint at /api/health returning JSON status</spec>
+        <spec>Use serde 1.0 with derive features for JSON serialization</spec>
+        <spec>Implement placeholder routes returning 501 Not Implemented for future development</spec>
+        <spec>Import schema module to establish explicit dependency on Task 1</spec>
+        <spec>Configure HTTP server on 127.0.0.1:8080</spec>
+        <spec>Use #[actix_web::main] macro for async runtime setup</spec>
+    </technical_specifications>
+    <implementation_details>
+        <step>
+            <number>1</number>
+            <action>Create API module structure</action>
+            <details>
+                Create src/api/mod.rs with module exports:
+
+                pub mod routes;
+
+                This establishes the api module and exports the routes submodule for use throughout the application.
+            </details>
+        </step>
+        <step>
+            <number>2</number>
+            <action>Implement route configuration</action>
+            <details>
+                Create src/api/routes.rs with complete routing setup:
+
+                - Import actix_web::web, HttpResponse, Scope
+                - Import crate::schema (establishes Task 1 dependency)
+                - Implement configure_routes function taking &amp;mut web::ServiceConfig
+                - Create /api scope containing health check and route subscopes
+                - Implement health_check handler with #[actix_web::get("/health")] attribute
+                - Health check returns HttpResponse::Ok().json({"status": "ok"})
+                - Create user_routes placeholder returning 501 Not Implemented
+                - Create product_routes placeholder returning 501 Not Implemented
+                - Add comments indicating Tasks 3 and 4 will implement these routes
+
+                Route hierarchy:
+                /api
+                  /health (GET - implemented)
+                  /users (placeholder for Task 3)
+                  /products (placeholder for Task 4)
+            </details>
+        </step>
+        <step>
+            <number>3</number>
+            <action>Set up HTTP server in main.rs</action>
+            <details>
+                Update src/main.rs with server configuration:
+
+                - Import actix_web::{App, HttpServer}
+                - Declare mod api; and mod schema; modules
+                - Create async main function with #[actix_web::main] attribute
+                - Return type: std::io::Result&lt;()&gt;
+                - Add println! logging server startup on 127.0.0.1:8080
+                - Create HttpServer::new with App configuration
+                - Configure app with api::routes::configure_routes
+                - Bind to "127.0.0.1:8080" using ?operator for error handling
+                - Call .run().await to start server
+
+                The async main with actix_web::main macro sets up the Tokio runtime automatically.
+            </details>
+        </step>
+        <step>
+            <number>4</number>
+            <action>Update Cargo.toml dependencies</action>
+            <details>
+                Add web framework dependencies to [dependencies] section:
+
+                actix-web = "4.3.1"
+                serde = { version = "1.0", features = ["derive"] }
+                serde_json = "1.0"
+
+                Note: Task 1 also modified Cargo.toml with database dependencies. If conflict exists, merge both sets:
+                - Keep diesel, r2d2, dotenv from Task 1
+                - Add actix-web, serde, serde_json from Task 2
+
+                The platform's conflict detection should handle this merge.
+            </details>
+        </step>
+        <step>
+            <number>5</number>
+            <action>Validate implementation</action>
+            <details>
+                Run comprehensive validation checks:
+
+                1. Verify file structure:
+                   ls -la src/api/mod.rs src/api/routes.rs src/main.rs
+
+                2. Check compilation:
+                   cargo check
+                   Must compile without errors
+
+                3. Verify dependencies:
+                   grep -E "actix-web|serde" Cargo.toml
+                   All three dependencies should be present
+
+                4. Validate schema import:
+                   Ensure "use crate::schema;" compiles successfully
+
+                5. Optional runtime test (if environment allows):
+                   cargo run &amp;
+                   sleep 2
+                   curl http://localhost:8080/api/health
+                   Should return: {"status":"ok"}
+
+                Do not mark complete if any validation fails.
+            </details>
+        </step>
+    </implementation_details>
+    <acceptance_criteria>
+        <criterion>src/api/mod.rs exists and exports routes module</criterion>
+        <criterion>src/api/routes.rs exists with configure_routes function, health check endpoint, and placeholder routes</criterion>
+        <criterion>Health check endpoint at /api/health returns 200 OK with JSON {"status":"ok"}</criterion>
+        <criterion>Placeholder routes for /api/users and /api/products return 501 Not Implemented</criterion>
+        <criterion>src/main.rs updated with HttpServer setup, async main function, and module imports</criterion>
+        <criterion>Server configured to bind on 127.0.0.1:8080</criterion>
+        <criterion>Cargo.toml includes actix-web 4.3.1, serde 1.0 with derive features, and serde_json 1.0</criterion>
+        <criterion>crate::schema imported in routes.rs to establish Task 1 dependency</criterion>
+        <criterion>Code compiles with 'cargo check' without errors</criterion>
+        <criterion>Routing uses hierarchical scope structure with /api base path</criterion>
+        <criterion>Proper async/await usage with #[actix_web::main] macro</criterion>
+    </acceptance_criteria>
+    <test_strategy>
+        Comprehensive validation approach for API implementation:
+
+        1. Compilation Testing:
+           cargo check
+           - Verify no syntax errors
+           - Ensure all imports resolve
+           - Validate async/await usage
+
+        2. File Structure Verification:
+           ls -la src/api/
+           ls -la src/main.rs
+           - Confirm all files created
+           - Verify directory structure
+
+        3. Dependency Validation:
+           cargo tree | grep actix-web
+           grep actix-web Cargo.toml
+           - Ensure dependencies resolve
+           - Check for version conflicts
+           - Verify feature flags
+
+        4. Module Import Testing:
+           cargo build
+           - Validates schema import works
+           - Confirms Task 1 dependency satisfied
+           - Checks module hierarchy
+
+        5. Runtime Testing (Optional):
+           cargo run &amp;
+           curl http://localhost:8080/api/health
+           curl http://localhost:8080/api/users
+           curl http://localhost:8080/api/products
+           - Health check returns 200 with {"status":"ok"}
+           - User routes return 501 Not Implemented
+           - Product routes return 501 Not Implemented
+
+        6. Integration Readiness:
+           - Verify route structure extensible for Tasks 3, 4, 5
+           - Confirm placeholder routes ready for implementation
+           - Validate no blocking issues for dependent tasks
+
+        7. Cargo.toml Merge Validation:
+           cat Cargo.toml
+           - Ensure both Task 1 and Task 2 dependencies present
+           - No duplicate entries
+           - Proper TOML syntax
+    </test_strategy>
+    <instructions>
+        You are implementing Task 2: API Endpoints for a parallel task execution test project.
+
+        CRITICAL INSTRUCTIONS:
+        - This is a Level 1 task that DEPENDS on Task 1 - verify Task 1 is complete before starting
+        - Task 1 provides src/schema.rs which MUST be imported to establish dependency
+        - Create exactly three files: src/api/mod.rs, src/api/routes.rs, and update src/main.rs
+        - Update Cargo.toml, handling potential merge conflict with Task 1
+        - This is a test project - keep implementation focused on structure, not full functionality
+
+        DEPENDENCY VERIFICATION:
+        1. Before starting, confirm Task 1 status is complete
+        2. Verify src/schema.rs exists
+        3. If Task 1 incomplete, STOP and report dependency blocker
+
+        IMPLEMENTATION APPROACH:
+        1. Think step-by-step through the routing hierarchy
+        2. Start with module structure (mod.rs)
+        3. Build routing configuration (routes.rs)
+        4. Set up HTTP server (main.rs)
+        5. Add dependencies (Cargo.toml)
+        6. Validate with cargo check
+
+        ROUTING STRUCTURE:
+        - Base scope: /api
+        - Health endpoint: GET /api/health (fully implemented)
+        - User scope: /api/users (placeholder, Task 3 will implement)
+        - Product scope: /api/products (placeholder, Task 4 will implement)
+        - Use web::scope() for hierarchical organization
+        - Use #[actix_web::get()] attribute macro for health check
+
+        ASYNC PATTERNS:
+        - Use #[actix_web::main] on main function
+        - Handler functions are async
+        - Properly await server run()
+        - Return std::io::Result&lt;()&gt; from main
+
+        CARGO.TOML HANDLING:
+        - Task 1 added: diesel, r2d2, dotenv
+        - Task 2 adds: actix-web, serde, serde_json
+        - If conflict detected, merge both sets of dependencies
+        - Do not remove Task 1 dependencies
+
+        QUALITY STANDARDS:
+        - All code must compile with cargo check
+        - Follow Rust naming conventions
+        - Use proper error handling with ? operator
+        - Include helpful comments for placeholders
+        - Proper module organization and imports
+
+        INTEGRATION POINTS:
+        - Import crate::schema to establish Task 1 dependency
+        - user_routes placeholder ready for Task 3
+        - product_routes placeholder ready for Task 4
+        - Route structure extensible for Task 5 cart routes
+        - Health check endpoint ready for Task 7 testing
+
+        VALIDATION REQUIREMENTS:
+        1. Run cargo check - must pass
+        2. Verify file structure created correctly
+        3. Check dependencies in Cargo.toml
+        4. Confirm schema import compiles
+        5. Optional: Test server startup if environment allows
+
+        SUCCESS DEFINITION:
+        You have completed this task successfully when:
+        1. All required files created/modified with correct content
+        2. cargo check passes without errors
+        3. Health endpoint implemented and functional
+        4. Placeholder routes configured correctly
+        5. Task 1 dependency explicitly established via schema import
+        6. Code follows Actix-web and Rust best practices
+        7. Ready for Tasks 3, 4, 5 to add implementations
+
+        DO NOT:
+        - Skip the schema import (critical for dependency tracking)
+        - Implement full user or product logic (that's Tasks 3 and 4)
+        - Remove Task 1 dependencies from Cargo.toml
+        - Use unwrap() without justification
+        - Skip validation steps
+
+        DO:
+        - Verify Task 1 completion first
+        - Import schema module explicitly
+        - Keep placeholder routes simple (501 responses)
+        - Include helpful comments
+        - Test compilation thoroughly
+        - Handle Cargo.toml merge properly
+    </instructions>
+</prompt>

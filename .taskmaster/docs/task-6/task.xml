@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prompt>
+    <role>You are a senior frontend developer specializing in React, Material-UI, and modern web application development with expertise in component architecture and responsive design.</role>
+    <task>
+        <id>6</id>
+        <title>Frontend Components</title>
+        <description>Create basic frontend structure and components for the application using React 18, Material-UI 5, and React Router 6. Implement package configuration with all necessary dependencies, create main App component with routing and theming, and build 8 core UI components including Header, Footer, HomePage, ProductList, ProductDetail, Cart, Login, and Register pages with consistent Material-UI styling and navigation.</description>
+        <priority>high</priority>
+        <status>pending</status>
+        <dependencies></dependencies>
+        <level>0</level>
+        <estimated_time>35 minutes</estimated_time>
+    </task>
+    <technical_specifications>
+        <spec>Use React 18.2.0 with functional components and hooks (no class components)</spec>
+        <spec>Use Material-UI 5.14.0 for all UI components and styling</spec>
+        <spec>Use React Router 6.14.2 for client-side routing</spec>
+        <spec>Use axios 1.4.0 for future API integration (placeholder usage)</spec>
+        <spec>Configure Material-UI theme with primary color #1976d2 and secondary #dc004e</spec>
+        <spec>Implement 6 routes: /, /products, /products/:id, /cart, /login, /register</spec>
+        <spec>Create 8 component files: Header, Footer, HomePage, ProductList, ProductDetail, Cart, Login, Register</spec>
+        <spec>Use Material-UI components exclusively (AppBar, Card, Grid, TextField, Button, etc.)</spec>
+        <spec>Include ThemeProvider and CssBaseline for consistent styling</spec>
+        <spec>Components should be placeholders with sample data, not connected to backend</spec>
+        <spec>Use react-scripts 5.0.1 for build tooling and development server</spec>
+        <spec>Responsive design using Material-UI's Grid system</spec>
+    </technical_specifications>
+    <implementation_details>
+        <step>
+            <number>1</number>
+            <action>Create frontend directory structure</action>
+            <details>
+                Create the following directory structure:
+                frontend/
+                ├── package.json
+                ├── src/
+                │   ├── App.js
+                │   └── components/
+                │       ├── Header.js
+                │       ├── Footer.js
+                │       ├── HomePage.js
+                │       ├── ProductList.js
+                │       ├── ProductDetail.js
+                │       ├── Cart.js
+                │       ├── Login.js
+                │       └── Register.js
+
+                Ensure all directories exist before creating files within them.
+            </details>
+        </step>
+        <step>
+            <number>2</number>
+            <action>Create package.json with dependencies</action>
+            <details>
+                Create frontend/package.json with exact content specified in task.txt.
+
+                Key dependencies:
+                - react &amp; react-dom: ^18.2.0 (core React framework)
+                - react-router-dom: ^6.14.2 (routing)
+                - axios: ^1.4.0 (HTTP client for future API integration)
+                - @mui/material: ^5.14.0 (Material-UI components)
+                - @mui/icons-material: ^5.14.0 (Material-UI icons)
+                - @emotion/react &amp; @emotion/styled: ^11.11.1 (CSS-in-JS for Material-UI)
+
+                Dev dependencies:
+                - react-scripts: 5.0.1 (build tooling)
+
+                Scripts:
+                - start: Launches development server on port 3000
+                - build: Creates production build
+                - test: Runs tests
+                - eject: Ejects from Create React App (not recommended for this project)
+
+                The package.json must be valid JSON with proper formatting. Use exact version numbers as specified to ensure compatibility.
+            </details>
+        </step>
+        <step>
+            <number>3</number>
+            <action>Create App.js with routing and theming</action>
+            <details>
+                Create frontend/src/App.js as the main application component.
+
+                Structure:
+                1. Imports:
+                   - React from 'react'
+                   - BrowserRouter (as Router), Routes, Route from 'react-router-dom'
+                   - ThemeProvider, createTheme from '@mui/material/styles'
+                   - CssBaseline from '@mui/material/CssBaseline'
+                   - All 8 component files (Header, Footer, HomePage, etc.)
+
+                2. Theme configuration:
+                   const theme = createTheme({
+                     palette: {
+                       primary: { main: '#1976d2' },
+                       secondary: { main: '#dc004e' }
+                     }
+                   });
+
+                3. Component structure:
+                   - ThemeProvider wraps everything with theme prop
+                   - CssBaseline for CSS reset
+                   - Router (BrowserRouter) for routing
+                   - Header component (outside Routes, always visible)
+                   - main element with Routes inside
+                   - Define 6 routes with path and element props
+                   - Footer component (outside Routes, always visible)
+
+                4. Routes:
+                   - / → HomePage
+                   - /products → ProductList
+                   - /products/:id → ProductDetail
+                   - /cart → Cart
+                   - /login → Login
+                   - /register → Register
+
+                5. Export default App
+
+                The main content should have padding and minimum height to keep footer at bottom.
+            </details>
+        </step>
+        <step>
+            <number>4</number>
+            <action>Create Header component</action>
+            <details>
+                Create frontend/src/components/Header.js
+
+                Use Material-UI AppBar component with:
+                - Toolbar containing:
+                  * Typography for site title "E-Commerce Demo" (flexGrow: 1)
+                  * Link to home page (/) on title
+                  * Button linking to /products
+                  * IconButton with ShoppingCartIcon and Badge (cart item count)
+                  * Link to /cart on cart icon
+                  * Button for Login/Logout
+                  * Link to /login on button
+
+                The component should:
+                - Use AppBar with position="static"
+                - Import Link from react-router-dom for navigation
+                - Use placeholder values for isLoggedIn (false) and cartItemCount (0)
+                - Style links to remove default link styling
+
+                Export as default.
+            </details>
+        </step>
+        <step>
+            <number>5</number>
+            <action>Create Footer component</action>
+            <details>
+                Create frontend/src/components/Footer.js
+
+                Simple footer using Material-UI:
+                - Box component as footer container
+                - bgcolor: 'background.paper'
+                - py: 2 (vertical padding)
+                - mt: 'auto' (push to bottom)
+                - Container inside Box
+                - Typography for copyright text
+                - Display current year using new Date().getFullYear()
+                - Center aligned text
+                - "© {year} Parallel Task Execution Test"
+
+                Export as default.
+            </details>
+        </step>
+        <step>
+            <number>6</number>
+            <action>Create HomePage component</action>
+            <details>
+                Create frontend/src/components/HomePage.js
+
+                Landing page with:
+                - Container with maxWidth="md"
+                - Box with my: 4, textAlign: 'center'
+                - Typography variant="h3" for main heading "Welcome to Our Store"
+                - Typography variant="h5" for subheading "Browse our catalog of products"
+                - Button variant="contained" color="primary" size="large"
+                - Button links to /products
+                - Button text: "Shop Now"
+
+                Use Link from react-router-dom for navigation.
+
+                Export as default.
+            </details>
+        </step>
+        <step>
+            <number>7</number>
+            <action>Create ProductList component</action>
+            <details>
+                Create frontend/src/components/ProductList.js
+
+                Product catalog view with:
+                1. Placeholder data:
+                   const products = [
+                     { id: 1, name: 'Product 1', price: 19.99, description: 'Description for product 1' },
+                     { id: 2, name: 'Product 2', price: 29.99, description: 'Description for product 2' },
+                     { id: 3, name: 'Product 3', price: 39.99, description: 'Description for product 3' }
+                   ];
+
+                2. Layout:
+                   - Container component
+                   - Typography variant="h4" for page heading "Products"
+                   - Grid container spacing={4}
+                   - Map over products, each in Grid item xs={12} sm={6} md={4}
+
+                3. Product cards:
+                   - Card component for each product
+                   - CardMedia (placeholder image area with gray background)
+                   - CardContent with product name (h5), price, description
+                   - CardActions with "View Details" and "Add to Cart" buttons
+                   - "View Details" links to /products/{id}
+
+                Export as default.
+            </details>
+        </step>
+        <step>
+            <number>8</number>
+            <action>Create remaining placeholder components</action>
+            <details>
+                Create these four components as simpler placeholders:
+
+                1. ProductDetail.js:
+                   - Use useParams() from react-router-dom to get id
+                   - Display heading with product ID
+                   - "Back to Products" link to /products
+                   - Use Container, Typography
+
+                2. Cart.js:
+                   - Simple container
+                   - "Shopping Cart" heading
+                   - Placeholder message or empty cart display
+                   - Use Container, Typography
+
+                3. Login.js:
+                   - Container with Box
+                   - "Login" heading
+                   - TextField for email (type="email")
+                   - TextField for password (type="password")
+                   - Login Button
+                   - Link to /register: "Don't have an account? Register"
+                   - Use Container, Box, TextField, Button, Typography
+
+                4. Register.js:
+                   - Similar to Login but with:
+                   - "Register" heading
+                   - TextField for username
+                   - TextField for email
+                   - TextField for password
+                   - Register Button
+                   - Link to /login: "Already have an account? Login"
+
+                All components should export as default.
+            </details>
+        </step>
+        <step>
+            <number>9</number>
+            <action>Validate implementation</action>
+            <details>
+                Run validation checks:
+
+                1. File structure check:
+                   ls -la frontend/package.json
+                   ls -la frontend/src/App.js
+                   ls -la frontend/src/components/
+
+                   Confirm all 9 files exist (1 package.json, 1 App.js, 8 components).
+
+                2. Install dependencies:
+                   cd frontend &amp;&amp; npm install
+
+                   Must complete without errors. Verify node_modules/ is created and package-lock.json is generated.
+
+                3. Start development server:
+                   cd frontend &amp;&amp; npm start
+
+                   Server should start on http://localhost:3000 and automatically open browser. Check for "Compiled successfully" message.
+
+                4. Browser verification:
+                   - Open http://localhost:3000
+                   - Check that home page loads
+                   - Verify Material-UI styling is applied
+                   - Check navigation bar and footer appear
+                   - Click navigation links to test routing
+                   - Open browser console, verify no errors
+
+                Do not mark complete if any validation step fails. Fix issues and re-validate.
+            </details>
+        </step>
+    </implementation_details>
+    <acceptance_criteria>
+        <criterion>frontend/package.json exists with all specified dependencies at correct versions</criterion>
+        <criterion>React 18.2.0, React Router 6.14.2, Material-UI 5.14.0, axios 1.4.0 are included</criterion>
+        <criterion>react-scripts 5.0.1 is in devDependencies</criterion>
+        <criterion>Scripts include start, build, test, eject</criterion>
+        <criterion>frontend/src/App.js exists and imports all necessary dependencies</criterion>
+        <criterion>App.js creates Material-UI theme with primary #1976d2 and secondary #dc004e</criterion>
+        <criterion>App.js wraps application in ThemeProvider, includes CssBaseline</criterion>
+        <criterion>App.js uses BrowserRouter for routing</criterion>
+        <criterion>App.js defines 6 routes: /, /products, /products/:id, /cart, /login, /register</criterion>
+        <criterion>App.js includes Header and Footer components outside Routes</criterion>
+        <criterion>All 8 component files exist in frontend/src/components/ directory</criterion>
+        <criterion>Header.js uses AppBar, Toolbar, and navigation components</criterion>
+        <criterion>Header.js has links to home, products, cart, and login</criterion>
+        <criterion>Footer.js displays copyright with current year</criterion>
+        <criterion>HomePage.js has welcome message and Shop Now button linking to /products</criterion>
+        <criterion>ProductList.js displays grid of placeholder products with cards</criterion>
+        <criterion>ProductList.js has View Details buttons linking to /products/:id</criterion>
+        <criterion>ProductDetail.js uses useParams to get product ID from route</criterion>
+        <criterion>Cart.js displays cart heading and placeholder content</criterion>
+        <criterion>Login.js has email and password fields with Material-UI TextField components</criterion>
+        <criterion>Register.js has username, email, and password fields</criterion>
+        <criterion>All components are functional components, not class components</criterion>
+        <criterion>All components use Material-UI components consistently</criterion>
+        <criterion>All components export default</criterion>
+        <criterion>npm install completes without errors</criterion>
+        <criterion>npm start launches development server successfully</criterion>
+        <criterion>Application loads in browser without console errors</criterion>
+        <criterion>All routes are accessible and display correct components</criterion>
+        <criterion>Navigation between pages works correctly</criterion>
+        <criterion>Material-UI theme is applied throughout application</criterion>
+    </acceptance_criteria>
+    <test_strategy>
+        Validation approach for frontend components:
+
+        1. File Structure Verification:
+           - Confirm frontend/ directory exists
+           - Verify package.json in frontend/
+           - Check src/App.js exists
+           - Verify components/ directory with all 8 files
+
+        2. Dependency Check:
+           - Review package.json for all required dependencies
+           - Verify correct version numbers
+           - Check scripts are properly defined
+
+        3. Installation Testing:
+           - Run npm install in frontend/ directory
+           - Verify successful completion
+           - Check node_modules/ created
+           - Verify package-lock.json generated
+
+        4. Build System Testing:
+           - Run npm start
+           - Verify server starts on port 3000
+           - Check for "Compiled successfully" message
+           - Verify browser opens automatically
+
+        5. Component Rendering:
+           - Open http://localhost:3000
+           - Verify home page displays
+           - Check Material-UI styling is visible
+           - Confirm header and footer appear
+           - Verify no console errors
+
+        6. Routing Testing:
+           - Click navigation links (Products, Cart, Login)
+           - Verify each route displays correct component
+           - Check URL updates properly
+           - Test browser back/forward buttons
+           - Test direct URL navigation
+
+        7. Component Functionality:
+           - HomePage: Check heading and Shop Now button
+           - ProductList: Verify product grid with cards
+           - ProductDetail: Check URL parameter handling
+           - Cart: Verify cart page renders
+           - Login: Check form fields present
+           - Register: Verify registration form
+
+        8. Material-UI Integration:
+           - Verify theme colors are applied
+           - Check AppBar styling
+           - Confirm Card components styled correctly
+           - Verify Button colors match theme
+           - Check responsive Grid layout
+
+        9. Code Quality:
+           - Review that all components are functional (not class)
+           - Verify proper imports at top of files
+           - Check exports at bottom
+           - Confirm no unused imports
+
+        10. Commands to execute:
+            cd frontend &amp;&amp; npm install
+            cd frontend &amp;&amp; npm start
+            curl http://localhost:3000
+            # Manual browser testing for navigation
+    </test_strategy>
+    <instructions>
+        You are implementing Task 6: Frontend Components for a parallel task execution test project.
+
+        CRITICAL INSTRUCTIONS:
+        - This is a Level 0 task with NO dependencies - proceed immediately
+        - Create exactly the files specified in the implementation steps
+        - Use exact dependency versions specified
+        - Follow Create React App conventions with react-scripts
+        - Use functional components with hooks, NOT class components
+        - This is a test project - components have placeholder data and functionality
+
+        IMPLEMENTATION APPROACH:
+        1. Create frontend directory structure
+        2. Create package.json with all dependencies
+        3. Create App.js with routing and theming
+        4. Create all 8 component files
+        5. Validate with npm install and npm start
+
+        QUALITY STANDARDS:
+        - All components must be functional components
+        - Use Material-UI components exclusively for UI
+        - Follow React Router 6 patterns (useParams, Link, etc.)
+        - Configure theme with specified colors
+        - Include CssBaseline for CSS reset
+        - Use responsive Grid layout
+        - Consistent component structure and naming
+        - Proper imports and exports
+
+        DEPENDENCY REQUIREMENTS:
+        - React 18.2.0 (latest stable)
+        - Material-UI 5.14.0 (comprehensive component library)
+        - React Router 6.14.2 (modern routing with hooks)
+        - Exact versions specified to ensure compatibility
+        - react-scripts handles build tooling
+
+        COMPONENT REQUIREMENTS:
+        - Header: AppBar with navigation and cart badge
+        - Footer: Simple copyright footer
+        - HomePage: Welcome page with call-to-action
+        - ProductList: Grid of product cards with placeholder data
+        - ProductDetail: Dynamic route with useParams
+        - Cart: Placeholder cart page
+        - Login: Form with email and password fields
+        - Register: Form with username, email, password fields
+
+        ROUTING STRUCTURE:
+        - Use BrowserRouter (Router)
+        - Define Routes with Route components
+        - Six routes: /, /products, /products/:id, /cart, /login, /register
+        - Use Link for navigation (not anchor tags)
+        - Header and Footer outside Routes (always visible)
+
+        STYLING APPROACH:
+        - Material-UI provides all styling
+        - Custom theme with primary/secondary colors
+        - ThemeProvider wraps entire app
+        - CssBaseline normalizes CSS
+        - Responsive Grid for layouts
+        - sx prop for inline styles where needed
+
+        PLACEHOLDER FUNCTIONALITY:
+        - Components don't connect to backend (yet)
+        - ProductList has hardcoded sample data
+        - Authentication components don't submit to API
+        - Cart doesn't persist data
+        - This is intentional for test project
+
+        SUCCESS DEFINITION:
+        You have completed this task successfully when:
+        1. All files created with correct content
+        2. package.json has all dependencies
+        3. npm install completes successfully
+        4. npm start launches without errors
+        5. Application loads in browser
+        6. All navigation works correctly
+        7. Material-UI styling is visible
+        8. No console errors
+        9. Ready for Task 7 integration testing
+
+        VALIDATION CHECKLIST:
+        Before marking complete, verify:
+        - [ ] 9 files created: package.json, App.js, 8 components
+        - [ ] All dependencies with correct versions
+        - [ ] npm install succeeds
+        - [ ] npm start succeeds
+        - [ ] Browser shows application
+        - [ ] Navigation works for all routes
+        - [ ] Material-UI theme applied
+        - [ ] No console errors
+        - [ ] All components render correctly
+
+        DO NOT:
+        - Use class components
+        - Add backend API integration
+        - Add state management libraries
+        - Use custom CSS files (Material-UI only)
+        - Add extra dependencies beyond specification
+        - Skip validation steps
+
+        DO:
+        - Use functional components with hooks
+        - Use Material-UI components exclusively
+        - Follow React Router 6 patterns
+        - Create placeholder components as specified
+        - Test thoroughly before marking complete
+        - Ensure all navigation works
+    </instructions>
+</prompt>

@@ -1,0 +1,303 @@
+```mermaid
+graph TB
+    subgraph "Frontend Application Structure"
+        PackageJSON[package.json<br/>Dependencies & Scripts]
+        AppJS[src/App.js<br/>Main Component<br/>Routing & Theming]
+        Components[src/components/<br/>8 Component Files]
+
+        PackageJSON --> AppJS
+        AppJS --> Components
+    end
+
+    subgraph "Dependencies"
+        React[react: ^18.2.0<br/>react-dom: ^18.2.0<br/>Core Framework]
+        Router[react-router-dom: ^6.14.2<br/>Client-side Routing]
+        MUI[Material-UI: ^5.14.0<br/>@mui/material<br/>@mui/icons-material<br/>UI Components]
+        Emotion[@emotion/react: ^11.11.1<br/>@emotion/styled: ^11.11.0<br/>CSS-in-JS]
+        Axios[axios: ^1.4.0<br/>HTTP Client]
+        Scripts[react-scripts: ^5.0.1<br/>Build Tooling]
+
+        PackageJSON --> React
+        PackageJSON --> Router
+        PackageJSON --> MUI
+        PackageJSON --> Emotion
+        PackageJSON --> Axios
+        PackageJSON --> Scripts
+    end
+
+    subgraph "App.js Architecture"
+        Theme[Theme Configuration<br/>Primary: #1976d2<br/>Secondary: #dc004e]
+        Provider[ThemeProvider + CssBaseline]
+        RouterComp[BrowserRouter]
+        Layout[Header + Routes + Footer]
+
+        AppJS --> Theme
+        Theme --> Provider
+        Provider --> RouterComp
+        RouterComp --> Layout
+    end
+
+    subgraph "Routing Structure"
+        Routes[Routes Component]
+        Route1[Route: / → HomePage]
+        Route2[Route: /products → ProductList]
+        Route3[Route: /products/:id → ProductDetail]
+        Route4[Route: /cart → Cart]
+        Route5[Route: /login → Login]
+        Route6[Route: /register → Register]
+
+        Layout --> Routes
+        Routes --> Route1
+        Routes --> Route2
+        Routes --> Route3
+        Routes --> Route4
+        Routes --> Route5
+        Routes --> Route6
+    end
+
+    subgraph "Component Files"
+        Header[Header.js<br/>AppBar, Navigation, Cart Badge]
+        Footer[Footer.js<br/>Copyright]
+        HomePage[HomePage.js<br/>Welcome, Call-to-Action]
+        ProductList[ProductList.js<br/>Product Grid, Cards]
+        ProductDetail[ProductDetail.js<br/>Product Details, useParams]
+        Cart[Cart.js<br/>Shopping Cart]
+        Login[Login.js<br/>Login Form]
+        Register[Register.js<br/>Registration Form]
+
+        Components --> Header
+        Components --> Footer
+        Components --> HomePage
+        Components --> ProductList
+        Components --> ProductDetail
+        Components --> Cart
+        Components --> Login
+        Components --> Register
+    end
+
+    style PackageJSON fill:#e1f5ff
+    style AppJS fill:#e1f5ff
+    style Components fill:#e1f5ff
+    style Theme fill:#fff3e0
+    style Routes fill:#fff3e0
+    style Header fill:#c8e6c9
+    style ProductList fill:#c8e6c9
+    style Cart fill:#c8e6c9
+    style Login fill:#c8e6c9
+```
+
+```mermaid
+graph LR
+    subgraph "Component Hierarchy"
+        direction TB
+        App[App.js<br/>Theme + Router]
+        H[Header<br/>Always Visible]
+        M[Main Content Area<br/>Routes Switch Here]
+        F[Footer<br/>Always Visible]
+
+        App --> H
+        App --> M
+        App --> F
+
+        Home[HomePage]
+        PL[ProductList]
+        PD[ProductDetail]
+        C[Cart]
+        L[Login]
+        R[Register]
+
+        M -.->|Route: /| Home
+        M -.->|Route: /products| PL
+        M -.->|Route: /products/:id| PD
+        M -.->|Route: /cart| C
+        M -.->|Route: /login| L
+        M -.->|Route: /register| R
+    end
+
+    subgraph "Navigation Flow"
+        direction LR
+        Nav1[Home Page] -->|Shop Now| Nav2[Product List]
+        Nav2 -->|View Details| Nav3[Product Detail]
+        Nav2 -->|Add to Cart| Nav4[Cart]
+        Nav1 -->|Login Link| Nav5[Login]
+        Nav5 -->|Register Link| Nav6[Register]
+        Nav6 -->|Login Link| Nav5
+    end
+
+    subgraph "Header Navigation"
+        direction LR
+        HLogo[Site Logo] -->|Click| HHome[Home]
+        HProducts[Products Button] -->|Click| HProdList[Product List]
+        HCart[Cart Icon] -->|Click| HCartPage[Cart]
+        HLogin[Login Button] -->|Click| HLoginPage[Login]
+    end
+
+    style App fill:#e3f2fd
+    style H fill:#bbdefb
+    style F fill:#bbdefb
+    style M fill:#fff9c4
+    style Home fill:#c8e6c9
+    style PL fill:#c8e6c9
+    style PD fill:#c8e6c9
+    style C fill:#c8e6c9
+    style L fill:#c8e6c9
+    style R fill:#c8e6c9
+```
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Browser
+    participant App as App.js
+    participant Router as React Router
+    participant Component as Page Component
+
+    Note over User,Component: Application Load Flow
+
+    User->>Browser: Navigate to http://localhost:3000
+    Browser->>App: Load application
+    App->>App: Create Material-UI theme
+    App->>App: Apply ThemeProvider
+    App->>Router: Initialize BrowserRouter
+    Router->>Router: Match URL to route
+    Router->>Component: Render HomePage
+    Component->>Component: Render Material-UI components
+    Component-->>Browser: Display content
+    Browser-->>User: Show home page
+
+    Note over User,Component: Navigation Flow
+
+    User->>Browser: Click "Shop Now" button
+    Browser->>Router: Navigate to /products
+    Router->>Router: Match /products route
+    Router->>Component: Render ProductList
+    Component->>Component: Map over placeholder products
+    Component->>Component: Create Card for each product
+    Component-->>Browser: Display product grid
+    Browser-->>User: Show products
+
+    Note over User,Component: Product Detail Flow
+
+    User->>Browser: Click "View Details" on Product 1
+    Browser->>Router: Navigate to /products/1
+    Router->>Router: Match /products/:id route
+    Router->>Component: Render ProductDetail
+    Component->>Component: useParams() to get id=1
+    Component->>Component: Display product with id 1
+    Component-->>Browser: Display product details
+    Browser-->>User: Show product detail
+
+    Note over User,Component: Cart Flow
+
+    User->>Browser: Click cart icon in header
+    Browser->>Router: Navigate to /cart
+    Router->>Router: Match /cart route
+    Router->>Component: Render Cart
+    Component->>Component: Display cart contents
+    Component-->>Browser: Display cart
+    Browser-->>User: Show cart page
+```
+
+```mermaid
+flowchart TD
+    Start([User Opens App]) --> LoadApp[App.js Loads]
+    LoadApp --> CreateTheme[Create Material-UI Theme<br/>Primary: #1976d2<br/>Secondary: #dc004e]
+    CreateTheme --> ApplyProvider[Apply ThemeProvider<br/>Include CssBaseline]
+    ApplyProvider --> InitRouter[Initialize BrowserRouter]
+    InitRouter --> RenderHeader[Render Header<br/>AppBar with Navigation]
+    RenderHeader --> MatchRoute{Match URL to Route}
+
+    MatchRoute -->|/ | HomePage[Render HomePage<br/>Welcome + Shop Now]
+    MatchRoute -->|/products| ProductList[Render ProductList<br/>Product Grid Cards]
+    MatchRoute -->|/products/:id| ProductDetail[Render ProductDetail<br/>useParams for ID]
+    MatchRoute -->|/cart| Cart[Render Cart<br/>Cart Items]
+    MatchRoute -->|/login| Login[Render Login<br/>Email/Password Form]
+    MatchRoute -->|/register| Register[Render Register<br/>Username/Email/Password]
+    MatchRoute -->|unknown| Default[Redirect or 404]
+
+    HomePage --> RenderFooter[Render Footer]
+    ProductList --> RenderFooter
+    ProductDetail --> RenderFooter
+    Cart --> RenderFooter
+    Login --> RenderFooter
+    Register --> RenderFooter
+    Default --> RenderFooter
+
+    RenderFooter --> Display[Display Complete Page]
+
+    Display --> UserAction{User Action}
+    UserAction -->|Click Link| Navigate[Router Navigates]
+    Navigate --> MatchRoute
+    UserAction -->|No Action| Idle[Idle State]
+
+    style Start fill:#e3f2fd
+    style CreateTheme fill:#fff3e0
+    style HomePage fill:#c8e6c9
+    style ProductList fill:#c8e6c9
+    style ProductDetail fill:#c8e6c9
+    style Cart fill:#c8e6c9
+    style Login fill:#c8e6c9
+    style Register fill:#c8e6c9
+    style Display fill:#bbdefb
+```
+
+```mermaid
+graph TB
+    subgraph "Task Dependencies - Highlighting Task 6"
+        subgraph "Level 0 - Parallel"
+            Task1[Task 1: Database Schema<br/>30 min]
+            Task3[Task 3: User Auth<br/>45 min]
+            Task4[Task 4: Product Catalog<br/>40 min]
+            Task6[Task 6: Frontend Components<br/>React + Material-UI<br/>35 min]
+        end
+
+        subgraph "Level 1 - Depends on Level 0"
+            Task2[Task 2: API Endpoints<br/>Depends: Task 1<br/>50 min]
+            Task5[Task 5: Shopping Cart API<br/>Depends: Tasks 3, 4<br/>45 min]
+        end
+
+        subgraph "Level 2 - Final Integration"
+            Task7[Task 7: Integration Tests<br/>Depends: Tasks 2, 5, 6<br/>60 min]
+        end
+
+        Task1 --> Task2
+        Task3 --> Task5
+        Task4 --> Task5
+        Task2 --> Task7
+        Task5 --> Task7
+        Task6 --> Task7
+    end
+
+    subgraph "Task 6 Details"
+        T6[Task 6:<br/>Frontend Components]
+        NoDepNote[No Dependencies<br/>Level 0<br/>Runs in Parallel]
+        T7Use[Used By Task 7<br/>Integration Tests]
+
+        NoDepNote -.-> T6
+        T6 -.->|enables| T7Use
+    end
+
+    subgraph "Technology Stack"
+        ReactStack[React 18.2.0<br/>Modern Hooks]
+        MUIStack[Material-UI 5.14.0<br/>Component Library]
+        RouterStack[React Router 6.14.2<br/>Client-side Routing]
+        BuildStack[react-scripts 5.0.1<br/>Build Tooling]
+
+        T6 --> ReactStack
+        T6 --> MUIStack
+        T6 --> RouterStack
+        T6 --> BuildStack
+    end
+
+    style Task6 fill:#ffd54f,stroke:#f57c00,stroke-width:4px
+    style Task7 fill:#ffecb3,stroke:#f57c00,stroke-width:2px
+    style T6 fill:#ffd54f,stroke:#f57c00,stroke-width:4px
+
+    classDef level0 fill:#e1f5fe
+    classDef level1 fill:#fff3e0
+    classDef level2 fill:#f3e5f5
+
+    class Task1,Task3,Task4,Task6 level0
+    class Task2,Task5 level1
+    class Task7 level2
+```

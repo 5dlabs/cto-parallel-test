@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prompt>
+    <role>You are a senior Rust backend developer specializing in REST API development, authentication systems, and e-commerce cart functionality with expertise in actix-web framework and secure API design.</role>
+    <task>
+        <id>5</id>
+        <title>Shopping Cart API</title>
+        <description>Create shopping cart functionality and API endpoints for the Rust API project. Implement CartService with user-specific cart management using in-memory thread-safe storage, integrate JWT authentication from Task 3 for user verification, integrate with Product Catalog from Task 4 for product validation and inventory checking, and expose RESTful API endpoints for cart operations including add, remove, get, and clear.</description>
+        <priority>high</priority>
+        <status>pending</status>
+        <dependencies>3,4</dependencies>
+        <level>1</level>
+        <estimated_time>45 minutes</estimated_time>
+    </task>
+    <technical_specifications>
+        <spec>Use Arc&lt;Mutex&lt;HashMap&lt;i32, Cart&gt;&gt;&gt; for thread-safe user-specific cart storage</spec>
+        <spec>Define CartItem struct with product snapshot: product_id, quantity, product_name, unit_price</spec>
+        <spec>Define Cart struct with fields: id, user_id, items (Vec&lt;CartItem&gt;)</spec>
+        <spec>Implement CartService with methods: new, get_or_create_cart, add_item, remove_item, get_cart, clear_cart</spec>
+        <spec>Integrate JWT authentication from Task 3 using validate_token() for all endpoints</spec>
+        <spec>Integrate ProductService from Task 4 for product validation and inventory checking</spec>
+        <spec>Implement four RESTful endpoints: GET /cart, POST /cart/add, DELETE /cart/remove/{id}, POST /cart/clear</spec>
+        <spec>Extract user_id from JWT claims.sub field for user isolation</spec>
+        <spec>Validate products exist before adding to cart using ProductService.get_by_id()</spec>
+        <spec>Check inventory_count &gt;= quantity before allowing cart additions</spec>
+        <spec>Return appropriate HTTP status codes: 200 OK, 400 Bad Request, 401 Unauthorized, 404 Not Found</spec>
+        <spec>Store product snapshot in CartItem to prevent stale data issues</spec>
+        <spec>Accumulate quantity for duplicate products instead of creating separate items</spec>
+    </technical_specifications>
+    <implementation_details>
+        <step>
+            <number>1</number>
+            <action>Verify dependencies are available</action>
+            <details>
+                CRITICAL: This is a Level 1 task that depends on:
+                - Task 3: User Authentication Module (for JWT validation)
+                - Task 4: Product Catalog Module (for product operations)
+
+                Before proceeding, verify these modules exist:
+                - src/auth/jwt.rs with validate_token() function
+                - src/catalog/service.rs with ProductService
+
+                If these are not available, STOP and wait for Tasks 3 and 4 to complete.
+
+                Check imports:
+                - use crate::auth::jwt::validate_token;
+                - use crate::auth::models::User;
+                - use crate::catalog::models::Product;
+                - use crate::catalog::ProductService;
+
+                The CTO platform should ensure these dependencies are met before starting this task.
+            </details>
+        </step>
+        <step>
+            <number>2</number>
+            <action>Create cart module structure</action>
+            <details>
+                Create src/cart/mod.rs with module declaration and export:
+
+                pub mod service;
+
+                pub use self::service::CartService;
+
+                This establishes the cart module and makes CartService available for import by other modules and the API layer.
+            </details>
+        </step>
+        <step>
+            <number>3</number>
+            <action>Implement cart service with data models</action>
+            <details>
+                Create src/cart/service.rs with three components:
+
+                1. CartItem struct (product snapshot):
+                   - product_id: i32 (reference to product)
+                   - quantity: i32 (number of items)
+                   - product_name: String (snapshot of name at add time)
+                   - unit_price: rust_decimal::Decimal (snapshot of price at add time)
+                   Derives: Debug, Clone, Serialize, Deserialize
+
+                   Why snapshot? If product is deleted or price changes after adding to cart, cart still shows what user added.
+
+                2. Cart struct (user's shopping cart):
+                   - id: i32 (auto-generated cart ID)
+                   - user_id: i32 (owner of this cart)
+                   - items: Vec&lt;CartItem&gt; (list of items in cart)
+                   Derives: Debug, Clone, Serialize, Deserialize
+
+                3. CartService struct (cart management):
+                   - carts: Arc&lt;Mutex&lt;HashMap&lt;i32, Cart&gt;&gt;&gt; (thread-safe cart storage by cart ID)
+                   - next_id: Arc&lt;Mutex&lt;i32&gt;&gt; (auto-incrementing ID generator)
+
+                Implement methods:
+
+                a) new() -&gt; Self
+                   Initialize empty HashMap and next_id = 1
+
+                b) get_or_create_cart(&amp;self, user_id: i32) -&gt; Cart
+                   - Lock carts mutex
+                   - Iterate through all carts to find one with matching user_id
+                   - If found, return cloned cart
+                   - If not found, create new cart with next_id, insert into HashMap, increment next_id
+                   - Return cloned cart
+
+                c) add_item(&amp;self, user_id: i32, product: &amp;Product, quantity: i32) -&gt; Cart
+                   - Lock carts mutex (mutable)
+                   - Get cart_id using get_or_create_cart (releases lock first)
+                   - Get mutable reference to cart from HashMap
+                   - Check if product_id already in cart.items
+                   - If yes: increment existing item's quantity
+                   - If no: push new CartItem with product snapshot (id, name, price) and quantity
+                   - Return cloned cart
+
+                d) remove_item(&amp;self, user_id: i32, product_id: i32) -&gt; Option&lt;Cart&gt;
+                   - Lock carts mutex (mutable)
+                   - Find cart with matching user_id
+                   - If found: use retain() to filter out items with matching product_id
+                   - Return cloned cart or None
+
+                e) get_cart(&amp;self, user_id: i32) -&gt; Option&lt;Cart&gt;
+                   - Lock carts mutex
+                   - Find cart with matching user_id
+                   - Return cloned cart or None
+
+                f) clear_cart(&amp;self, user_id: i32) -&gt; Option&lt;Cart&gt;
+                   - Lock carts mutex (mutable)
+                   - Find cart with matching user_id
+                   - If found: call items.clear() to remove all items
+                   - Return cloned cart or None
+
+                Import required types:
+                - use crate::auth::models::User;
+                - use crate::catalog::models::Product;
+                - use serde::{Serialize, Deserialize};
+                - use std::sync::{Arc, Mutex};
+                - use std::collections::HashMap;
+
+                Thread safety: Arc allows sharing across threads, Mutex ensures exclusive access. Always clone before returning to release locks quickly.
+            </details>
+        </step>
+        <step>
+            <number>4</number>
+            <action>Implement cart API routes with authentication</action>
+            <details>
+                Create src/api/cart_routes.rs with authenticated endpoints:
+
+                1. Define AddItemRequest DTO:
+                   pub struct AddItemRequest {
+                       pub product_id: i32,
+                       pub quantity: i32,
+                   }
+                   Derives: Deserialize
+
+                2. Implement configure_cart_routes(cfg: &amp;mut web::ServiceConfig):
+                   Create scope "/cart" with routes:
+                   - GET "" to get_cart
+                   - POST "/add" to add_item
+                   - DELETE "/remove/{product_id}" to remove_item
+                   - POST "/clear" to clear_cart
+
+                3. Implement get_cart handler:
+                   async fn get_cart(cart_service: web::Data&lt;CartService&gt;, req: web::HttpRequest) -&gt; impl Responder
+                   - Extract Authorization header
+                   - Check for "Bearer " prefix
+                   - Extract token (skip first 7 chars)
+                   - Call validate_token(token) from Task 3
+                   - If valid: parse user_id from claims.sub
+                   - Try to get_cart(user_id)
+                   - If Some: return HttpResponse::Ok().json(cart)
+                   - If None: call get_or_create_cart(user_id) and return it
+                   - If auth fails: return HttpResponse::Unauthorized().finish()
+
+                4. Implement add_item handler:
+                   async fn add_item(cart_service: web::Data&lt;CartService&gt;, product_service: web::Data&lt;ProductService&gt;, req: web::HttpRequest, item: web::Json&lt;AddItemRequest&gt;) -&gt; impl Responder
+                   - Perform JWT authentication (same as get_cart)
+                   - If valid: parse user_id from claims
+                   - Call product_service.get_by_id(item.product_id) from Task 4
+                   - If None: return HttpResponse::NotFound().json({{"error": "Product not found"}})
+                   - If Some(product): check product.inventory_count &gt;= item.quantity
+                   - If insufficient: return HttpResponse::BadRequest().json({{"error": "Not enough inventory"}})
+                   - If sufficient: call cart_service.add_item(user_id, &amp;product, item.quantity)
+                   - Return HttpResponse::Ok().json(cart)
+                   - If auth fails: return HttpResponse::Unauthorized().finish()
+
+                5. Implement remove_item handler:
+                   async fn remove_item(cart_service: web::Data&lt;CartService&gt;, req: web::HttpRequest, path: web::Path&lt;i32&gt;) -&gt; impl Responder
+                   - Extract product_id from path parameter
+                   - Perform JWT authentication (same as get_cart)
+                   - If valid: parse user_id from claims
+                   - Call cart_service.remove_item(user_id, product_id)
+                   - If Some(cart): return HttpResponse::Ok().json(cart)
+                   - If None: return HttpResponse::NotFound().json({{"error": "Item not found in cart"}})
+                   - If auth fails: return HttpResponse::Unauthorized().finish()
+
+                6. Implement clear_cart handler:
+                   async fn clear_cart(cart_service: web::Data&lt;CartService&gt;, req: web::HttpRequest) -&gt; impl Responder
+                   - Perform JWT authentication (same as get_cart)
+                   - If valid: parse user_id from claims
+                   - Call cart_service.clear_cart(user_id)
+                   - If Some(cart): return HttpResponse::Ok().json(cart)
+                   - If None: return HttpResponse::NotFound().json({{"error": "Cart not found"}})
+                   - If auth fails: return HttpResponse::Unauthorized().finish()
+
+                Import required types:
+                - use actix_web::{web, HttpResponse, Responder};
+                - use serde::{Serialize, Deserialize};
+                - use crate::cart::CartService;
+                - use crate::catalog::ProductService;
+                - use crate::auth::jwt::validate_token;
+
+                Authentication pattern: Extract "Authorization" header, check "Bearer " prefix, extract token, validate with Task 3's function, parse user_id from claims.sub, return 401 if any step fails.
+            </details>
+        </step>
+        <step>
+            <number>5</number>
+            <action>Update API module configuration</action>
+            <details>
+                1. Update src/api/mod.rs:
+                   Add module declaration:
+                   pub mod cart_routes;
+
+                2. Update src/api/routes.rs:
+                   Import configure_cart_routes:
+                   use crate::api::cart_routes::configure_cart_routes;
+
+                   In the configure_routes function, add cart routes configuration:
+                   pub fn configure_routes(cfg: &amp;mut web::ServiceConfig) {
+                       cfg.service(
+                           web::scope("/api")
+                               .service(health_check)
+                               // ... other routes ...
+                               .configure(configure_cart_routes)  // Add this line
+                       );
+                   }
+
+                   This mounts cart routes at /api/cart path. Routes become:
+                   - GET /api/cart
+                   - POST /api/cart/add
+                   - DELETE /api/cart/remove/{product_id}
+                   - POST /api/cart/clear
+
+                Ensure cart_routes is configured after any existing route configurations.
+            </details>
+        </step>
+        <step>
+            <number>6</number>
+            <action>Validate implementation</action>
+            <details>
+                Run validation checks to ensure correctness:
+
+                1. Dependency verification:
+                   grep -r "validate_token" src/auth/jwt.rs
+                   grep -r "ProductService" src/catalog/service.rs
+
+                   Confirm Task 3 and Task 4 modules exist and export required functions.
+
+                2. File structure check:
+                   ls -la src/cart/mod.rs
+                   ls -la src/cart/service.rs
+                   ls -la src/api/cart_routes.rs
+                   cat src/api/mod.rs | grep cart_routes
+
+                3. Compilation check:
+                   cargo check
+
+                   Must complete without errors or warnings. Verify that:
+                   - All structs compile correctly
+                   - JWT integration works (imports from Task 3)
+                   - Product service integration works (imports from Task 4)
+                   - Arc and Mutex usage is correct
+                   - All handlers have correct signatures
+
+                4. Module integration test (conceptual):
+                   Verify that main.rs can:
+                   - Import CartService: use crate::cart::CartService;
+                   - Create and share service: web::Data::new(CartService::new())
+                   - Configure routes: configure_routes is called
+
+                Do not mark the task complete if any validation fails. Fix issues and re-validate.
+            </details>
+        </step>
+    </implementation_details>
+    <acceptance_criteria>
+        <criterion>Task 3 (User Authentication) and Task 4 (Product Catalog) are complete and their modules are available for import</criterion>
+        <criterion>src/cart/mod.rs file exists and contains module declaration for service with pub use export for CartService</criterion>
+        <criterion>src/cart/service.rs file exists with CartItem struct containing product_id, quantity, product_name, unit_price fields</criterion>
+        <criterion>CartItem derives Debug, Clone, Serialize, and Deserialize traits</criterion>
+        <criterion>Cart struct exists with id, user_id, and items (Vec&lt;CartItem&gt;) fields, deriving Debug, Clone, Serialize, Deserialize</criterion>
+        <criterion>CartService struct exists with carts (Arc&lt;Mutex&lt;HashMap&lt;i32, Cart&gt;&gt;&gt;) and next_id (Arc&lt;Mutex&lt;i32&gt;&gt;) fields</criterion>
+        <criterion>CartService implements new() method initializing empty storage with next_id = 1</criterion>
+        <criterion>CartService implements get_or_create_cart() returning existing or new cart for user</criterion>
+        <criterion>CartService implements add_item() that accumulates quantity for duplicate products</criterion>
+        <criterion>add_item() stores product snapshot (name, price) in CartItem to prevent stale data</criterion>
+        <criterion>CartService implements remove_item() using retain() to filter out products</criterion>
+        <criterion>CartService implements get_cart() returning Option&lt;Cart&gt; for user</criterion>
+        <criterion>CartService implements clear_cart() removing all items from user's cart</criterion>
+        <criterion>src/api/cart_routes.rs file exists with AddItemRequest struct and four handler functions</criterion>
+        <criterion>configure_cart_routes() creates scope with GET, POST, DELETE routes for cart operations</criterion>
+        <criterion>All handlers implement JWT authentication by extracting and validating Authorization header</criterion>
+        <criterion>All handlers call validate_token() from auth::jwt module</criterion>
+        <criterion>All handlers extract user_id from JWT claims.sub field</criterion>
+        <criterion>All handlers return 401 Unauthorized for authentication failures</criterion>
+        <criterion>add_item handler validates product exists using ProductService.get_by_id()</criterion>
+        <criterion>add_item handler checks inventory_count &gt;= quantity before adding to cart</criterion>
+        <criterion>add_item handler returns 404 Not Found if product doesn't exist</criterion>
+        <criterion>add_item handler returns 400 Bad Request if insufficient inventory</criterion>
+        <criterion>Error responses use proper JSON format with "error" field</criterion>
+        <criterion>src/api/mod.rs declares cart_routes module</criterion>
+        <criterion>src/api/routes.rs imports and configures cart_routes in configure_routes function</criterion>
+        <criterion>Cart routes are mounted under /api/cart path</criterion>
+        <criterion>Code passes 'cargo check' without compilation errors or warnings</criterion>
+        <criterion>Thread-safe design allows CartService to be shared across multiple request handlers</criterion>
+    </acceptance_criteria>
+    <test_strategy>
+        Validation approach for the shopping cart API:
+
+        1. Dependency Verification:
+           - Confirm Task 3 completed: auth::jwt::validate_token exists
+           - Confirm Task 4 completed: catalog::ProductService exists
+           - Verify imports resolve correctly
+           - Check that JWT Claims struct is available
+
+        2. Compilation Testing:
+           - Run 'cargo check' to verify syntax and type correctness
+           - Ensure no compilation errors or warnings
+           - Verify all dependencies resolve correctly
+           - Check that actix-web types are used properly
+
+        3. File Structure Verification:
+           - Confirm src/cart/mod.rs exists with proper exports
+           - Verify src/cart/service.rs contains CartItem, Cart, CartService
+           - Check src/api/cart_routes.rs has all handlers
+           - Validate src/api/mod.rs declares cart_routes
+           - Verify src/api/routes.rs configures cart routes
+
+        4. Authentication Integration:
+           - Verify all handlers extract Authorization header
+           - Check "Bearer " prefix handling
+           - Confirm validate_token() is called
+           - Verify user_id extraction from claims.sub
+           - Check 401 Unauthorized responses for auth failures
+
+        5. Product Integration:
+           - Verify ProductService injection in add_item handler
+           - Check get_by_id() call for product validation
+           - Confirm inventory_count checking logic
+           - Verify product snapshot storage in CartItem
+
+        6. Service Functionality (conceptual):
+           - get_or_create_cart returns existing or creates new cart
+           - add_item accumulates quantity for duplicate products
+           - remove_item filters out specific product
+           - get_cart returns user's cart or None
+           - clear_cart empties items list
+           - Each user has isolated cart
+
+        7. API Endpoint Behavior:
+           - GET /api/cart returns cart (or creates if needed)
+           - POST /api/cart/add validates product and inventory
+           - DELETE /api/cart/remove/{id} removes item
+           - POST /api/cart/clear empties cart
+           - Proper status codes: 200, 400, 401, 404
+
+        8. Thread Safety Verification:
+           - Confirm Arc&lt;Mutex&lt;HashMap&gt;&gt; pattern used correctly
+           - Check that locks are acquired and released properly
+           - Verify carts are cloned before returning
+           - Ensure no potential deadlocks or race conditions
+
+        9. Commands to execute:
+           cargo check
+           ls -la src/cart/
+           ls -la src/api/cart_routes.rs
+           grep "validate_token" src/auth/jwt.rs
+           grep "ProductService" src/catalog/service.rs
+           cat src/api/mod.rs | grep cart_routes
+
+        10. Manual verification:
+            - Review all handler implementations
+            - Check authentication flow in each handler
+            - Verify product validation logic
+            - Confirm error response formats
+            - Validate route configuration
+    </test_strategy>
+    <instructions>
+        You are implementing Task 5: Shopping Cart API for a parallel task execution test project.
+
+        CRITICAL INSTRUCTIONS:
+        - This is a Level 1 task with dependencies on Tasks 3 and 4 - VERIFY they are complete before starting
+        - Do NOT proceed if auth::jwt::validate_token or catalog::ProductService are not available
+        - Create exactly the files specified: src/cart/mod.rs, src/cart/service.rs, src/api/cart_routes.rs
+        - Update src/api/mod.rs and src/api/routes.rs for integration
+        - Use the exact struct definitions and method signatures provided in the specifications
+        - This is a test project - use in-memory storage, not a database
+        - Task 7 (Integration Tests) depends on this task being complete
+
+        IMPLEMENTATION APPROACH:
+        1. First verify Tasks 3 and 4 dependencies are available
+        2. Create cart module with service implementation
+        3. Implement API routes with JWT authentication
+        4. Update API module configuration
+        5. Validate with cargo check before marking complete
+
+        QUALITY STANDARDS:
+        - All endpoints MUST implement JWT authentication
+        - Extract user_id from JWT claims.sub field
+        - Use ProductService to validate products and check inventory
+        - Store product snapshot (name, price) in CartItem
+        - Use Arc&lt;Mutex&lt;HashMap&gt;&gt; for thread-safe user-specific cart storage
+        - Clone carts before returning to release locks quickly
+        - Return appropriate HTTP status codes: 200, 400, 401, 404
+        - Provide JSON error responses with "error" field
+        - Follow Rust naming conventions and idioms
+        - Keep code clean, simple, and well-organized
+
+        AUTHENTICATION REQUIREMENTS:
+        - All cart endpoints require valid JWT token
+        - Extract from Authorization header with "Bearer " prefix
+        - Call validate_token() from Task 3
+        - Parse user_id from claims.sub as i32
+        - Return 401 Unauthorized for any auth failure
+        - Each user can only access their own cart
+
+        PRODUCT INTEGRATION REQUIREMENTS:
+        - Use ProductService.get_by_id() to validate products exist
+        - Check product.inventory_count &gt;= quantity before adding
+        - Return 404 Not Found if product doesn't exist
+        - Return 400 Bad Request if insufficient inventory
+        - Store product snapshot in CartItem (product_id, product_name, unit_price)
+        - Snapshot prevents issues if product changes after adding to cart
+
+        CART SERVICE DESIGN:
+        - HashMap&lt;i32, Cart&gt; stores carts by cart ID
+        - One cart per user (search by user_id)
+        - Auto-incrementing cart IDs
+        - CartItem stores product snapshot
+        - add_item accumulates quantity for duplicate products
+        - remove_item removes entire product, not just quantity
+        - clear_cart empties items but keeps cart
+
+        API ROUTES STRUCTURE:
+        - Scope: /api/cart
+        - GET /api/cart - get user's cart
+        - POST /api/cart/add - add item with validation
+        - DELETE /api/cart/remove/{product_id} - remove item
+        - POST /api/cart/clear - clear all items
+        - All require authentication
+        - All extract user_id from JWT
+
+        INTEGRATION POINTS:
+        - Task 3 provides: validate_token() function and Claims struct
+        - Task 4 provides: ProductService and Product struct
+        - Task 7 will test: full user flow with auth and cart operations
+        - Ensure CartService can be instantiated and shared as web::Data
+
+        THREAD SAFETY NOTES:
+        - CartService must be Send + Sync for actix-web
+        - Use Arc for shared ownership
+        - Use Mutex for exclusive access
+        - Acquire lock, perform operation, clone result, release lock
+        - Never hold a lock while doing async operations
+
+        SUCCESS DEFINITION:
+        You have completed this task successfully when:
+        1. Dependencies from Tasks 3 and 4 are confirmed available
+        2. All cart service files created with correct implementations
+        3. All API route handlers implement JWT authentication
+        4. Product validation and inventory checking work correctly
+        5. API module configuration is updated
+        6. cargo check passes without errors or warnings
+        7. Module is ready for Task 7 to import and test
+
+        VALIDATION CHECKLIST:
+        Before marking complete, verify:
+        - [ ] Tasks 3 and 4 modules can be imported
+        - [ ] Files exist: src/cart/mod.rs, service.rs, api/cart_routes.rs
+        - [ ] CartItem has product_id, quantity, product_name, unit_price
+        - [ ] Cart has id, user_id, items
+        - [ ] CartService has carts and next_id with Arc&lt;Mutex&gt;
+        - [ ] All 5 service methods implemented
+        - [ ] All 4 API handlers implemented with JWT auth
+        - [ ] Product validation in add_item
+        - [ ] Inventory checking in add_item
+        - [ ] Proper error responses (401, 404, 400)
+        - [ ] API module updated to include cart_routes
+        - [ ] cargo check passes successfully
+
+        DO NOT:
+        - Start if Tasks 3 and 4 are not complete
+        - Add extra features beyond specifications
+        - Implement database connections (use in-memory only)
+        - Skip JWT authentication on any endpoint
+        - Skip product or inventory validation
+        - Add unnecessary complexity
+        - Mark complete if cargo check fails
+
+        DO:
+        - Wait for dependency tasks to complete
+        - Follow exact specifications provided
+        - Implement all required authentication checks
+        - Store product snapshots in CartItem
+        - Use thread-safe patterns correctly
+        - Clone data before returning from methods
+        - Return appropriate HTTP status codes
+        - Validate implementation before marking complete
+    </instructions>
+</prompt>

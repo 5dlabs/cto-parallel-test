@@ -1,0 +1,62 @@
+sequenceDiagram
+    participant Client
+    participant HttpServer
+    participant App
+    participant Routes
+    participant HealthHandler
+    participant PlaceholderHandler
+
+    Note over Client,PlaceholderHandler: Health Check Request Flow
+    Client->>HttpServer: GET /api/health
+    HttpServer->>App: Route request
+    App->>Routes: configure_routes
+    Routes->>HealthHandler: health_check()
+    HealthHandler-->>Routes: {"status": "ok"}
+    Routes-->>App: HttpResponse 200
+    App-->>HttpServer: Response
+    HttpServer-->>Client: 200 OK
+
+    Note over Client,PlaceholderHandler: Placeholder Route Flow
+    Client->>HttpServer: GET /api/users
+    HttpServer->>App: Route request
+    App->>Routes: configure_routes
+    Routes->>PlaceholderHandler: user_routes
+    PlaceholderHandler-->>Routes: HttpResponse 501
+    Routes-->>App: Not Implemented
+    App-->>HttpServer: Response
+    HttpServer-->>Client: 501 Not Implemented
+
+---
+
+graph TB
+    subgraph "Application Architecture"
+        Main[main.rs<br/>HttpServer Setup]
+        ApiMod[api/mod.rs<br/>Module Exports]
+        Routes[api/routes.rs<br/>Route Configuration]
+        Schema[schema.rs<br/>From Task 1]
+    end
+
+    subgraph "Route Hierarchy"
+        API[/api]
+        Health[/api/health<br/>GET - Implemented]
+        Users[/api/users<br/>Placeholder]
+        Products[/api/products<br/>Placeholder]
+    end
+
+    Main --> ApiMod
+    Main --> Schema
+    ApiMod --> Routes
+    Routes --> Schema
+    Routes --> API
+    API --> Health
+    API --> Users
+    API --> Products
+
+    style Health fill:#90EE90
+    style Users fill:#FFE4B5
+    style Products fill:#FFE4B5
+    style Schema fill:#87CEEB
+
+    classDef implemented fill:#90EE90
+    classDef placeholder fill:#FFE4B5
+    classDef dependency fill:#87CEEB
