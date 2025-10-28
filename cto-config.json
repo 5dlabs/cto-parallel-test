@@ -173,6 +173,29 @@
         ],
         "localServers": {}
       }
+    },
+    "blaze": {
+      "githubApp": "5DLabs-Blaze",
+      "cli": "codex",
+      "model": "gpt-5-codex",
+      "modelRotation": {
+        "enabled": true,
+        "models": [
+          "gpt-5-codex",
+          "claude-sonnet-4-5-20250929",
+          "claude-opus-4-1-20250805"
+        ]
+      },
+      "tools": {
+        "remote": [
+          "brave_search_brave_web_search",
+          "context7_get_library_docs",
+          "agent_docs_codex_query",
+          "agent_docs_cursor_query",
+          "agent_docs_opencode_query"
+        ],
+        "localServers": {}
+      }
     }
   }
 }
