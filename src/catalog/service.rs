@@ -176,14 +176,14 @@ mod tests {
     fn test_get_all_returns_all_products() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Product A".to_string(),
             description: "Description A".to_string(),
             price: Decimal::from_str("5.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Product B".to_string(),
             description: "Description B".to_string(),
             price: Decimal::from_str("15.00").unwrap(),
@@ -247,14 +247,14 @@ mod tests {
     fn test_filter_by_name_contains() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Blue Widget".to_string(),
             description: "Blue colored widget".to_string(),
             price: Decimal::from_str("10.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Red Gadget".to_string(),
             description: "Red colored gadget".to_string(),
             price: Decimal::from_str("20.00").unwrap(),
@@ -268,7 +268,7 @@ mod tests {
             in_stock: None,
         };
 
-        let results = service.filter(filter);
+        let results = service.filter(&filter);
         assert_eq!(results.len(), 1);
         assert!(results[0].name.contains("Widget"));
     }
@@ -277,21 +277,21 @@ mod tests {
     fn test_filter_by_price_range() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Cheap Item".to_string(),
             description: "Low price".to_string(),
             price: Decimal::from_str("5.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Mid Item".to_string(),
             description: "Medium price".to_string(),
             price: Decimal::from_str("15.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Expensive Item".to_string(),
             description: "High price".to_string(),
             price: Decimal::from_str("50.00").unwrap(),
@@ -305,7 +305,7 @@ mod tests {
             in_stock: None,
         };
 
-        let results = service.filter(filter);
+        let results = service.filter(&filter);
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].name, "Mid Item");
     }
@@ -314,14 +314,14 @@ mod tests {
     fn test_filter_by_in_stock() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Available".to_string(),
             description: "In stock".to_string(),
             price: Decimal::from_str("10.00").unwrap(),
             inventory_count: 5,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Out of Stock".to_string(),
             description: "Not available".to_string(),
             price: Decimal::from_str("10.00").unwrap(),
@@ -335,7 +335,7 @@ mod tests {
             in_stock: Some(true),
         };
 
-        let results = service.filter(filter);
+        let results = service.filter(&filter);
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].name, "Available");
     }
@@ -344,21 +344,21 @@ mod tests {
     fn test_filter_combines_all_criteria() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Blue Widget".to_string(),
             description: "Match all".to_string(),
             price: Decimal::from_str("15.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Blue Gadget".to_string(),
             description: "Wrong price".to_string(),
             price: Decimal::from_str("50.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Red Widget".to_string(),
             description: "Wrong name".to_string(),
             price: Decimal::from_str("15.00").unwrap(),
@@ -372,7 +372,7 @@ mod tests {
             in_stock: Some(true),
         };
 
-        let results = service.filter(filter);
+        let results = service.filter(&filter);
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].name, "Blue Widget");
     }
@@ -381,14 +381,14 @@ mod tests {
     fn test_empty_filter_returns_all() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Product 1".to_string(),
             description: "First".to_string(),
             price: Decimal::from_str("10.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Product 2".to_string(),
             description: "Second".to_string(),
             price: Decimal::from_str("20.00").unwrap(),
@@ -402,7 +402,7 @@ mod tests {
             in_stock: None,
         };
 
-        let results = service.filter(filter);
+        let results = service.filter(&filter);
         assert_eq!(results.len(), 2);
     }
 
@@ -414,7 +414,7 @@ mod tests {
         let service_clone = service.clone();
 
         let handle = thread::spawn(move || {
-            service_clone.create(NewProduct {
+            let _ = service_clone.create(NewProduct {
                 name: "Thread Product".to_string(),
                 description: "Created in thread".to_string(),
                 price: Decimal::from_str("10.00").unwrap(),
