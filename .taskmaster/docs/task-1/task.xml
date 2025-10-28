@@ -1,157 +1,210 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <prompt>
-    <role>You are a senior Rust backend developer specializing in database schema design with Diesel ORM and PostgreSQL.</role>
+    <role>You are a senior Rust backend developer specializing in database design with Diesel ORM and PostgreSQL.</role>
+
     <task>
         <id>1</id>
         <title>Database Schema Setup</title>
-        <description>Create basic database schema files and configuration for the Rust API project. Implement schema definitions using Diesel ORM for PostgreSQL, set up migration files, and configure database dependencies in Cargo.toml.</description>
+        <description>Create basic database schema files and configuration for the Rust API project using Diesel ORM. This includes defining table schemas for users, products, carts, and cart items, along with initial migration files and dependency configuration.</description>
         <priority>high</priority>
         <status>pending</status>
         <dependencies></dependencies>
         <level>0</level>
         <estimated_time>30 minutes</estimated_time>
     </task>
+
     <technical_specifications>
-        <spec>Use Diesel 2.1.0 ORM with PostgreSQL and r2d2 connection pooling features</spec>
-        <spec>Define four core tables: users, products, carts, and cart_items</spec>
-        <spec>Use appropriate SQL data types: Integer, Varchar, Text, Numeric, Timestamp</spec>
-        <spec>Create migration files following Diesel conventions for schema management</spec>
-        <spec>Include dotenv dependency for environment variable configuration</spec>
+        <spec>Use Diesel ORM version 2.1.0 with PostgreSQL and r2d2 connection pooling</spec>
+        <spec>Define schema using Diesel's table! macro with proper column types</spec>
+        <spec>Create four tables: users, products, carts, cart_items</spec>
+        <spec>Implement foreign key relationships and constraints</spec>
+        <spec>Use r2d2 0.8.10 for connection pooling</spec>
+        <spec>Use dotenv 0.15.0 for configuration management</spec>
+        <spec>Create migration files with up.sql and down.sql</spec>
+        <spec>Ensure referential integrity with CASCADE deletes where appropriate</spec>
     </technical_specifications>
+
     <implementation_details>
-        <step>
-            <number>1</number>
-            <action>Create src/schema.rs file</action>
+        <overview>This task establishes the data layer foundation for the e-commerce test API. It is a Level 0 task that runs independently in parallel with Tasks 3, 4, and 6.</overview>
+
+        <step number="1">
+            <action>Update Cargo.toml with database dependencies</action>
             <details>
-                Create a new file at src/schema.rs with Diesel table definitions:
-
-                - users table with columns: id (Integer, PK), username (Varchar), email (Varchar), password_hash (Varchar), created_at (Timestamp)
-                - products table with columns: id (Integer, PK), name (Varchar), description (Text), price (Numeric), inventory_count (Integer)
-                - carts table with columns: id (Integer, PK), user_id (Integer, FK), created_at (Timestamp)
-                - cart_items table with columns: id (Integer, PK), cart_id (Integer, FK), product_id (Integer, FK), quantity (Integer)
-
-                Use Diesel's table! macro for all definitions to ensure type safety and compile-time query verification.
+                Add to [dependencies] section:
+                - diesel = { version = "2.1.0", features = ["postgres", "r2d2"] }
+                - r2d2 = "0.8.10"
+                - dotenv = "0.15.0"
             </details>
         </step>
-        <step>
-            <number>2</number>
+
+        <step number="2">
+            <action>Create src/schema.rs with table definitions</action>
+            <details>
+                Define four tables using table! macro:
+
+                users (id) with columns:
+                - id -> Integer (primary key)
+                - username -> Varchar
+                - email -> Varchar
+                - password_hash -> Varchar
+                - created_at -> Timestamp
+
+                products (id) with columns:
+                - id -> Integer (primary key)
+                - name -> Varchar
+                - description -> Text
+                - price -> Numeric
+                - inventory_count -> Integer
+
+                carts (id) with columns:
+                - id -> Integer (primary key)
+                - user_id -> Integer
+                - created_at -> Timestamp
+
+                cart_items (id) with columns:
+                - id -> Integer (primary key)
+                - cart_id -> Integer
+                - product_id -> Integer
+                - quantity -> Integer
+            </details>
+        </step>
+
+        <step number="3">
             <action>Create migrations directory structure</action>
             <details>
-                Create migrations/ directory in project root and add initial migration:
-
-                - Create migrations/ directory
-                - Add subdirectory with timestamp-based name (e.g., 00000000000000_create_tables)
-                - Create up.sql with CREATE TABLE statements for all four tables
-                - Optionally create down.sql with DROP TABLE statements for rollback capability
-
-                Ensure migration files follow Diesel's conventions for compatibility with diesel CLI tools.
+                Create: migrations/00000000000001_create_tables/
+                This directory will contain up.sql and down.sql
             </details>
         </step>
-        <step>
-            <number>3</number>
-            <action>Update Cargo.toml dependencies</action>
+
+        <step number="4">
+            <action>Write migrations/00000000000001_create_tables/up.sql</action>
             <details>
-                Add database-related dependencies to Cargo.toml [dependencies] section:
-
-                diesel = { version = "2.1.0", features = ["postgres", "r2d2"] }
-                r2d2 = "0.8.10"
-                dotenv = "0.15.0"
-
-                These dependencies provide: Diesel ORM with PostgreSQL support, r2d2 connection pooling, and dotenv for configuration management.
+                Include CREATE TABLE statements for all four tables with:
+                - SERIAL PRIMARY KEY for id columns
+                - NOT NULL constraints on required fields
+                - UNIQUE constraints on users.username and users.email
+                - FOREIGN KEY constraints:
+                  * carts.user_id REFERENCES users(id)
+                  * cart_items.cart_id REFERENCES carts(id) ON DELETE CASCADE
+                  * cart_items.product_id REFERENCES products(id)
+                - UNIQUE constraint on cart_items(cart_id, product_id)
+                - DEFAULT CURRENT_TIMESTAMP for created_at columns
+                - DEFAULT 0 for inventory_count
             </details>
         </step>
-        <step>
-            <number>4</number>
-            <action>Validate implementation</action>
+
+        <step number="5">
+            <action>Write migrations/00000000000001_create_tables/down.sql</action>
             <details>
-                Run validation checks:
+                Include DROP TABLE IF EXISTS statements in reverse order:
+                1. cart_items (has foreign keys to carts and products)
+                2. carts (has foreign key to users)
+                3. products
+                4. users
+            </details>
+        </step>
 
-                - Execute 'cargo check' to verify syntax correctness
-                - Confirm src/schema.rs compiles without errors
-                - Verify migrations directory structure is correct
-                - Check that all dependencies resolve properly
-
-                Do not proceed to marking complete if any validation fails.
+        <step number="6">
+            <action>Verify compilation</action>
+            <details>
+                Run: cargo check
+                Ensure no syntax errors in schema.rs
+                Confirm dependencies resolve correctly
             </details>
         </step>
     </implementation_details>
+
     <acceptance_criteria>
-        <criterion>src/schema.rs file exists and contains definitions for users, products, carts, and cart_items tables using Diesel's table! macro</criterion>
-        <criterion>migrations/ directory exists with proper structure and at least one migration with up.sql file</criterion>
-        <criterion>Cargo.toml includes diesel (v2.1.0 with postgres and r2d2 features), r2d2 (v0.8.10), and dotenv (v0.15.0) dependencies</criterion>
-        <criterion>Schema definitions use correct data types: Integer for IDs and counts, Varchar for short strings, Text for long strings, Numeric for prices, Timestamp for dates</criterion>
-        <criterion>Code passes 'cargo check' without compilation errors or warnings</criterion>
-        <criterion>Migration files follow Diesel naming conventions and can be parsed by diesel CLI</criterion>
-        <criterion>All files are properly formatted and follow Rust coding standards</criterion>
+        <criterion>File src/schema.rs exists and contains valid Diesel table definitions for all four tables</criterion>
+        <criterion>Migration directory exists: migrations/00000000000001_create_tables/</criterion>
+        <criterion>Migration up.sql contains valid PostgreSQL CREATE TABLE statements with all constraints</criterion>
+        <criterion>Migration down.sql contains valid DROP TABLE statements in correct order</criterion>
+        <criterion>Cargo.toml includes all three required dependencies with correct versions and features</criterion>
+        <criterion>cargo check completes without errors</criterion>
+        <criterion>Schema definitions use correct Diesel column types</criterion>
+        <criterion>Foreign key relationships are properly defined in SQL</criterion>
+        <criterion>All tables specify primary keys correctly</criterion>
+        <criterion>UNIQUE constraints are applied to users.username, users.email, and cart_items(cart_id, product_id)</criterion>
     </acceptance_criteria>
+
     <test_strategy>
-        Validation approach for this schema-only task:
+        <validation>
+            Manual validation steps:
 
-        1. Compilation Testing:
-           - Run 'cargo check' to verify syntax
-           - Ensure no compilation errors in schema definitions
-           - Verify dependencies resolve correctly
+            1. Verify file existence:
+               - ls -la src/schema.rs
+               - ls -la migrations/
 
-        2. File Structure Verification:
-           - Confirm src/schema.rs exists with all 4 table definitions
-           - Verify migrations/ directory structure
-           - Check Cargo.toml has all required dependencies
+            2. Check Rust compilation:
+               - cargo check
 
-        3. Schema Validation:
-           - Verify table! macro usage is correct
-           - Check column names and types match requirements
-           - Ensure primary keys are properly defined
+            3. Validate dependencies:
+               - cargo tree | grep diesel
+               - cargo tree | grep r2d2
+               - cargo tree | grep dotenv
 
-        4. Integration Readiness:
-           - Schema is importable via 'use crate::schema::*;'
-           - Table definitions are accessible to other modules
-           - Ready for use by Task 2 (API Endpoints)
+            4. Syntax check SQL files:
+               - cat migrations/*/up.sql
+               - cat migrations/*/down.sql
 
-        5. Commands to execute:
-           cargo check
-           ls -la src/schema.rs
-           ls -la migrations/
-           grep -E "diesel|r2d2|dotenv" Cargo.toml
+            5. Verify schema structure:
+               - grep -c "table!" src/schema.rs  (should output: 4)
+
+            Expected outcomes:
+            - All commands complete without errors
+            - Files contain expected content
+            - Dependencies resolve correctly
+            - SQL syntax is valid PostgreSQL
+        </validation>
+
+        <integration_testing>
+            This task enables:
+            - Task 2 to import and use schema definitions in API endpoints
+            - Task 3 to work with users table for authentication
+            - Task 4 to work with products table for catalog
+            - Task 5 to work with carts tables for shopping cart functionality
+        </integration_testing>
     </test_strategy>
+
     <instructions>
-        You are implementing Task 1: Database Schema Setup for a parallel task execution test project.
+        Think step-by-step and follow the implementation plan exactly.
 
-        CRITICAL INSTRUCTIONS:
-        - This is a Level 0 task with NO dependencies - proceed immediately
-        - Create exactly the files specified: src/schema.rs, migrations/, and update Cargo.toml
-        - Use the exact table structures and dependencies provided
-        - This is a test project - keep implementation simple and focused
-        - File conflicts with Task 2 on Cargo.toml are expected and acceptable
+        1. Start by updating Cargo.toml with the exact dependencies specified
+        2. Create src/schema.rs with all four table definitions using proper Diesel syntax
+        3. Create the migrations directory and migration files
+        4. Write complete SQL in up.sql with all constraints and relationships
+        5. Write corresponding DROP statements in down.sql
+        6. Verify everything compiles with cargo check
 
-        IMPLEMENTATION APPROACH:
-        1. Think step-by-step through each file creation
-        2. Use Diesel's table! macro exactly as shown in the specifications
-        3. Follow Rust and Diesel conventions for naming and structure
-        4. Include proper error handling in migration files
-        5. Validate with 'cargo check' before completing
+        Use standard Diesel patterns and conventions. Include all necessary imports.
+        Ensure proper error handling is possible (though this is a test/placeholder implementation).
 
-        QUALITY STANDARDS:
-        - All schema definitions must be syntactically correct
-        - Use appropriate SQL data types for each column
-        - Follow Diesel ORM best practices
-        - Ensure migration files are properly structured
-        - Keep code clean and well-organized
+        Remember: Task 2 will also modify Cargo.toml, so use standard formatting.
+        Keep implementations simple and focused on correct file structure.
 
-        INTEGRATION POINTS:
-        - Task 2 (API Endpoints) depends on this schema
-        - Task 3 (Auth) will use users table
-        - Task 4 (Catalog) will use products table
-        - Task 5 (Cart) will use carts and cart_items tables
-
-        SUCCESS DEFINITION:
-        You have completed this task successfully when:
-        1. All required files are created with correct content
-        2. 'cargo check' passes without errors
-        3. Schema is ready for use by dependent tasks
-        4. Code follows Rust and Diesel conventions
-
-        DO NOT add extra features, additional tables, or unnecessary complexity.
-        DO NOT skip validation steps.
-        DO mark the task complete only after all acceptance criteria are met.
+        This is a Level 0 task with no dependencies - you can start immediately.
+        Other Level 0 tasks (3, 4, 6) are running in parallel.
+        Task 2 depends on your completion.
     </instructions>
+
+    <context>
+        <project>
+            <name>Parallel Task Execution Test</name>
+            <repository>https://github.com/5dlabs/cto-parallel-test</repository>
+            <purpose>Testing parallel task orchestration, dependency management, and conflict detection</purpose>
+        </project>
+
+        <architecture>
+            <component>Database Layer</component>
+            <technology>Rust + Diesel ORM + PostgreSQL</technology>
+            <pattern>Repository pattern with ORM abstraction</pattern>
+        </architecture>
+
+        <constraints>
+            <constraint>This is a test project - focus on structure over production quality</constraint>
+            <constraint>File modifications may conflict with other parallel tasks</constraint>
+            <constraint>Simple, clear implementations preferred over complex patterns</constraint>
+        </constraints>
+    </context>
 </prompt>

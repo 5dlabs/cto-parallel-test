@@ -1,190 +1,97 @@
-# Autonomous Agent Prompt: Integration Tests
+# Task 7: Integration Tests - Agent Prompt
 
-## Mission
-You are tasked with creating comprehensive integration tests for the Rust API project. These tests verify that all system components work together correctly, covering the complete user flow from authentication through cart operations, API endpoints, and authentication mechanisms.
+You are a Rust test engineer tasked with creating comprehensive integration tests for the e-commerce API.
 
-## Prerequisites
+## Your Mission
+Write integration tests that validate the complete application: authentication, product catalog, shopping cart, and end-to-end user flows. Ensure all modules work together correctly.
 
-**IMPORTANT**: This is a Level 2 task with dependencies on:
-- **Task 2 (API Endpoints)** - Must be complete for route configuration
-- **Task 5 (Shopping Cart API)** - Must be complete for cart functionality
-- **Task 6 (Frontend Components)** - Should exist (file check)
+## What You Must Create
 
-Before starting, verify these modules exist:
-- `src/api/routes.rs` with `configure_routes()` function
-- `src/cart/service.rs` with `CartService`
-- `src/catalog/service.rs` with `ProductService`
-- `src/auth/jwt.rs` with `create_token()` and `validate_token()`
+### 1. Create `tests/auth_tests.rs`
+Unit tests for authentication:
 
-If these are not available, WAIT for dependency tasks to complete.
+**Test JWT creation and validation**:
+- Create token with user ID
+- Validate token
+- Verify user ID extracted correctly
 
-## What You Need to Do
+**Test password hashing and verification**:
+- Hash a password
+- Create User with hashed password
+- Verify correct password returns true
+- Verify incorrect password returns false
 
-### 1. Create Integration Tests (`tests/integration_tests.rs`)
+### 2. Create `tests/api_tests.rs`
+API endpoint tests:
 
-Create the file with health check and full user flow tests - use complete code from task.txt section 1.
+**Test health check**:
+- Initialize test app with configure_routes
+- GET /api/health
+- Verify 200 OK response
+- Verify JSON body {"status":"ok"}
 
-**Key test functions:**
-- `test_health_check()`: Verify /api/health returns 200 OK with {"status": "ok"}
-- `test_full_user_flow()`: Test complete flow:
-  1. Create ProductService and CartService
-  2. Create test product
-  3. Generate JWT token for user ID 1
-  4. POST to /api/cart/add with product and quantity
-  5. GET /api/cart to retrieve cart
-  6. Assert cart contains correct product and quantity
+**Test product routes**:
+- Create ProductService with test products
+- Initialize test app
+- Test GET /api/products returns all products
+- Test GET /api/products/:id returns specific product
 
-### 2. Create API Tests (`tests/api_tests.rs`)
+### 3. Create `tests/integration_tests.rs`
+Full user flow integration test:
 
-Create the file with product endpoint tests - use complete code from task.txt section 2.
+**Test complete workflow**:
+1. Create ProductService and CartService
+2. Initialize test app with both services
+3. Create test product in ProductService
+4. Create JWT token for test user (ID: "1")
+5. POST /api/cart/add with token and product
+6. Verify 200 OK response
+7. GET /api/cart with token
+8. Verify cart contains correct item with quantity
 
-**Key test function:**
-- `test_product_routes()`:
-  - Create ProductService with 2 test products
-  - Test GET /api/products returns all products
-  - Test GET /api/products/1 returns correct product by ID
-  - Assert response status codes and data correctness
+### 4. Update `src/main.rs`
+Make modules public for testing:
+```rust
+pub mod api;
+pub mod schema;
+pub mod auth;
+pub mod catalog;
+pub mod cart;
+```
 
-### 3. Create Authentication Tests (`tests/auth_tests.rs`)
+## Key Requirements
 
-Create the file with JWT and password tests - use complete code from task.txt section 3.
+✅ **Test Framework**:
+- Use `#[test]` for unit tests
+- Use `#[actix_web::test]` for API tests
+- Use actix_web::test utilities (init_service, TestRequest)
 
-**Key test functions:**
-- `test_jwt_creation_and_validation()`:
-  - Create token for user ID "123"
-  - Validate token
-  - Assert claims.sub matches user ID
+✅ **Test Coverage**:
+- Authentication (JWT, passwords)
+- API endpoints (health, products)
+- Full user flow (create product → add to cart → get cart)
 
-- `test_password_hashing_and_verification()`:
-  - Hash password "secure_password"
-  - Create User with hashed password
-  - Verify correct password returns true
-  - Verify wrong password returns false
-
-### 4. Update Main Application (`src/main.rs`)
-
-Modify src/main.rs to properly initialize services - use code from task.txt section 4.
-
-**Key changes:**
-- Import all modules: api, schema, auth, catalog, cart
-- Initialize ProductService and CartService as web::Data
-- Clone services in HttpServer closure
-- Pass services to App via app_data()
-- Configure routes
-
-## Expected Behavior
-
-After implementation:
-- Running `cargo test` executes all tests
-- All tests pass without errors
-- Health check test verifies API is responding
-- User flow test proves end-to-end integration works
-- API tests validate product endpoints
-- Auth tests confirm JWT and password security
-- Application is properly testable
-
-## Validation Steps
-
-Before marking complete, verify:
-
-1. **File Structure**
-   ```bash
-   ls -la tests/integration_tests.rs
-   ls -la tests/api_tests.rs
-   ls -la tests/auth_tests.rs
-   ```
-
-2. **Compilation Check**
-   ```bash
-   cargo test --no-run
-   ```
-   Should compile all tests without errors.
-
-3. **Run Tests**
-   ```bash
-   cargo test
-   ```
-   Should show all tests passing:
-   - test integration_tests::test_health_check ... ok
-   - test integration_tests::test_full_user_flow ... ok
-   - test api_tests::test_product_routes ... ok
-   - test auth_tests::test_jwt_creation_and_validation ... ok
-   - test auth_tests::test_password_hashing_and_verification ... ok
-
-4. **Check Test Output**
-   Verify no compilation errors, no test failures, no panics.
-
-## Constraints
-
-- This is a test project - tests verify placeholder functionality
-- Wait for Tasks 2, 5 to complete before starting
-- Use actix-web test utilities for API tests
-- Use standard #[test] for unit tests
-- Import from crate using `use crate::module::...`
-- Each test should be independent (no shared state)
-- Create services fresh for each test
-
-## Common Issues and Solutions
-
-**Issue**: Cannot find `configure_routes` or other imports
-- **Solution**: Ensure Task 2 is complete and modules are properly declared
-
-**Issue**: Cannot create JWT tokens
-- **Solution**: Ensure Task 3 is complete with auth::jwt module
-
-**Issue**: CartService or ProductService not found
-- **Solution**: Ensure Tasks 4 and 5 are complete
-
-**Issue**: Tests compile but fail
-- **Solution**: Check that services are initialized correctly in tests
-
-**Issue**: #[actix_web::test] macro not found
-- **Solution**: Ensure actix-web is in dev-dependencies with macros feature
+✅ **Assertions**:
+- Verify HTTP status codes
+- Verify JSON response structures
+- Verify data correctness
 
 ## Success Definition
-
 Task is complete when:
-- ✅ 3 test files created: integration_tests.rs, api_tests.rs, auth_tests.rs
-- ✅ src/main.rs updated with service initialization
-- ✅ All test files use correct imports (crate::)
-- ✅ Health check test implemented
-- ✅ Full user flow test implemented
-- ✅ Product API tests implemented
-- ✅ JWT and password tests implemented
-- ✅ cargo test --no-run compiles successfully
-- ✅ cargo test runs all tests
-- ✅ All tests pass
+- All 3 test files created
+- `cargo test` passes all tests
+- Tests cover auth, API, and integration scenarios
+- Full user flow test validates end-to-end functionality
 
-## Integration Notes
+## Context
+**Your dependencies**:
+- Task 2: API routing (test endpoints)
+- Task 3: Authentication (test JWT)
+- Task 4: Catalog (test products)
+- Task 5: Cart (test cart operations)
 
-### With Task 2 (API Endpoints)
-- Import: `use crate::api::routes::configure_routes;`
-- Use: Pass to App with `.configure(configure_routes)`
-- Health check must be at /api/health
+This is a **Level 2** task - final validation of the system.
 
-### With Task 3 (Authentication)
-- Import: `use crate::auth::jwt::{create_token, validate_token};`
-- Import: `use crate::auth::models::User;`
-- Use: `create_token("user_id")` for test tokens
-- Use: `validate_token(token)` to verify tokens
+---
 
-### With Task 4 (Product Catalog)
-- Import: `use crate::catalog::ProductService;`
-- Import: `use crate::catalog::models::{Product, NewProduct};`
-- Use: `ProductService::new()` to create service
-- Use: `product_service.create(...)` to add test products
-
-### With Task 5 (Shopping Cart)
-- Import: `use crate::cart::CartService;`
-- Use: `CartService::new()` to create service
-- Test: Cart endpoints with JWT authentication
-- Verify: Product integration with cart
-
-## Next Steps
-
-After completing this task:
-1. All 7 tasks are complete
-2. Full system integration is verified
-3. Project demonstrates parallel task execution
-4. Tests serve as documentation of system behavior
-5. Platform can measure actual vs theoretical speedup
+**Start working now. Create comprehensive tests and verify the entire system works.**

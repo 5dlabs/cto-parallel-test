@@ -1,30 +1,37 @@
 # Task 1: Database Schema Setup
 
 ## Overview
-Create basic database schema files and configuration for the Rust API project. This is a foundational Level 0 task that has no dependencies and should execute in parallel with other Level 0 tasks.
+Create basic database schema files and configuration for the Rust API project. This is a Level 0 task (no dependencies) that establishes the foundational data layer for the application.
 
 ## Context
-This task is part of the parallel task execution test project. It establishes the database foundation that Task 2 (API Endpoints) will depend on. The implementation uses Diesel ORM for PostgreSQL database management.
+This task is part of a parallel task execution test to validate the CTO platform's orchestration capabilities. The database schema will define tables for users, products, carts, and cart items that subsequent tasks will build upon.
 
 ## Objectives
-1. Create database schema definitions in `src/schema.rs`
-2. Set up initial migration files in the `migrations/` directory
-3. Add database dependencies to `Cargo.toml`
+1. Define database schema with Diesel ORM
+2. Create initial migration files
+3. Configure database dependencies in Cargo.toml
+4. Establish data models for users, products, carts, and cart items
 
 ## Dependencies
-**None** - This is a Level 0 task that can run independently.
+**None** - This is a Level 0 task that can run independently in parallel with Tasks 3, 4, and 6.
 
-## Files to Create/Modify
+## Files to Create
+- `src/schema.rs` - Diesel table definitions
+- `migrations/` - Directory containing database migration files
+- `Cargo.toml` - Updates for database dependencies
 
-### 1. `src/schema.rs`
-Create basic table definitions for the application:
-- **users** table: User authentication and profile data
-- **products** table: Product catalog information
-- **carts** table: Shopping cart instances
-- **cart_items** table: Items within shopping carts
+## Technical Specifications
 
+### Database Technology
+- **ORM**: Diesel 2.1.0
+- **Database**: PostgreSQL (implied by Diesel features)
+- **Connection Pool**: r2d2 0.8.10
+- **Configuration**: dotenv 0.15.0
+
+### Schema Design
+
+#### Users Table
 ```rust
-// Basic schema definitions using Diesel
 table! {
     users (id) {
         id -> Integer,
@@ -34,7 +41,10 @@ table! {
         created_at -> Timestamp,
     }
 }
+```
 
+#### Products Table
+```rust
 table! {
     products (id) {
         id -> Integer,
@@ -44,7 +54,10 @@ table! {
         inventory_count -> Integer,
     }
 }
+```
 
+#### Carts Table
+```rust
 table! {
     carts (id) {
         id -> Integer,
@@ -52,7 +65,10 @@ table! {
         created_at -> Timestamp,
     }
 }
+```
 
+#### Cart Items Table
+```rust
 table! {
     cart_items (id) {
         id -> Integer,
@@ -63,14 +79,10 @@ table! {
 }
 ```
 
-### 2. `migrations/` Directory
-Create basic migration files for initial schema setup:
-- Migration files follow Diesel's naming convention
-- Include up.sql and down.sql for each migration
-- Ensure migrations can be applied and rolled back cleanly
+## Implementation Plan
 
-### 3. `Cargo.toml` Updates
-Add database-related dependencies:
+### Step 1: Update Cargo.toml
+Add the following dependencies to `Cargo.toml`:
 
 ```toml
 [dependencies]
@@ -79,68 +91,96 @@ r2d2 = "0.8.10"
 dotenv = "0.15.0"
 ```
 
-## Implementation Steps
+### Step 2: Create Schema File
+Create `src/schema.rs` with all table definitions using Diesel's `table!` macro. This file will be auto-generated initially by Diesel CLI but can be created manually for this test.
 
-1. **Create Schema File**
-   - Create `src/schema.rs` with all table definitions
-   - Use Diesel's `table!` macro for type-safe schema definitions
-   - Define relationships between tables implicitly through foreign key columns
+### Step 3: Create Migrations Directory
+Create `migrations/` directory structure:
+- `migrations/00000000000000_diesel_initial_setup/`
+- `migrations/00000000000001_create_tables/`
 
-2. **Set Up Migrations**
-   - Create `migrations/` directory if it doesn't exist
-   - Add initial migration files for schema creation
-   - Ensure migration structure follows Diesel conventions
+Each migration should contain:
+- `up.sql` - SQL to apply the migration
+- `down.sql` - SQL to rollback the migration
 
-3. **Update Dependencies**
-   - Modify `Cargo.toml` to include Diesel with PostgreSQL support
-   - Add r2d2 for connection pooling
-   - Include dotenv for environment variable management
+### Step 4: Write Migration SQL
+Example `up.sql` for initial tables:
 
-4. **Validation**
-   - Ensure schema definitions are syntactically correct
-   - Verify migration files can be parsed
-   - Check that dependencies resolve correctly
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
-## Technical Considerations
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price NUMERIC(10, 2) NOT NULL,
+    inventory_count INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE carts (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE cart_items (
+    id SERIAL PRIMARY KEY,
+    cart_id INTEGER NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
+    product_id INTEGER NOT NULL REFERENCES products(id),
+    quantity INTEGER NOT NULL DEFAULT 1,
+    UNIQUE(cart_id, product_id)
+);
+```
+
+## Architectural Considerations
 
 ### Database Choice
-- Using PostgreSQL as the database backend
-- Diesel 2.1.0 provides compile-time query verification
-- R2D2 connection pool for efficient connection management
+PostgreSQL is selected via Diesel's features. The schema uses standard SQL types that map cleanly to Rust types through Diesel's type system.
 
-### Schema Design
-- Simple normalized schema appropriate for e-commerce use case
-- Foreign key relationships implicit in column names
-- Timestamp fields for audit trails
+### Relationship Design
+- **Users → Carts**: One-to-many relationship
+- **Carts → Cart Items**: One-to-many with CASCADE delete
+- **Products → Cart Items**: One-to-many
+- Enforced at the database level with foreign keys
 
-### Migration Strategy
-- Migrations should be idempotent where possible
-- Down migrations should cleanly reverse up migrations
-- Follow Diesel's migration conventions for tooling compatibility
+### Scalability Notes
+This is a test/placeholder implementation. In production:
+- Consider adding indexes on frequently queried columns
+- Add created_at/updated_at to all tables
+- Implement soft deletes for audit trails
+- Consider partitioning strategies for large tables
 
-## Integration Points
+## Risks and Considerations
 
-- **Task 2 (API Endpoints)**: Will import and use schema definitions
-- **Task 3 (User Authentication)**: Will use users table
-- **Task 4 (Product Catalog)**: Will use products table
-- **Task 5 (Shopping Cart)**: Will use carts and cart_items tables
+1. **File Conflicts**: Task 2 (API Endpoints) will also modify `Cargo.toml` to add web framework dependencies. The orchestrator should detect and merge these changes.
 
-## Risks and Mitigation
+2. **Migration Order**: Migrations must maintain referential integrity. The provided structure ensures parent tables are created before child tables.
 
-**Risk**: Cargo.toml conflicts with Task 2
-- **Mitigation**: This is expected and will be handled by the CTO platform's conflict detection
+3. **Minimal Implementation**: This is intentionally minimal to focus on task orchestration testing, not production-ready database design.
 
-**Risk**: Schema changes needed after initial creation
-- **Mitigation**: Keep schema simple and focused on core requirements
+## Testing Strategy
+See `acceptance-criteria.md` for detailed validation steps.
 
 ## Success Criteria
+- All files created in correct locations
+- Schema definitions are syntactically valid Rust code
+- Migration SQL is valid PostgreSQL
+- Dependencies resolve correctly
+- Code compiles without errors
 
-1. ✅ `src/schema.rs` exists with all four table definitions
-2. ✅ Migration files created in `migrations/` directory
-3. ✅ `Cargo.toml` includes correct database dependencies
-4. ✅ Schema definitions are syntactically valid
-5. ✅ Dependencies can be resolved by Cargo
-6. ✅ Migration files follow Diesel conventions
+## Related Tasks
+- **Task 2**: API Endpoints (depends on this task)
+- **Task 3**: User Authentication (uses users table)
+- **Task 4**: Product Catalog (uses products table)
+- **Task 5**: Shopping Cart (depends on Tasks 3 & 4, uses carts tables)
 
-## Estimated Effort
-**30 minutes** - Simple file creation with predefined structure
+## References
+- [Diesel Documentation](https://diesel.rs/)
+- [PostgreSQL Data Types](https://www.postgresql.org/docs/current/datatype.html)
+- Project PRD: `.taskmaster/docs/prd.txt`

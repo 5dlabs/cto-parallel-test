@@ -1,102 +1,81 @@
-# Autonomous Agent Prompt: Database Schema Setup
+# Task 1: Database Schema Setup - Agent Prompt
 
-## Mission
-You are tasked with creating database schema files and configuration for a Rust API project using Diesel ORM. This is a straightforward file creation task with predefined structure.
+You are a Rust backend developer tasked with creating database schema files for a test e-commerce API project.
 
-## What You Need to Do
+## Your Mission
+Create basic database schema files and configuration using Diesel ORM. This is part of a parallel execution test, so focus on creating correct, complete file structures rather than production-ready implementations.
 
-### 1. Create Database Schema (`src/schema.rs`)
-Create a new file at `src/schema.rs` with the following table definitions:
+## What You Must Create
 
-```rust
-// Basic schema definitions
-table! {
-    users (id) {
-        id -> Integer,
-        username -> Varchar,
-        email -> Varchar,
-        password_hash -> Varchar,
-        created_at -> Timestamp,
-    }
-}
-
-table! {
-    products (id) {
-        id -> Integer,
-        name -> Varchar,
-        description -> Text,
-        price -> Numeric,
-        inventory_count -> Integer,
-    }
-}
-
-table! {
-    carts (id) {
-        id -> Integer,
-        user_id -> Integer,
-        created_at -> Timestamp,
-    }
-}
-
-table! {
-    cart_items (id) {
-        id -> Integer,
-        cart_id -> Integer,
-        product_id -> Integer,
-        quantity -> Integer,
-    }
-}
-```
-
-### 2. Create Migration Files (`migrations/`)
-Create the migrations directory and add basic migration files:
-- Create `migrations/` directory in the project root
-- Add initial migration for schema creation
-- Follow Diesel migration conventions (timestamp-based naming)
-
-Example migration structure:
-```
-migrations/
-  └── 00000000000000_create_tables/
-      ├── up.sql
-      └── down.sql
-```
-
-### 3. Update Cargo.toml
+### 1. Update `Cargo.toml`
 Add these dependencies to the `[dependencies]` section:
-
 ```toml
 diesel = { version = "2.1.0", features = ["postgres", "r2d2"] }
 r2d2 = "0.8.10"
 dotenv = "0.15.0"
 ```
 
-## Expected Behavior
-- All schema definitions use Diesel's `table!` macro
-- Migration files can be applied to create database schema
-- Dependencies are correctly specified for PostgreSQL support
+### 2. Create `src/schema.rs`
+Define these four tables using Diesel's `table!` macro:
+- **users**: id, username, email, password_hash, created_at
+- **products**: id, name, description, price, inventory_count
+- **carts**: id, user_id, created_at
+- **cart_items**: id, cart_id, product_id, quantity
 
-## Validation
-Before marking this task complete:
-1. Verify `src/schema.rs` exists and compiles
-2. Verify `migrations/` directory has proper structure
-3. Verify `Cargo.toml` has database dependencies
-4. Run `cargo check` to ensure no syntax errors
+Use appropriate Diesel column types (Integer, Varchar, Text, Numeric, Timestamp).
+
+### 3. Create Migration Files
+Set up the `migrations/` directory with initial migration:
+- Create directory structure
+- Write `up.sql` with CREATE TABLE statements
+- Write `down.sql` with DROP TABLE statements
+- Ensure proper foreign key relationships and constraints
+
+## Key Requirements
+
+✅ **File Locations**:
+- Schema: `src/schema.rs`
+- Migrations: `migrations/00000000000001_create_tables/up.sql` and `down.sql`
+- Dependencies: Update existing `Cargo.toml`
+
+✅ **Data Integrity**:
+- Use foreign keys for relationships (user_id, cart_id, product_id)
+- Add UNIQUE constraints where appropriate (username, email)
+- Include CASCADE deletes for cart_items → carts relationship
+
+✅ **Completeness**:
+- All four tables must be defined
+- Schema.rs must compile without errors
+- Migration SQL must be valid PostgreSQL
 
 ## Constraints
-- This is a test project - keep implementation simple
-- Use exact table names and column types as specified
-- No actual database connection required - files only
-- Do not add extra features beyond requirements
+- This is a **Level 0** task with no dependencies
+- Other tasks may also modify `Cargo.toml` - use standard formatting
+- Keep implementations simple - this is a test project
+- Use placeholder/example data structures, not production patterns
+
+## Validation
+After completing the work:
+1. Verify all files exist at specified paths
+2. Ensure `cargo check` passes (schema.rs is valid Rust)
+3. Validate migration SQL syntax
+4. Confirm dependencies are correctly specified
 
 ## Success Definition
 Task is complete when:
-- ✅ `src/schema.rs` created with 4 table definitions
-- ✅ Migration directory structure created
-- ✅ `Cargo.toml` updated with dependencies
-- ✅ Code passes syntax validation
+- `src/schema.rs` exists with all 4 table definitions
+- `migrations/` directory contains valid migration files
+- `Cargo.toml` includes all required dependencies
+- All files are syntactically correct and would compile
 
-## Notes
-- This task has no dependencies and can run in parallel
-- Task 2 will depend on this schema being available
-- File conflicts with Task 2 on Cargo.toml are expected and acceptable
+## Context
+You're working on a parallel task execution test. Other tasks running simultaneously:
+- Task 3: User Authentication
+- Task 4: Product Catalog
+- Task 6: Frontend Components
+
+Your schema provides the foundation for Task 2 (API Endpoints), which depends on this work.
+
+---
+
+**Start working now. Create the files, write the code, and verify completeness.**

@@ -1,32 +1,77 @@
 # Task 2: API Endpoints
 
 ## Overview
-Create REST API endpoints for core operations of the application using Actix-web framework. This is a Level 1 task that depends on Task 1 (Database Schema Setup) and establishes the HTTP server and routing infrastructure.
+Create REST API endpoints for core operations of the application using Actix-web framework. This is a Level 1 task that depends on Task 1 (Database Schema) and provides the HTTP interface layer for the application.
 
 ## Context
-This task builds the backbone REST API structure for the e-commerce application. It creates the main HTTP server, configures routing, and sets up placeholder endpoints that will be implemented by other tasks. This is part of the parallel task execution test to validate dependency management.
+This task establishes the web server and routing infrastructure for the e-commerce test API. It creates the foundation that other modules (authentication, catalog, cart) will build upon by registering their route handlers.
 
 ## Objectives
-1. Create modular API structure with `src/api/mod.rs` and `src/api/routes.rs`
-2. Configure Actix-web HTTP server in `src/main.rs`
-3. Set up health check endpoint and placeholder routes
-4. Add Actix-web and serialization dependencies to `Cargo.toml`
+1. Set up Actix-web HTTP server
+2. Create modular routing structure
+3. Implement health check endpoint
+4. Define placeholder route configurations for users and products
+5. Configure the main application entry point
 
 ## Dependencies
-- **Task 1 (Database Schema Setup)**: Required - needs schema definitions in `src/schema.rs`
-- Level: 1 (runs after Level 0 tasks complete)
+- **Task 1: Database Schema Setup** - Required to import schema definitions
+
+## Blocked By
+None initially, but needs Task 1's schema.rs to complete successfully.
 
 ## Files to Create/Modify
+- `src/api/mod.rs` - API module exports
+- `src/api/routes.rs` - Route definitions and configuration
+- `src/main.rs` - Application entry point and server setup
+- `Cargo.toml` - Add Actix-web dependencies
 
-### 1. `src/api/mod.rs`
-Module declaration file to export API components:
+## Technical Specifications
+
+### Web Framework
+- **Framework**: Actix-web 4.3.1
+- **Serialization**: Serde 1.0 with derive feature
+- **JSON**: serde_json 1.0
+- **Server**: Asynchronous HTTP server on 127.0.0.1:8080
+
+### Architecture Pattern
+- **Modular routing**: Separate modules for different API domains
+- **Scope-based organization**: `/api` base scope with nested scopes
+- **Configuration pattern**: ServiceConfig-based route registration
+- **Async runtime**: Actix-web's built-in async runtime
+
+### API Structure
+```
+/api
+├── /health (GET) - Health check endpoint
+├── /users/* - User-related endpoints (placeholder)
+└── /products/* - Product-related endpoints (placeholder)
+```
+
+## Implementation Plan
+
+### Step 1: Update Cargo.toml
+Add web framework dependencies:
+
+```toml
+[dependencies]
+actix-web = "4.3.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+```
+
+**Note**: Task 1 already added database dependencies. Ensure no conflicts.
+
+### Step 2: Create API Module (src/api/mod.rs)
+Simple module export file:
 
 ```rust
 pub mod routes;
 ```
 
-### 2. `src/api/routes.rs`
-Main routing configuration with health check and placeholder routes:
+This establishes the API module namespace and exports the routes submodule.
+
+### Step 3: Create Route Configuration (src/api/routes.rs)
+Implement the core routing logic:
 
 ```rust
 use actix_web::{web, HttpResponse, Scope};
@@ -47,24 +92,24 @@ async fn health_check() -> HttpResponse {
 }
 
 fn user_routes(cfg: &mut web::ServiceConfig) {
-    // User routes will be implemented in Task 3
+    // Placeholder - Task 3 will implement
     cfg.service(web::resource("").route(web::get().to(|| HttpResponse::NotImplemented())));
 }
 
 fn product_routes(cfg: &mut web::ServiceConfig) {
-    // Product routes will be implemented in Task 4
+    // Placeholder - Task 4 will implement
     cfg.service(web::resource("").route(web::get().to(|| HttpResponse::NotImplemented())));
 }
 ```
 
-**Key Design Decisions:**
-- Nested route scopes for organization (`/api/users`, `/api/products`)
-- Health check endpoint for monitoring
+**Key Design Decisions**:
+- `configure_routes` accepts `ServiceConfig` for modular composition
+- Health check uses Actix-web's macro routing (`#[actix_web::get]`)
 - Placeholder routes return 501 Not Implemented
-- Import schema to establish dependency on Task 1
+- Import schema to validate Task 1 dependency
 
-### 3. `src/main.rs`
-HTTP server setup and application entry point:
+### Step 4: Create Main Application (src/main.rs)
+Set up the HTTP server:
 
 ```rust
 use actix_web::{App, HttpServer};
@@ -73,7 +118,7 @@ mod schema;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    println!("Starting API server on 127.0.0.1:8080");
+    println!("Starting API server");
 
     HttpServer::new(|| {
         App::new()
@@ -85,114 +130,79 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
-**Implementation Notes:**
-- Uses `#[actix_web::main]` for async runtime
+**Key Features**:
+- Uses `#[actix_web::main]` macro for async runtime
+- Imports both `api` and `schema` modules
+- Single app instance with route configuration
 - Binds to localhost port 8080
-- Imports both api and schema modules
+- Returns IO errors for proper error propagation
 
-### 4. `Cargo.toml` Updates
-Add web framework and serialization dependencies:
+### Step 5: Verify Dependencies Resolution
+After all file changes:
 
-```toml
-[dependencies]
-actix-web = "4.3.1"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+```bash
+cargo check
+cargo tree
 ```
 
-**Expected Conflict**: Task 1 also modifies Cargo.toml (database deps). This conflict is intentional for testing the platform's merge capabilities.
+Ensure no dependency conflicts between Task 1's database deps and Task 2's web deps.
 
-## Implementation Steps
+## Architectural Considerations
 
-1. **Create API Module Structure**
-   - Create `src/api/` directory
-   - Add `mod.rs` with module exports
-   - Set up basic module organization
+### Modularity
+The routing structure is designed for extension:
+- Each domain (users, products, cart) gets its own scope
+- Route configuration is delegated to domain-specific functions
+- Future tasks can implement actual handlers in separate modules
 
-2. **Implement Route Configuration**
-   - Create `routes.rs` with configure_routes function
-   - Implement health check endpoint
-   - Add placeholder route functions
-   - Import schema to establish dependency
+### Async Design
+- All handlers are `async fn`
+- Actix-web provides actor-based concurrency
+- Non-blocking I/O for database and external services
 
-3. **Set Up HTTP Server**
-   - Update `main.rs` with Actix-web server setup
-   - Configure async runtime
-   - Add route configuration
-   - Import required modules
+### Error Handling
+- Server startup errors propagate via `std::io::Result`
+- Route handlers will implement proper error responses
+- Health check always succeeds (for monitoring)
 
-4. **Add Dependencies**
-   - Update Cargo.toml with Actix-web
-   - Add serde for JSON serialization
-   - Add serde_json for JSON handling
+### Conflict Points
+This task modifies `Cargo.toml`, which Task 1 also modified. The orchestrator must merge:
+- Task 1's database dependencies
+- Task 2's web framework dependencies
 
-5. **Test Compilation**
-   - Run `cargo check` to verify syntax
-   - Ensure imports resolve correctly
-   - Validate async/await usage
+Both sets are independent and should merge cleanly.
 
-## Technical Considerations
+## Risks and Considerations
 
-### Framework Choice: Actix-web
-- High-performance async web framework
-- Actor-based architecture
-- Built on Tokio async runtime
-- Compile-time type checking for routes
+1. **Cargo.toml Conflicts**: Both Task 1 and Task 2 modify this file. Git merge should handle cleanly since different dependencies are added.
 
-### Routing Architecture
-- Hierarchical scope-based routing
-- Centralized route configuration
-- Easy to extend with new endpoints
-- Clear separation of concerns
+2. **Schema Import**: The `use crate::schema;` line validates that Task 1 completed. Without it, compilation fails.
 
-### Placeholder Strategy
-- NotImplemented (501) responses for unfinished routes
-- Allows dependent tasks to add implementations
-- Maintains valid route structure
+3. **Placeholder Routes**: The NotImplemented responses are intentional. Tasks 3, 4, and 5 will replace these.
 
-### Module Organization
-```
-src/
-├── main.rs          (server entry point)
-├── schema.rs        (from Task 1)
-└── api/
-    ├── mod.rs       (module exports)
-    └── routes.rs    (route configuration)
-```
+4. **Port Binding**: Port 8080 must be available. In a real deployment, this would be configurable.
 
-## Integration Points
-
-- **Task 1 (Database Schema)**: Imports schema.rs to establish dependency
-- **Task 3 (User Authentication)**: Will implement user_routes
-- **Task 4 (Product Catalog)**: Will implement product_routes
-- **Task 5 (Shopping Cart API)**: Will add cart routes
-- **Task 7 (Integration Tests)**: Will test all endpoints
-
-## Risks and Mitigation
-
-**Risk**: Cargo.toml merge conflict with Task 1
-- **Mitigation**: Expected - tests platform's conflict resolution
-- **Resolution**: Manual merge or platform auto-merge
-
-**Risk**: Schema import fails if Task 1 incomplete
-- **Mitigation**: Task 2 runs at Level 1 after Task 1 completes
-- **Validation**: Check Task 1 status before starting
-
-**Risk**: Port 8080 already in use during testing
-- **Mitigation**: Documentation notes this is test code
-- **Alternative**: Use dynamic port assignment if needed
+## Testing Strategy
+See `acceptance-criteria.md` for detailed validation steps.
 
 ## Success Criteria
+- HTTP server starts without errors
+- Health check endpoint responds with 200 OK
+- Placeholder routes return 501 Not Implemented
+- Code compiles with Task 1's schema
+- Dependencies resolve without conflicts
 
-1. ✅ `src/api/mod.rs` exists with module exports
-2. ✅ `src/api/routes.rs` exists with route configuration
-3. ✅ `src/main.rs` updated with HTTP server setup
-4. ✅ `Cargo.toml` includes Actix-web dependencies
-5. ✅ Health check endpoint implemented at `/api/health`
-6. ✅ Placeholder routes exist for `/api/users` and `/api/products`
-7. ✅ Schema module imported successfully
-8. ✅ Code compiles with `cargo check`
-9. ✅ Server can start and bind to port 8080
+## Related Tasks
+- **Task 1**: Database Schema (dependency - must complete first)
+- **Task 3**: User Authentication (will implement user_routes)
+- **Task 4**: Product Catalog (will implement product_routes)
+- **Task 5**: Shopping Cart (will add cart routes)
+- **Task 7**: Integration Tests (will test these endpoints)
 
-## Estimated Effort
-**50 minutes** - Module setup, routing configuration, and server implementation
+## Diagram
+See `diagrams.mmd` for visual representation of the routing structure.
+
+## References
+- [Actix-web Documentation](https://actix.rs/)
+- [Actix-web Routing](https://actix.rs/docs/url-dispatch/)
+- Project PRD: `.taskmaster/docs/prd.txt`

@@ -1,100 +1,131 @@
-# Acceptance Criteria: Database Schema Setup
+# Task 1: Database Schema Setup - Acceptance Criteria
 
-## Required Files
+## File Creation Criteria
 
-### ✅ `src/schema.rs`
-- [ ] File exists at `src/schema.rs`
-- [ ] Contains `users` table definition with columns: id, username, email, password_hash, created_at
-- [ ] Contains `products` table definition with columns: id, name, description, price, inventory_count
-- [ ] Contains `carts` table definition with columns: id, user_id, created_at
-- [ ] Contains `cart_items` table definition with columns: id, cart_id, product_id, quantity
-- [ ] All tables use Diesel's `table!` macro
-- [ ] Correct data types for all columns (Integer, Varchar, Text, Numeric, Timestamp)
+### ✅ Required Files Exist
+- [ ] `src/schema.rs` exists
+- [ ] `migrations/` directory exists
+- [ ] Migration file `migrations/00000000000001_create_tables/up.sql` exists
+- [ ] Migration file `migrations/00000000000001_create_tables/down.sql` exists
+- [ ] `Cargo.toml` has been updated
 
-### ✅ `migrations/` Directory
-- [ ] Directory exists at `migrations/`
-- [ ] Contains at least one migration subdirectory
-- [ ] Migration follows Diesel naming conventions
-- [ ] Includes `up.sql` migration file
-- [ ] Includes `down.sql` migration file (optional but recommended)
+## Code Quality Criteria
 
-### ✅ `Cargo.toml` Updates
-- [ ] File contains `diesel = { version = "2.1.0", features = ["postgres", "r2d2"] }` dependency
-- [ ] File contains `r2d2 = "0.8.10"` dependency
-- [ ] File contains `dotenv = "0.15.0"` dependency
+### ✅ Schema Definitions (src/schema.rs)
+- [ ] File contains valid Rust syntax
+- [ ] Uses Diesel's `table!` macro correctly
+- [ ] Defines `users` table with all required columns (id, username, email, password_hash, created_at)
+- [ ] Defines `products` table with all required columns (id, name, description, price, inventory_count)
+- [ ] Defines `carts` table with all required columns (id, user_id, created_at)
+- [ ] Defines `cart_items` table with all required columns (id, cart_id, product_id, quantity)
+- [ ] Uses appropriate Diesel column types (Integer, Varchar, Text, Numeric, Timestamp)
+- [ ] Each table specifies its primary key correctly
+
+### ✅ Migration Files (migrations/*/up.sql)
+- [ ] Contains valid PostgreSQL SQL syntax
+- [ ] Creates all four tables (users, products, carts, cart_items)
+- [ ] Uses SERIAL for auto-incrementing primary keys
+- [ ] Includes proper data types matching schema.rs
+- [ ] Defines foreign key constraints:
+  - `carts.user_id` → `users.id`
+  - `cart_items.cart_id` → `carts.id` with ON DELETE CASCADE
+  - `cart_items.product_id` → `products.id`
+- [ ] Includes UNIQUE constraints on `users.username` and `users.email`
+- [ ] Includes UNIQUE constraint on `cart_items(cart_id, product_id)`
+- [ ] Sets appropriate DEFAULT values (timestamps, inventory_count)
+
+### ✅ Migration Rollback (migrations/*/down.sql)
+- [ ] Contains DROP TABLE statements for all four tables
+- [ ] Drops tables in correct order (respecting foreign key constraints)
+- [ ] Uses `DROP TABLE IF EXISTS` for safety
+
+### ✅ Dependencies (Cargo.toml)
+- [ ] Includes `diesel = { version = "2.1.0", features = ["postgres", "r2d2"] }`
+- [ ] Includes `r2d2 = "0.8.10"`
+- [ ] Includes `dotenv = "0.15.0"`
 - [ ] Dependencies are in the `[dependencies]` section
+- [ ] TOML syntax is valid
 
-## Validation Tests
+## Compilation and Validation Criteria
 
-### Syntax Validation
-```bash
-cargo check
-```
-- [ ] Command executes without errors
-- [ ] Schema definitions are syntactically correct
-- [ ] No compilation errors
+### ✅ Build Verification
+- [ ] `cargo check` completes without errors
+- [ ] No syntax errors in schema.rs
+- [ ] Dependencies resolve correctly
 
-### File Structure Check
-```bash
-ls -la src/schema.rs
-ls -la migrations/
-cat Cargo.toml | grep diesel
-```
-- [ ] All required files exist
-- [ ] Files are in correct locations
-- [ ] Dependencies are properly specified
+### ✅ SQL Validation
+- [ ] `up.sql` contains valid PostgreSQL syntax
+- [ ] `down.sql` contains valid PostgreSQL syntax
+- [ ] Table creation order respects dependencies (parent before child)
+- [ ] Foreign key references exist before being used
 
-### Schema Verification
-- [ ] Schema file can be imported in Rust code: `use crate::schema::*;`
-- [ ] All table definitions are accessible
-- [ ] No syntax errors in table definitions
+## Integration Criteria
 
-## Non-Functional Requirements
+### ✅ Compatibility with Dependent Tasks
+- [ ] Schema structure supports Task 2 (API Endpoints) requirements
+- [ ] Users table supports Task 3 (User Authentication) requirements
+- [ ] Products table supports Task 4 (Product Catalog) requirements
+- [ ] Carts tables support Task 5 (Shopping Cart) requirements
 
-### Code Quality
-- [ ] Schema definitions follow Rust naming conventions
-- [ ] Code is properly formatted
-- [ ] No unnecessary complexity
+### ✅ File Conflict Management
+- [ ] `Cargo.toml` modifications are compatible with Task 2's changes
+- [ ] No merge conflicts in generated files
+- [ ] Standard formatting used for maintainability
 
-### Documentation
-- [ ] Schema structure is clear and self-documenting
-- [ ] Table relationships are apparent from column names
+## Testing Commands
 
-### Integration Readiness
-- [ ] Schema is ready for use by Task 2 (API Endpoints)
-- [ ] Table definitions match expected structure for other tasks
-- [ ] No blocking issues for dependent tasks
+### Manual Validation Steps
 
-## Edge Cases and Error Handling
+1. **Verify File Existence**
+   ```bash
+   ls -la src/schema.rs
+   ls -la migrations/
+   ```
 
-- [ ] Schema handles standard SQL data types correctly
-- [ ] Migration files are properly structured for Diesel tooling
-- [ ] No conflicts with existing files (should be new project)
+2. **Check Rust Compilation**
+   ```bash
+   cargo check
+   ```
 
-## Performance Considerations
+3. **Validate Dependencies**
+   ```bash
+   cargo tree | grep diesel
+   cargo tree | grep r2d2
+   cargo tree | grep dotenv
+   ```
 
-- [ ] Schema design supports efficient queries
-- [ ] Appropriate column types for expected data
-- [ ] Foundation for proper indexing in future
+4. **Syntax Check SQL Files**
+   ```bash
+   cat migrations/*/up.sql
+   cat migrations/*/down.sql
+   ```
 
-## Success Metrics
+5. **Verify Schema Structure**
+   ```bash
+   grep -c "table!" src/schema.rs  # Should output: 4
+   ```
 
-- **Completion**: All required files created with correct content
-- **Quality**: Code passes `cargo check` without errors
-- **Integration**: Schema is usable by dependent tasks
-- **Simplicity**: Implementation is straightforward and maintainable
+## Success Definition
 
-## Manual Verification Steps
+**Task is COMPLETE when:**
+1. All required files exist at specified paths
+2. All code quality criteria are met
+3. `cargo check` passes without errors
+4. SQL files contain valid PostgreSQL syntax
+5. Schema supports all dependent tasks' requirements
 
-1. Check `src/schema.rs` exists and contains all 4 tables
-2. Verify `migrations/` directory structure is correct
-3. Confirm `Cargo.toml` has all 3 database dependencies
-4. Run `cargo check` to validate syntax
-5. Verify file can be committed to version control
+**Task is INCOMPLETE if:**
+- Any required file is missing
+- Compilation errors exist
+- SQL syntax is invalid
+- Table definitions are incomplete
+- Dependencies are incorrectly specified
 
-## Automated Testing
+## Estimated Completion Time
+30 minutes (as specified in PRD)
 
-Since this is a schema-only task, automated testing is limited to:
-- Cargo compilation checks
-- File existence verification
-- Syntax validation through Rust compiler
+## Dependencies
+None - This is a Level 0 task
+
+## Blocks
+- Task 2: API Endpoints (depends on this task completing)

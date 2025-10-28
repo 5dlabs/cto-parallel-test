@@ -1,455 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <prompt>
-    <role>You are a senior Rust developer specializing in testing, integration testing with actix-web, and test-driven development with expertise in system integration verification and quality assurance.</role>
+    <role>You are a senior Rust test engineer specializing in integration testing, API testing, and test-driven development.</role>
+
     <task>
         <id>7</id>
         <title>Integration Tests</title>
-        <description>Create comprehensive integration tests for the application to verify complete system functionality. Implement tests for health check endpoint, full user flow from product creation through cart operations with authentication, product API endpoints verification, and authentication mechanisms including JWT token lifecycle and password security. Update main application to support proper service initialization for testing.</description>
+        <description>Create comprehensive integration tests for the entire application. Test authentication (JWT, passwords), API endpoints (health check, products), shopping cart operations, and full end-to-end user workflows. Validate that all modules integrate correctly and the system functions as a cohesive whole.</description>
         <priority>high</priority>
         <status>pending</status>
         <dependencies>2,5,6</dependencies>
         <level>2</level>
         <estimated_time>60 minutes</estimated_time>
     </task>
+
     <technical_specifications>
-        <spec>Use actix-web test utilities for API integration tests</spec>
-        <spec>Create 3 test files: tests/integration_tests.rs, tests/api_tests.rs, tests/auth_tests.rs</spec>
-        <spec>Use #[actix_web::test] attribute for async integration tests</spec>
-        <spec>Use #[test] attribute for synchronous unit tests</spec>
-        <spec>Test health check endpoint returns 200 OK with {"status": "ok"}</spec>
-        <spec>Test full user flow: create product, generate JWT, add to cart, verify cart contents</spec>
-        <spec>Test product API endpoints: GET all products, GET product by ID</spec>
-        <spec>Test JWT creation and validation with correct claims</spec>
-        <spec>Test password hashing and verification with correct and incorrect passwords</spec>
-        <spec>Update src/main.rs to initialize ProductService and CartService as web::Data</spec>
-        <spec>Ensure all tests can import from crate using `use crate::module::...` pattern</spec>
-        <spec>Each test should be independent with its own service instances</spec>
-        <spec>All tests must pass when running cargo test</spec>
+        <spec>Use Rust built-in testing with #[test] and #[actix_web::test] attributes</spec>
+        <spec>Use Actix-web test utilities (test::init_service, test::TestRequest, test::call_service)</spec>
+        <spec>Test authentication: JWT creation/validation, password hashing/verification</spec>
+        <spec>Test API endpoints: health check, product routes</spec>
+        <spec>Test integration: full user flow from authentication to cart operations</spec>
+        <spec>Verify HTTP status codes (200, 400, 401, 404)</spec>
+        <spec>Validate JSON response structures and data correctness</spec>
+        <spec>Test with in-memory services (no database needed)</spec>
     </technical_specifications>
+
     <implementation_details>
-        <step>
-            <number>1</number>
-            <action>Verify dependencies are complete</action>
+        <overview>Create three test files covering authentication, API endpoints, and full integration. Tests validate all previous tasks work together correctly. Level 2 task - final system validation.</overview>
+
+        <step number="1">
+            <action>Create tests/auth_tests.rs</action>
             <details>
-                CRITICAL: This is a Level 2 task that depends on:
-                - Task 2: API Endpoints (for route configuration and health check)
-                - Task 5: Shopping Cart API (for cart functionality and full user flow)
-                - Task 6: Frontend Components (structure verification)
-
-                Before proceeding, verify these modules exist:
-                - src/api/routes.rs with configure_routes() function
-                - src/cart/service.rs with CartService
-                - src/catalog/service.rs with ProductService
-                - src/auth/jwt.rs with create_token() and validate_token()
-                - frontend/ directory with package.json and src/ (Task 6 verification)
-
-                If any are missing, STOP and wait for dependency tasks to complete.
-
-                The CTO platform should ensure these dependencies are met before starting this task.
+                Test JWT lifecycle, password hashing/verification, User serialization.
+                Use #[test] attribute for unit tests.
             </details>
         </step>
-        <step>
-            <number>2</number>
-            <action>Create integration tests file</action>
+
+        <step number="2">
+            <action>Create tests/api_tests.rs</action>
             <details>
-                Create tests/integration_tests.rs with two main tests:
-
-                1. test_health_check():
-                   - Use #[actix_web::test] attribute for async test
-                   - Create test App with configure_routes
-                   - Send GET request to /api/health
-                   - Assert response status is 200 OK
-                   - Read and parse JSON body
-                   - Assert json["status"] == "ok"
-
-                2. test_full_user_flow():
-                   - Use #[actix_web::test] attribute
-                   - Initialize ProductService and CartService as web::Data
-                   - Create test App with both services
-                   - Create test product with ProductService.create()
-                   - Generate JWT token with create_token("1")
-                   - Send POST to /api/cart/add with Authorization header
-                   - Include product_id and quantity in JSON body
-                   - Assert response is 200 OK
-                   - Send GET to /api/cart with same Authorization header
-                   - Assert response is 200 OK
-                   - Parse Cart from response body
-                   - Assert cart.items.len() == 1
-                   - Assert cart.items[0].product_id matches test product
-                   - Assert cart.items[0].quantity == 2
-
-                Imports needed:
-                - use actix_web::{test, web, App};
-                - use actix_web::http::StatusCode;
-                - use serde_json::json;
-                - use crate::api::routes::configure_routes;
-                - use crate::auth::jwt::create_token;
-                - use crate::catalog::ProductService;
-                - use crate::cart::CartService;
-
-                This file tests the complete integration of all system components.
+                Test health check endpoint, product routes.
+                Use #[actix_web::test] attribute.
+                Initialize test app with services.
+                Use TestRequest to make HTTP calls.
             </details>
         </step>
-        <step>
-            <number>3</number>
-            <action>Create API tests file</action>
+
+        <step number="3">
+            <action>Create tests/integration_tests.rs</action>
             <details>
-                Create tests/api_tests.rs with product endpoint tests:
-
-                1. test_product_routes():
-                   - Use #[actix_web::test] attribute
-                   - Create ProductService as web::Data
-                   - Add 2 test products with create():
-                     * Product 1: $19.99, inventory 10
-                     * Product 2: $29.99, inventory 5
-                   - Create test App with ProductService
-                   - Test GET /api/products:
-                     * Send request
-                     * Assert 200 OK
-                     * Parse Vec&lt;Product&gt; from body
-                     * Assert products.len() == 2
-                   - Test GET /api/products/1:
-                     * Send request
-                     * Assert 200 OK
-                     * Parse Product from body
-                     * Assert product.id == 1
-                     * Assert product.name == "Product 1"
-
-                Imports needed:
-                - use actix_web::{test, web, App};
-                - use actix_web::http::StatusCode;
-                - use crate::api::routes::configure_routes;
-                - use crate::catalog::ProductService;
-
-                This file verifies product API endpoints work correctly.
+                Test full user flow: create product, create token, add to cart, get cart.
+                Verify multi-module integration.
+                Assert correct data in responses.
             </details>
         </step>
-        <step>
-            <number>4</number>
-            <action>Create authentication tests file</action>
+
+        <step number="4">
+            <action>Update src/main.rs</action>
             <details>
-                Create tests/auth_tests.rs with JWT and password tests:
-
-                1. test_jwt_creation_and_validation():
-                   - Use #[test] attribute (synchronous test)
-                   - Create token with create_token("123")
-                   - Assert token creation succeeds
-                   - Validate token with validate_token(&amp;token)
-                   - Assert validation succeeds
-                   - Assert claims.sub == "123"
-
-                2. test_password_hashing_and_verification():
-                   - Use #[test] attribute (synchronous test)
-                   - Hash password "secure_password" with User::hash_password()
-                   - Create User struct with hashed password:
-                     * id: 1
-                     * username: "testuser"
-                     * email: "test@example.com"
-                     * password_hash: hashed
-                   - Call user.verify_password("secure_password")
-                   - Assert returns true
-                   - Call user.verify_password("wrong_password")
-                   - Assert returns false
-
-                Imports needed:
-                - use crate::auth::jwt::{create_token, validate_token};
-                - use crate::auth::models::User;
-
-                These are unit tests for authentication module functions.
+                Make modules public: pub mod api, pub mod schema, pub mod auth, pub mod catalog, pub mod cart.
             </details>
         </step>
-        <step>
-            <number>5</number>
-            <action>Update main.rs for testability</action>
+
+        <step number="5">
+            <action>Run tests and verify</action>
             <details>
-                Modify src/main.rs to properly initialize services:
-
-                Structure:
-                - Add module declarations at top:
-                  mod api;
-                  mod schema;
-                  mod auth;
-                  mod catalog;
-                  mod cart;
-
-                - Main function:
-                  #[actix_web::main]
-                  async fn main() -&gt; std::io::Result&lt;()&gt; {
-                      println!("Starting API server");
-
-                      // Initialize services
-                      let product_service = web::Data::new(catalog::ProductService::new());
-                      let cart_service = web::Data::new(cart::CartService::new());
-
-                      HttpServer::new(move || {
-                          App::new()
-                              .app_data(product_service.clone())
-                              .app_data(cart_service.clone())
-                              .configure(api::routes::configure_routes)
-                      })
-                      .bind("127.0.0.1:8080")?
-                      .run()
-                      .await
-                  }
-
-                Key changes:
-                - Services created outside HttpServer::new closure
-                - Services cloned into closure (move captures them)
-                - App includes services via app_data()
-                - This pattern allows tests to create services the same way
-                - Services must be web::Data wrapped for actix-web
-
-                Without this update, tests won't be able to properly initialize the application with required services.
-            </details>
-        </step>
-        <step>
-            <number>6</number>
-            <action>Validate implementation</action>
-            <details>
-                Run validation checks to ensure correctness:
-
-                1. File structure check:
-                   ls -la tests/integration_tests.rs
-                   ls -la tests/api_tests.rs
-                   ls -la tests/auth_tests.rs
-
-                   Confirm all 3 test files exist in tests/ directory.
-
-                2. Compilation check:
-                   cargo test --no-run
-
-                   Must compile all tests without errors. Verify that:
-                   - All imports resolve correctly
-                   - actix-web test utilities work
-                   - #[actix_web::test] macro is recognized
-                   - All test modules compile
-
-                3. Run tests:
-                   cargo test
-
-                   All tests must pass. Expected output:
-                   - test integration_tests::test_health_check ... ok
-                   - test integration_tests::test_full_user_flow ... ok
-                   - test api_tests::test_product_routes ... ok
-                   - test auth_tests::test_jwt_creation_and_validation ... ok
-                   - test auth_tests::test_password_hashing_and_verification ... ok
-
-                4. Verify test isolation:
-                   cargo test test_health_check
-                   cargo test test_full_user_flow
-
-                   Each test should pass independently.
-
-                5. Check frontend exists (Task 6 verification):
-                   ls -la frontend/package.json
-                   ls -la frontend/src/
-
-                   Confirms frontend structure is present.
-
-                Do not mark the task complete if any validation fails. Fix issues and re-validate.
+                cargo test
+                Verify all tests pass.
             </details>
         </step>
     </implementation_details>
+
     <acceptance_criteria>
-        <criterion>Task 2 (API Endpoints), Task 5 (Shopping Cart API), and Task 6 (Frontend) are complete and their modules are available</criterion>
-        <criterion>tests/integration_tests.rs file exists with #[cfg(test)] module</criterion>
-        <criterion>test_health_check() function implemented with #[actix_web::test] attribute</criterion>
-        <criterion>Health check test verifies /api/health returns 200 OK with {"status": "ok"}</criterion>
-        <criterion>test_full_user_flow() function implemented with #[actix_web::test] attribute</criterion>
-        <criterion>User flow test creates ProductService and CartService</criterion>
-        <criterion>User flow test creates test product, generates JWT, adds to cart, retrieves cart</criterion>
-        <criterion>User flow test verifies cart contains correct product and quantity</criterion>
-        <criterion>tests/api_tests.rs file exists with #[cfg(test)] module</criterion>
-        <criterion>test_product_routes() function implemented with #[actix_web::test] attribute</criterion>
-        <criterion>Product routes test creates test products and verifies GET endpoints</criterion>
-        <criterion>Product routes test validates status codes and response data</criterion>
-        <criterion>tests/auth_tests.rs file exists with #[cfg(test)] module</criterion>
-        <criterion>test_jwt_creation_and_validation() function implemented with #[test] attribute</criterion>
-        <criterion>JWT test creates token, validates it, and verifies claims</criterion>
-        <criterion>test_password_hashing_and_verification() function implemented with #[test] attribute</criterion>
-        <criterion>Password test hashes password, creates User, and verifies correct/incorrect passwords</criterion>
-        <criterion>src/main.rs imports all necessary modules (api, schema, auth, catalog, cart)</criterion>
-        <criterion>main.rs initializes ProductService and CartService as web::Data</criterion>
-        <criterion>main.rs passes services to App via app_data()</criterion>
-        <criterion>main.rs configures routes with configure_routes</criterion>
-        <criterion>All test files use correct imports with crate:: prefix</criterion>
-        <criterion>cargo test --no-run compiles all tests without errors</criterion>
-        <criterion>cargo test runs successfully and all tests pass</criterion>
-        <criterion>Test output shows 5 tests passing: health check, user flow, product routes, JWT, password</criterion>
-        <criterion>Tests are independent and can run in any order</criterion>
-        <criterion>Each test creates its own service instances (no shared state)</criterion>
-        <criterion>Frontend directory structure exists (Task 6 verification)</criterion>
+        <criterion>Files tests/integration_tests.rs, tests/api_tests.rs, tests/auth_tests.rs created</criterion>
+        <criterion>src/main.rs updated with public module declarations</criterion>
+        <criterion>Authentication tests cover JWT and password operations</criterion>
+        <criterion>API tests cover health check and product routes</criterion>
+        <criterion>Integration test covers full user flow (create product → add to cart → get cart)</criterion>
+        <criterion>All tests compile without errors</criterion>
+        <criterion>cargo test passes all tests</criterion>
+        <criterion>Tests verify HTTP status codes, JSON structures, and data correctness</criterion>
     </acceptance_criteria>
+
     <test_strategy>
-        Validation approach for integration tests:
-
-        1. Dependency Verification:
-           - Confirm Task 2 completed: api::routes::configure_routes exists
-           - Confirm Task 5 completed: cart::CartService exists
-           - Confirm Task 6 completed: frontend/ directory exists
-           - Verify all imports resolve
-
-        2. Compilation Testing:
-           - Run cargo test --no-run
-           - Verify all test files compile
-           - Check actix-web test utilities work
-           - Confirm no import errors
-
-        3. Test File Verification:
-           - Check tests/ directory has 3 files
-           - Verify each file has correct module structure
-           - Confirm test attributes are correct
-
-        4. Individual Test Execution:
-           - Run cargo test test_health_check
-           - Run cargo test test_full_user_flow
-           - Run cargo test test_product_routes
-           - Run cargo test test_jwt_creation_and_validation
-           - Run cargo test test_password_hashing_and_verification
-           - Verify each passes independently
-
-        5. Full Test Suite Execution:
-           - Run cargo test
-           - Verify all 5 tests pass
-           - Check test summary shows expected count
-           - Confirm no failures or panics
-
-        6. Health Check Test Validation:
-           - Verifies /api/health endpoint
-           - Confirms 200 OK status
-           - Validates JSON response format
-           - Checks "status" field value
-
-        7. User Flow Test Validation:
-           - Creates test product successfully
-           - Generates valid JWT token
-           - Adds product to cart with auth
-           - Retrieves cart successfully
-           - Verifies cart contents accurate
-
-        8. API Test Validation:
-           - Tests product list endpoint
-           - Tests product detail endpoint
-           - Confirms correct status codes
-           - Validates response data
-
-        9. Auth Test Validation:
-           - JWT creation works
-           - JWT validation works
-           - Claims are correct
-           - Password hashing works
-           - Password verification works
-
-        10. Main Application Validation:
-            - Services initialized correctly
-            - Services shared properly
-            - Routes configured correctly
-
-        11. Commands to execute:
-            cargo test --no-run
-            cargo test
-            cargo test --verbose
-            ls -la tests/
-            ls -la frontend/
+        <validation>Run cargo test and verify all tests pass. Test individual files. Check test coverage.</validation>
     </test_strategy>
+
     <instructions>
-        You are implementing Task 7: Integration Tests for a parallel task execution test project.
-
-        CRITICAL INSTRUCTIONS:
-        - This is a Level 2 task with dependencies on Tasks 2, 5, and 6 - VERIFY they are complete
-        - Do NOT proceed if required modules are not available
-        - Create exactly 3 test files in tests/ directory
-        - Update src/main.rs for proper service initialization
-        - Use actix-web test utilities correctly
-        - Ensure all tests are independent with no shared state
-        - This is the final validation task for the entire system
-
-        IMPLEMENTATION APPROACH:
-        1. Verify Tasks 2, 5, and 6 dependencies are complete
-        2. Create integration_tests.rs with health check and user flow tests
-        3. Create api_tests.rs with product endpoint tests
-        4. Create auth_tests.rs with JWT and password tests
-        5. Update main.rs to initialize services correctly
-        6. Validate with cargo test
-
-        QUALITY STANDARDS:
-        - Use #[actix_web::test] for async integration tests
-        - Use #[test] for synchronous unit tests
-        - Import from crate using `use crate::module::...`
-        - Each test creates its own services (no shared state)
-        - Clear test names describing what is tested
-        - Meaningful assertions with descriptive messages
-        - All tests must pass
-        - Tests must be maintainable and clear
-
-        TEST COVERAGE REQUIREMENTS:
-        - Health check endpoint (system availability)
-        - Full user flow (end-to-end integration)
-        - Product API endpoints (CRUD operations)
-        - JWT lifecycle (security)
-        - Password security (authentication)
-        - Service initialization (testability)
-
-        ACTIX-WEB TESTING PATTERN:
-        - Use test::init_service() to create test app
-        - Use test::TestRequest to build requests
-        - Use test::call_service() to execute requests
-        - Use test::read_body() to read responses
-        - Assert status codes with StatusCode enum
-        - Parse JSON responses with serde_json
-
-        SERVICE INITIALIZATION PATTERN:
-        - Create services as web::Data::new(Service::new())
-        - Clone services in HttpServer closure
-        - Pass to App via app_data()
-        - Same pattern in tests and main.rs
-        - Ensures consistency and testability
-
-        INTEGRATION POINTS:
-        - Task 2 provides: configure_routes, health check endpoint
-        - Task 3 provides: create_token, validate_token, User model
-        - Task 4 provides: ProductService, Product models
-        - Task 5 provides: CartService, cart endpoints
-        - Task 6 provides: frontend structure (verified present)
-
-        SUCCESS DEFINITION:
-        You have completed this task successfully when:
-        1. All dependency tasks are confirmed complete
-        2. All 3 test files created with correct implementations
-        3. main.rs updated with service initialization
-        4. cargo test --no-run compiles successfully
-        5. cargo test executes all tests
-        6. All 5 tests pass
-        7. Tests verify complete system integration
-        8. Frontend structure exists (Task 6 verification)
-
-        VALIDATION CHECKLIST:
-        Before marking complete, verify:
-        - [ ] Tasks 2, 5, 6 modules can be imported
-        - [ ] Files exist: tests/integration_tests.rs, api_tests.rs, auth_tests.rs
-        - [ ] Health check test implemented
-        - [ ] Full user flow test implemented
-        - [ ] Product routes test implemented
-        - [ ] JWT test implemented
-        - [ ] Password test implemented
-        - [ ] main.rs initializes services
-        - [ ] cargo test --no-run succeeds
-        - [ ] cargo test passes all tests
-        - [ ] Frontend directory exists
-
-        DO NOT:
-        - Start if Tasks 2, 5, 6 are not complete
-        - Share state between tests
-        - Skip any test implementations
-        - Use synchronous tests for async operations
-        - Mark complete if any test fails
-
-        DO:
-        - Wait for dependency tasks to complete
-        - Create independent tests
-        - Use correct test attributes
-        - Initialize services in each test
-        - Verify all assertions pass
-        - Test the complete system integration
+        Create comprehensive tests covering authentication, API endpoints, and full integration. Use Actix-web test utilities. Verify all modules work together. Ensure all tests pass.
     </instructions>
+
+    <context>
+        <project>
+            <name>Parallel Task Execution Test</name>
+            <repository>https://github.com/5dlabs/cto-parallel-test</repository>
+        </project>
+        <execution_context>
+            <level>2</level>
+            <depends_on>Tasks 2, 5, 6</depends_on>
+            <purpose>Final validation of complete system</purpose>
+        </execution_context>
+    </context>
 </prompt>

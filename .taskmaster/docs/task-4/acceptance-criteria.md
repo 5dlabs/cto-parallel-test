@@ -1,262 +1,354 @@
-# Acceptance Criteria: Product Catalog Module
+# Task 4: Product Catalog Module - Acceptance Criteria
 
-## Required Files
+## File Creation Criteria
 
-### ✅ `src/catalog/mod.rs`
-- [ ] File exists at `src/catalog/mod.rs`
-- [ ] Contains `pub mod models;` declaration
-- [ ] Contains `pub mod service;` declaration
-- [ ] Contains `pub use self::models::Product;` export
-- [ ] Contains `pub use self::service::ProductService;` export
-- [ ] File is properly formatted
+### ✅ Required Files Exist
+- [ ] `src/catalog/mod.rs` exists
+- [ ] `src/catalog/models.rs` exists
+- [ ] `src/catalog/service.rs` exists
+- [ ] `Cargo.toml` has been updated with rust_decimal dependency
 
-### ✅ `src/catalog/models.rs`
-- [ ] File exists at `src/catalog/models.rs`
-- [ ] Contains `Product` struct with fields: id (i32), name (String), description (String), price (Decimal), inventory_count (i32)
-- [ ] `Product` derives Debug, Serialize, Deserialize, and Clone
-- [ ] Contains `NewProduct` struct with fields: name, description, price, inventory_count (no id)
-- [ ] `NewProduct` derives Debug, Serialize, and Deserialize
-- [ ] Contains `ProductFilter` struct with optional fields: name_contains, min_price, max_price, in_stock
-- [ ] `ProductFilter` derives Debug, Serialize, and Deserialize
-- [ ] All price fields use `rust_decimal::Decimal` type
-- [ ] Proper use of `Option<T>` for optional filter fields
-- [ ] All necessary imports included (serde, rust_decimal)
+## Code Quality Criteria
 
-### ✅ `src/catalog/service.rs`
-- [ ] File exists at `src/catalog/service.rs`
-- [ ] Contains `ProductService` struct with fields: products (Arc<Mutex<Vec<Product>>>), next_id (Arc<Mutex<i32>>)
-- [ ] Implements `new()` constructor that initializes empty storage with next_id = 1
-- [ ] Implements `create(&self, new_product: NewProduct) -> Product` method
-- [ ] `create()` generates auto-incrementing IDs correctly
-- [ ] `create()` stores products in the vector
-- [ ] Implements `get_all(&self) -> Vec<Product>` method
-- [ ] Implements `get_by_id(&self, id: i32) -> Option<Product>` method
-- [ ] Implements `update_inventory(&self, id: i32, new_count: i32) -> Option<Product>` method
-- [ ] Implements `filter(&self, filter: ProductFilter) -> Vec<Product>` method
-- [ ] Filter supports case-insensitive name matching
-- [ ] Filter supports min_price comparison (>=)
-- [ ] Filter supports max_price comparison (<=)
-- [ ] Filter supports in_stock boolean check
-- [ ] All filter criteria applied with AND logic
-- [ ] Proper mutex locking and unlocking in all methods
-- [ ] Returns cloned products to avoid holding locks
-- [ ] All necessary imports included (Arc, Mutex, models)
+### ✅ Module Exports (src/catalog/mod.rs)
+- [ ] Contains `pub mod models;`
+- [ ] Contains `pub mod service;`
+- [ ] Re-exports Product: `pub use self::models::Product;`
+- [ ] Re-exports ProductService: `pub use self::service::ProductService;`
+- [ ] Valid Rust module syntax
 
-### ✅ `Cargo.toml` Updates
-- [ ] File contains `rust_decimal = { version = "1.30", features = ["serde"] }` dependency
+### ✅ Data Models (src/catalog/models.rs)
+- [ ] Imports rust_decimal: `use rust_decimal::Decimal;`
+- [ ] Imports serde: `use serde::{Serialize, Deserialize};`
+- [ ] Product struct defined with:
+  - `id: i32` field
+  - `name: String` field
+  - `description: String` field
+  - `price: Decimal` field
+  - `inventory_count: i32` field
+  - Derives: `Debug, Serialize, Deserialize` (Clone recommended)
+- [ ] NewProduct struct defined with:
+  - `name: String` field
+  - `description: String` field
+  - `price: Decimal` field
+  - `inventory_count: i32` field
+  - Derives: `Debug, Serialize, Deserialize`
+- [ ] ProductFilter struct defined with:
+  - `name_contains: Option<String>` field
+  - `min_price: Option<Decimal>` field
+  - `max_price: Option<Decimal>` field
+  - `in_stock: Option<bool>` field
+  - Derives: `Debug, Serialize, Deserialize`
+
+### ✅ Product Service (src/catalog/service.rs)
+- [ ] Imports models: `use crate::catalog::models::{Product, NewProduct, ProductFilter};`
+- [ ] Imports rust_decimal: `use rust_decimal::Decimal;`
+- [ ] Imports sync types: `use std::sync::{Arc, Mutex};`
+- [ ] ProductService struct defined with:
+  - `products: Arc<Mutex<Vec<Product>>>` field
+  - `next_id: Arc<Mutex<i32>>` field
+- [ ] ProductService implements new() method:
+  - Returns Self
+  - Initializes products with Arc::new(Mutex::new(Vec::new()))
+  - Initializes next_id with Arc::new(Mutex::new(1))
+- [ ] ProductService implements create() method:
+  - Signature: `pub fn create(&self, new_product: NewProduct) -> Product`
+  - Locks both products and next_id
+  - Assigns ID from next_id
+  - Increments next_id
+  - Creates Product with all fields from NewProduct plus ID
+  - Pushes to products vector
+  - Returns cloned product
+- [ ] ProductService implements get_all() method:
+  - Signature: `pub fn get_all(&self) -> Vec<Product>`
+  - Locks products
+  - Returns cloned vector
+- [ ] ProductService implements get_by_id() method:
+  - Signature: `pub fn get_by_id(&self, id: i32) -> Option<Product>`
+  - Locks products
+  - Finds product by ID
+  - Returns cloned product or None
+- [ ] ProductService implements update_inventory() method:
+  - Signature: `pub fn update_inventory(&self, id: i32, new_count: i32) -> Option<Product>`
+  - Locks products mutably
+  - Finds product by ID
+  - Updates inventory_count
+  - Returns cloned updated product or None
+- [ ] ProductService implements filter() method:
+  - Signature: `pub fn filter(&self, filter: ProductFilter) -> Vec<Product>`
+  - Locks products
+  - Filters by name_contains (case-insensitive substring)
+  - Filters by min_price (>= comparison)
+  - Filters by max_price (<= comparison)
+  - Filters by in_stock (inventory_count > 0)
+  - Treats None as no filter (matches all)
+  - Combines all filters with AND logic
+  - Returns cloned filtered products
+
+### ✅ Dependencies (Cargo.toml)
+- [ ] Includes `rust_decimal = { version = "1.30", features = ["serde"] }`
 - [ ] Dependency is in the `[dependencies]` section
-- [ ] Version is 1.30 or higher
-- [ ] Includes `serde` feature for serialization support
+- [ ] TOML syntax is valid
 
-## Functional Requirements
+## Functional Criteria
 
-### Product Creation
-- [ ] ProductService can create products with all required fields
-- [ ] Product IDs are auto-generated starting from 1
-- [ ] IDs increment correctly for each new product
-- [ ] Created products are stored in internal vector
-- [ ] Create method returns the newly created product with ID
+### ✅ Product Creation
+- [ ] Creating product assigns ID starting from 1
+- [ ] Each created product gets unique sequential ID
+- [ ] Created product contains all fields from NewProduct
+- [ ] Created product includes assigned ID
 
-### Product Retrieval
-- [ ] `get_all()` returns all stored products
-- [ ] `get_all()` returns empty vector when no products exist
-- [ ] `get_by_id()` returns Some(Product) when product exists
-- [ ] `get_by_id()` returns None when product doesn't exist
-- [ ] Retrieved products have correct data
+### ✅ Product Retrieval
+- [ ] get_all() returns empty vector initially
+- [ ] get_all() returns all created products
+- [ ] get_by_id() returns None for non-existent ID
+- [ ] get_by_id() returns correct product for existing ID
 
-### Inventory Management
-- [ ] `update_inventory()` correctly updates inventory count
-- [ ] `update_inventory()` returns updated product when successful
-- [ ] `update_inventory()` returns None when product not found
-- [ ] Inventory count can be increased and decreased
-- [ ] Inventory updates persist in storage
+### ✅ Inventory Management
+- [ ] update_inventory() returns None for non-existent product
+- [ ] update_inventory() updates and returns product for existing ID
+- [ ] update_inventory() correctly modifies inventory_count
+- [ ] Subsequent get_by_id() reflects updated inventory
 
-### Product Filtering
-- [ ] Filter by name_contains works (case-insensitive)
-- [ ] Filter by min_price works (inclusive)
-- [ ] Filter by max_price works (inclusive)
-- [ ] Filter by in_stock works (true = inventory > 0, false = inventory == 0)
-- [ ] Multiple filters work together (AND logic)
-- [ ] Filter returns empty vector when no matches
-- [ ] Filter with all None values returns all products
+### ✅ Filtering
+- [ ] Empty filter (all None) returns all products
+- [ ] name_contains filter matches substring case-insensitively
+- [ ] min_price filter includes products with price >= min_price
+- [ ] max_price filter includes products with price <= max_price
+- [ ] in_stock=true filters products with inventory_count > 0
+- [ ] in_stock=false filters products with inventory_count == 0
+- [ ] Multiple filters combine with AND logic
+- [ ] None values in filter don't restrict results
 
-## Validation Tests
+## Thread Safety Criteria
 
-### Compilation Check
-```bash
-cargo check
+### ✅ Concurrency
+- [ ] ProductService is Send (can be sent across threads)
+- [ ] ProductService is Sync (can be shared across threads)
+- [ ] Multiple threads can safely call methods concurrently
+- [ ] No data races possible (ensured by Mutex)
+
+## Compilation and Testing Criteria
+
+### ✅ Build Verification
+- [ ] `cargo check` completes without errors
+- [ ] `cargo build` completes successfully
+- [ ] No warnings related to unused imports or dead code
+- [ ] rust_decimal dependency resolves correctly
+
+### ✅ Unit Test Validation
+Implement and run these tests:
+
+**Creation Test**:
+```rust
+#[test]
+fn test_product_creation() {
+    let service = ProductService::new();
+    let product1 = service.create(NewProduct {
+        name: "Test Product".to_string(),
+        description: "Description".to_string(),
+        price: Decimal::new(1999, 2), // $19.99
+        inventory_count: 10,
+    });
+    assert_eq!(product1.id, 1);
+    assert_eq!(product1.name, "Test Product");
+
+    let product2 = service.create(NewProduct {
+        name: "Product 2".to_string(),
+        description: "Desc 2".to_string(),
+        price: Decimal::new(2999, 2), // $29.99
+        inventory_count: 5,
+    });
+    assert_eq!(product2.id, 2);
+}
 ```
-- [ ] Command executes without errors
-- [ ] No compilation warnings
-- [ ] All dependencies resolve correctly
-- [ ] rust_decimal types work correctly
 
-### File Structure Check
-```bash
-ls -la src/catalog/
-cat src/catalog/mod.rs
-cat src/catalog/models.rs
-cat src/catalog/service.rs
-grep "rust_decimal" Cargo.toml
+**Retrieval Test**:
+```rust
+#[test]
+fn test_product_retrieval() {
+    let service = ProductService::new();
+    let created = service.create(/* ... */);
+
+    let found = service.get_by_id(created.id);
+    assert!(found.is_some());
+    assert_eq!(found.unwrap().id, created.id);
+
+    let not_found = service.get_by_id(9999);
+    assert!(not_found.is_none());
+
+    let all = service.get_all();
+    assert_eq!(all.len(), 1);
+}
 ```
-- [ ] All required files exist
-- [ ] Files are in correct locations
-- [ ] File contents match requirements
-- [ ] Dependency is properly specified
 
-### Module Import Check
-- [ ] Module can be imported: `use crate::catalog::{Product, ProductService};`
-- [ ] Structs are accessible from other modules
-- [ ] Service methods are callable
-- [ ] No visibility issues with pub/private
+**Inventory Test**:
+```rust
+#[test]
+fn test_inventory_update() {
+    let service = ProductService::new();
+    let product = service.create(/* inventory_count: 10 */);
 
-## Non-Functional Requirements
+    let updated = service.update_inventory(product.id, 5);
+    assert!(updated.is_some());
+    assert_eq!(updated.unwrap().inventory_count, 5);
 
-### Code Quality
-- [ ] Code follows Rust naming conventions (snake_case for functions, PascalCase for types)
-- [ ] Proper use of Rust idioms (Option, Result where appropriate)
-- [ ] No unnecessary complexity
-- [ ] Code is well-organized and readable
-- [ ] Appropriate use of references vs owned values
+    let retrieved = service.get_by_id(product.id).unwrap();
+    assert_eq!(retrieved.inventory_count, 5);
+}
+```
 
-### Thread Safety
-- [ ] ProductService can be safely shared across threads
-- [ ] Arc<Mutex> pattern used correctly
-- [ ] No data races possible
-- [ ] Mutex locks are acquired and released properly
-- [ ] No deadlock potential
+**Filtering Test**:
+```rust
+#[test]
+fn test_product_filtering() {
+    let service = ProductService::new();
 
-### Type Safety
-- [ ] rust_decimal::Decimal used for all monetary values
-- [ ] No floating-point types (f32/f64) for prices
-- [ ] Strong typing for IDs (i32)
-- [ ] Proper use of Option<T> for nullable values
+    // Create test products
+    service.create(/* name: "Apple", price: 1.50, inventory: 10 */);
+    service.create(/* name: "Banana", price: 0.75, inventory: 0 */);
+    service.create(/* name: "Orange", price: 2.00, inventory: 5 */);
 
-### Documentation
-- [ ] Code is self-documenting with clear names
-- [ ] Struct fields are obvious in purpose
-- [ ] Method signatures clearly indicate behavior
+    // Test name filter
+    let filtered = service.filter(ProductFilter {
+        name_contains: Some("app".to_string()),
+        ..Default::default()
+    });
+    assert_eq!(filtered.len(), 1);
+    assert_eq!(filtered[0].name, "Apple");
 
-## Integration Readiness
+    // Test price range filter
+    let filtered = service.filter(ProductFilter {
+        min_price: Some(Decimal::new(100, 2)), // $1.00
+        max_price: Some(Decimal::new(180, 2)), // $1.80
+        ..Default::default()
+    });
+    assert_eq!(filtered.len(), 1);
 
-- [ ] Module is ready for use by Task 5 (Shopping Cart API)
-- [ ] ProductService can be instantiated and shared as web::Data
-- [ ] Methods are compatible with async handlers
-- [ ] Service can validate products exist before cart operations
-- [ ] Inventory checks can be performed before adding to cart
-- [ ] No blocking issues for dependent tasks
+    // Test in_stock filter
+    let filtered = service.filter(ProductFilter {
+        in_stock: Some(true),
+        ..Default::default()
+    });
+    assert_eq!(filtered.len(), 2); // Apple and Orange
 
-## Edge Cases and Error Handling
+    // Test combined filters
+    let filtered = service.filter(ProductFilter {
+        name_contains: Some("a".to_string()),
+        in_stock: Some(true),
+        ..Default::default()
+    });
+    assert_eq!(filtered.len(), 2); // Apple and Orange contain "a"
+}
+```
 
-- [ ] get_by_id handles non-existent IDs gracefully (returns None)
-- [ ] update_inventory handles non-existent IDs gracefully (returns None)
-- [ ] Filter handles empty product list correctly
-- [ ] Filter handles all-None criteria correctly
-- [ ] Service handles concurrent access safely
-- [ ] ID counter doesn't overflow (acceptable for test project)
+- [ ] All unit tests pass
+- [ ] Creation test verifies sequential ID assignment
+- [ ] Retrieval test verifies get_all and get_by_id
+- [ ] Inventory test verifies updates persist
+- [ ] Filtering test verifies all filter combinations
+
+## Integration Criteria
+
+### ✅ Compatibility with Dependent Tasks
+- [ ] Task 5 can import and use ProductService
+- [ ] Task 5 can import and use Product model
+- [ ] Task 7 can test product operations
+- [ ] Module exports are accessible from other modules
+
+## Testing Commands
+
+### Manual Validation Steps
+
+1. **Verify File Existence**
+   ```bash
+   ls -la src/catalog/mod.rs
+   ls -la src/catalog/models.rs
+   ls -la src/catalog/service.rs
+   ```
+
+2. **Check Rust Compilation**
+   ```bash
+   cargo check
+   cargo build
+   ```
+
+3. **Validate Dependencies**
+   ```bash
+   cargo tree | grep rust_decimal
+   ```
+
+4. **Run Unit Tests**
+   ```bash
+   cargo test catalog
+   ```
+
+5. **Test Service Functionality (via rust code)**
+   ```rust
+   use crate::catalog::{ProductService, Product};
+   use rust_decimal::Decimal;
+
+   let service = ProductService::new();
+
+   // Test creation
+   let product = service.create(NewProduct {
+       name: "Test".to_string(),
+       description: "Test product".to_string(),
+       price: Decimal::new(1999, 2),
+       inventory_count: 10,
+   });
+   println!("Created: {:?}", product);
+
+   // Test retrieval
+   let found = service.get_by_id(product.id);
+   println!("Found: {:?}", found);
+
+   // Test inventory
+   let updated = service.update_inventory(product.id, 5);
+   println!("Updated: {:?}", updated);
+
+   // Test filtering
+   let filtered = service.filter(ProductFilter {
+       in_stock: Some(true),
+       ..Default::default()
+   });
+   println!("Filtered: {:?}", filtered);
+   ```
+
+## Success Definition
+
+**Task is COMPLETE when:**
+1. All required files exist with correct implementations
+2. Product CRUD operations work correctly
+3. Filtering combines multiple criteria with AND logic
+4. Inventory updates persist correctly
+5. Service is thread-safe (Send + Sync)
+6. All unit tests pass
+7. Code compiles without errors
+8. rust_decimal dependency resolves
+
+**Task is INCOMPLETE if:**
+- Any required file is missing
+- Compilation errors exist
+- CRUD operations don't work as specified
+- Filtering logic is incorrect
+- Inventory updates don't persist
+- Service isn't thread-safe
+- Unit tests fail
+
+## Estimated Completion Time
+40 minutes (as specified in PRD)
+
+## Dependencies
+None - This is a Level 0 task
+
+## Blocks
+- Task 5: Shopping Cart API (needs product lookup)
+- Task 7: Integration Tests (needs product operations)
 
 ## Performance Considerations
-
-- [ ] Mutex locks released quickly (products cloned before returning)
-- [ ] No long-held locks that could block other threads
-- [ ] Filter operation is efficient for small datasets
-- [ ] Acceptable performance for in-memory test implementation
-
-## Success Metrics
-
-- **Completion**: All required files created with correct content
-- **Quality**: Code passes `cargo check` without errors or warnings
-- **Functionality**: All CRUD operations work correctly
-- **Thread Safety**: Service can be safely used from multiple threads
-- **Integration**: Module is ready for Task 5 to depend on
-- **Simplicity**: Implementation is straightforward and maintainable
-
-## Manual Verification Checklist
-
-1. **File Existence**
-   - [ ] Check `src/catalog/mod.rs` exists
-   - [ ] Check `src/catalog/models.rs` exists
-   - [ ] Check `src/catalog/service.rs` exists
-
-2. **Model Definitions**
-   - [ ] Verify Product has all required fields
-   - [ ] Verify NewProduct has all required fields except id
-   - [ ] Verify ProductFilter has all optional fields
-   - [ ] Confirm all price fields use Decimal type
-
-3. **Service Implementation**
-   - [ ] Verify ProductService has correct fields
-   - [ ] Verify all 6 methods exist: new, create, get_all, get_by_id, update_inventory, filter
-   - [ ] Check Arc<Mutex> pattern is used correctly
-   - [ ] Verify filter logic implements all criteria
-
-4. **Dependencies**
-   - [ ] Confirm rust_decimal in Cargo.toml
-   - [ ] Verify serde feature is enabled
-   - [ ] Check version is 1.30 or higher
-
-5. **Compilation**
-   - [ ] Run `cargo check` and verify success
-   - [ ] Ensure no warnings or errors
-
-6. **Integration Preparation**
-   - [ ] Verify module can be imported by other code
-   - [ ] Confirm ProductService can be instantiated
-   - [ ] Check that methods have correct signatures for Task 5 integration
-
-## Automated Testing
-
-While this task doesn't require unit tests, the following validation should pass:
-
-```rust
-// Example validation (not required to implement, just concept)
-let service = ProductService::new();
-
-// Test create
-let new_product = NewProduct {
-    name: "Test Product".to_string(),
-    description: "Test Description".to_string(),
-    price: Decimal::new(1999, 2), // $19.99
-    inventory_count: 10,
-};
-let product = service.create(new_product);
-assert_eq!(product.id, 1);
-assert_eq!(product.name, "Test Product");
-
-// Test get_by_id
-let found = service.get_by_id(1);
-assert!(found.is_some());
-
-// Test get_all
-let all = service.get_all();
-assert_eq!(all.len(), 1);
-
-// Test update_inventory
-let updated = service.update_inventory(1, 5);
-assert!(updated.is_some());
-assert_eq!(updated.unwrap().inventory_count, 5);
-
-// Test filter
-let filter = ProductFilter {
-    name_contains: Some("Test".to_string()),
-    min_price: None,
-    max_price: None,
-    in_stock: Some(true),
-};
-let filtered = service.filter(filter);
-assert_eq!(filtered.len(), 1);
-```
-
-## Definition of Done
-
-This task is complete when:
-1. All required files exist with correct implementations
-2. All structs and methods match specifications exactly
-3. rust_decimal is used for all price fields
-4. Thread-safe storage with Arc<Mutex> is implemented
-5. All service methods work correctly
-6. Filter supports all query types
-7. Cargo.toml has rust_decimal dependency
-8. Code passes `cargo check` without errors
-9. Module is ready for Task 5 integration
-10. All acceptance criteria checkboxes can be marked complete
+- [ ] Service creates are O(1) (append to vector)
+- [ ] Service retrievals are O(n) (linear search acceptable for test)
+- [ ] Filtering is O(n) (full scan acceptable for test)
+- [ ] Locks are held for minimal time
+- [ ] Cloning is used instead of holding locks

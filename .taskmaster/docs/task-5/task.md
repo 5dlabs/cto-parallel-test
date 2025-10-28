@@ -1,54 +1,40 @@
 # Task 5: Shopping Cart API
 
 ## Overview
-Create shopping cart functionality and API endpoints with JWT authentication. This is a Level 1 task that depends on Task 3 (User Authentication) and Task 4 (Product Catalog), demonstrating the dependency management capabilities of the parallel task execution system.
+Create shopping cart functionality and API endpoints with JWT authentication, product validation, and inventory checking. This is a Level 1 task that depends on Task 3 (User Authentication) and Task 4 (Product Catalog), integrating multiple modules into a complete cart management system.
 
 ## Context
-This task is part of the parallel task execution test project. It integrates authentication from Task 3 with the product catalog from Task 4 to provide a complete shopping cart experience. The implementation uses in-memory storage with thread-safe patterns and JWT-based authentication for all cart operations.
+This task brings together authentication and catalog modules to provide secure, user-specific shopping cart functionality. It demonstrates complex task dependency orchestration where multiple Level 0 tasks must complete before this Level 1 task can begin.
 
 ## Objectives
-1. Create cart service module in `src/cart/mod.rs` and `src/cart/service.rs`
-2. Implement CartService with user-specific cart management
-3. Create cart API endpoints in `src/api/cart_routes.rs`
-4. Integrate JWT authentication for all cart operations
-5. Update API module configuration to include cart routes
+1. Implement cart service with user-specific cart management
+2. Create cart models (Cart, CartItem)
+3. Build REST API endpoints with JWT authentication
+4. Validate products exist and have sufficient inventory
+5. Support cart operations: get, add item, remove item, clear
+6. Integrate with API routing from Task 2
 
 ## Dependencies
-
-**Depends On:**
-- **Task 3 (User Authentication Module)** - Level 0 - Provides JWT token validation and authentication
-- **Task 4 (Product Catalog Module)** - Level 0 - Provides product validation and inventory checking
-
-**Depended Upon By:**
-- **Task 7 (Integration Tests)** - Level 2 - Will test complete cart functionality
+- **Task 3: User Authentication** - Required for JWT token validation
+- **Task 4: Product Catalog** - Required for product lookup and inventory checking
 
 ## Files to Create/Modify
+- `src/cart/mod.rs` - Cart module exports
+- `src/cart/service.rs` - Cart service with business logic
+- `src/api/cart_routes.rs` - Cart API endpoints with authentication
+- `src/api/mod.rs` - Update to include cart_routes module
+- `src/api/routes.rs` - Update to configure cart routes
 
-### 1. `src/cart/mod.rs`
-Module declaration file that exports cart components:
+## Technical Specifications
 
+### Cart Data Models
 ```rust
-pub mod service;
-
-pub use self::service::CartService;
-```
-
-### 2. `src/cart/service.rs`
-Cart service with user-specific cart management and in-memory storage:
-
-```rust
-use crate::auth::models::User;
-use crate::catalog::models::Product;
-use serde::{Serialize, Deserialize};
-use std::sync::{Arc, Mutex};
-use std::collections::HashMap;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CartItem {
     pub product_id: i32,
     pub quantity: i32,
     pub product_name: String,
-    pub unit_price: rust_decimal::Decimal,
+    pub unit_price: Decimal,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -57,131 +43,84 @@ pub struct Cart {
     pub user_id: i32,
     pub items: Vec<CartItem>,
 }
+```
 
+### API Endpoints
+```
+POST   /api/cart/add        - Add item to cart (authenticated)
+GET    /api/cart            - Get user's cart (authenticated)
+DELETE /api/cart/remove/:id - Remove item from cart (authenticated)
+POST   /api/cart/clear      - Clear all items (authenticated)
+```
+
+### Authentication Flow
+1. Extract Authorization header from request
+2. Parse "Bearer {token}" format
+3. Validate JWT token using Task 3's `validate_token`
+4. Extract user_id from token claims
+5. Use user_id for cart operations
+
+## Implementation Plan
+
+### Step 1: Create Cart Service (src/cart/service.rs)
+Implement in-memory cart management with thread-safe operations:
+
+#### Data Structures
+```rust
 pub struct CartService {
     carts: Arc<Mutex<HashMap<i32, Cart>>>,
     next_id: Arc<Mutex<i32>>,
 }
-
-impl CartService {
-    pub fn new() -> Self {
-        CartService {
-            carts: Arc::new(Mutex::new(HashMap::new())),
-            next_id: Arc::new(Mutex::new(1)),
-        }
-    }
-
-    pub fn get_or_create_cart(&self, user_id: i32) -> Cart {
-        let mut carts = self.carts.lock().unwrap();
-
-        // Find existing cart for user
-        for (_, cart) in carts.iter() {
-            if cart.user_id == user_id {
-                return cart.clone();
-            }
-        }
-
-        // Create new cart if none exists
-        let mut next_id = self.next_id.lock().unwrap();
-        let cart = Cart {
-            id: *next_id,
-            user_id,
-            items: Vec::new(),
-        };
-
-        *next_id += 1;
-        carts.insert(cart.id, cart.clone());
-        cart
-    }
-
-    pub fn add_item(&self, user_id: i32, product: &Product, quantity: i32) -> Cart {
-        let mut carts = self.carts.lock().unwrap();
-
-        // Find or create cart
-        let cart_id = self.get_or_create_cart(user_id).id;
-        let cart = carts.get_mut(&cart_id).unwrap();
-
-        // Check if product already in cart
-        if let Some(item) = cart.items.iter_mut().find(|i| i.product_id == product.id) {
-            item.quantity += quantity;
-        } else {
-            // Add new item
-            cart.items.push(CartItem {
-                product_id: product.id,
-                quantity,
-                product_name: product.name.clone(),
-                unit_price: product.price,
-            });
-        }
-
-        cart.clone()
-    }
-
-    pub fn remove_item(&self, user_id: i32, product_id: i32) -> Option<Cart> {
-        let mut carts = self.carts.lock().unwrap();
-
-        // Find cart for user
-        for (_, cart) in carts.iter_mut() {
-            if cart.user_id == user_id {
-                cart.items.retain(|item| item.product_id != product_id);
-                return Some(cart.clone());
-            }
-        }
-
-        None
-    }
-
-    pub fn get_cart(&self, user_id: i32) -> Option<Cart> {
-        let carts = self.carts.lock().unwrap();
-
-        for (_, cart) in carts.iter() {
-            if cart.user_id == user_id {
-                return Some(cart.clone());
-            }
-        }
-
-        None
-    }
-
-    pub fn clear_cart(&self, user_id: i32) -> Option<Cart> {
-        let mut carts = self.carts.lock().unwrap();
-
-        for (_, cart) in carts.iter_mut() {
-            if cart.user_id == user_id {
-                cart.items.clear();
-                return Some(cart.clone());
-            }
-        }
-
-        None
-    }
-}
 ```
 
-**Service Features:**
-- Thread-safe storage using HashMap with Arc<Mutex>
-- User-specific cart management (one cart per user)
-- CartItem stores product snapshot (name, price) to avoid stale data
-- Automatic cart creation on first access
-- Quantity accumulation for duplicate products
-- Returns cloned carts to avoid holding locks
+Uses HashMap for O(1) cart lookup by cart_id, with user_id searchable within carts.
 
-### 3. `src/api/cart_routes.rs`
-Cart API endpoints with JWT authentication:
+#### Core Methods
 
+**`new() -> Self`**
+- Initializes empty cart HashMap
+- Sets next_id to 1
+
+**`get_or_create_cart(&self, user_id: i32) -> Cart`**
+- Searches existing carts for matching user_id
+- Creates new cart if none exists
+- Returns user's cart
+
+**`add_item(&self, user_id: i32, product: &Product, quantity: i32) -> Cart`**
+- Gets or creates user's cart
+- Checks if product already in cart (by product_id)
+- If exists: increment quantity
+- If new: add CartItem with product details
+- Returns updated cart
+
+**`remove_item(&self, user_id: i32, product_id: i32) -> Option<Cart>`**
+- Finds user's cart
+- Removes item matching product_id
+- Returns updated cart or None
+
+**`get_cart(&self, user_id: i32) -> Option<Cart>`**
+- Searches for cart by user_id
+- Returns cart or None
+
+**`clear_cart(&self, user_id: i32) -> Option<Cart>`**
+- Finds user's cart
+- Clears items vector
+- Returns empty cart or None
+
+### Step 2: Create API Routes (src/api/cart_routes.rs)
+Implement authenticated endpoints:
+
+#### Request DTOs
 ```rust
-use actix_web::{web, HttpResponse, Responder};
-use serde::{Serialize, Deserialize};
-use crate::cart::CartService;
-use crate::catalog::ProductService;
-use crate::auth::jwt::validate_token;
-
 #[derive(Deserialize)]
 pub struct AddItemRequest {
     pub product_id: i32,
     pub quantity: i32,
 }
+```
 
+#### Route Configuration
+```rust
 pub fn configure_cart_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/cart")
@@ -191,269 +130,189 @@ pub fn configure_cart_routes(cfg: &mut web::ServiceConfig) {
             .route("/clear", web::post().to(clear_cart))
     );
 }
+```
 
-async fn get_cart(
-    cart_service: web::Data<CartService>,
-    req: web::HttpRequest,
-) -> impl Responder {
-    // Extract user_id from JWT token in header
-    if let Some(auth_header) = req.headers().get("Authorization") {
-        if let Ok(auth_str) = auth_header.to_str() {
-            if auth_str.starts_with("Bearer ") {
-                let token = &auth_str[7..]; // Skip "Bearer " prefix
-                if let Ok(claims) = validate_token(token) {
-                    let user_id = claims.sub.parse::<i32>().unwrap_or(0);
-                    if let Some(cart) = cart_service.get_cart(user_id) {
-                        return HttpResponse::Ok().json(cart);
-                    }
-                    return HttpResponse::Ok().json(cart_service.get_or_create_cart(user_id));
-                }
-            }
-        }
-    }
+#### Authentication Helper Pattern
+Each handler extracts and validates JWT:
 
-    HttpResponse::Unauthorized().finish()
-}
+```rust
+// Extract Authorization header
+let auth_header = req.headers().get("Authorization")?;
+let auth_str = auth_header.to_str()?;
 
-async fn add_item(
-    cart_service: web::Data<CartService>,
-    product_service: web::Data<ProductService>,
-    req: web::HttpRequest,
-    item: web::Json<AddItemRequest>,
-) -> impl Responder {
-    // Extract user_id from JWT token in header
-    if let Some(auth_header) = req.headers().get("Authorization") {
-        if let Ok(auth_str) = auth_header.to_str() {
-            if auth_str.starts_with("Bearer ") {
-                let token = &auth_str[7..]; // Skip "Bearer " prefix
-                if let Ok(claims) = validate_token(token) {
-                    let user_id = claims.sub.parse::<i32>().unwrap_or(0);
+// Parse Bearer token
+if auth_str.starts_with("Bearer ") {
+    let token = &auth_str[7..];
 
-                    // Get product
-                    if let Some(product) = product_service.get_by_id(item.product_id) {
-                        // Check inventory
-                        if product.inventory_count >= item.quantity {
-                            let cart = cart_service.add_item(user_id, &product, item.quantity);
-                            return HttpResponse::Ok().json(cart);
-                        }
-                        return HttpResponse::BadRequest().json(serde_json::json!({
-                            "error": "Not enough inventory"
-                        }));
-                    }
-                    return HttpResponse::NotFound().json(serde_json::json!({
-                        "error": "Product not found"
-                    }));
-                }
-            }
-        }
-    }
+    // Validate with Task 3's function
+    let claims = validate_token(token)?;
 
-    HttpResponse::Unauthorized().finish()
-}
+    // Extract user_id
+    let user_id = claims.sub.parse::<i32>()?;
 
-async fn remove_item(
-    cart_service: web::Data<CartService>,
-    req: web::HttpRequest,
-    path: web::Path<i32>,
-) -> impl Responder {
-    let product_id = path.into_inner();
-
-    // Extract user_id from JWT token in header
-    if let Some(auth_header) = req.headers().get("Authorization") {
-        if let Ok(auth_str) = auth_header.to_str() {
-            if auth_str.starts_with("Bearer ") {
-                let token = &auth_str[7..]; // Skip "Bearer " prefix
-                if let Ok(claims) = validate_token(token) {
-                    let user_id = claims.sub.parse::<i32>().unwrap_or(0);
-
-                    if let Some(cart) = cart_service.remove_item(user_id, product_id) {
-                        return HttpResponse::Ok().json(cart);
-                    }
-                    return HttpResponse::NotFound().json(serde_json::json!({
-                        "error": "Item not found in cart"
-                    }));
-                }
-            }
-        }
-    }
-
-    HttpResponse::Unauthorized().finish()
-}
-
-async fn clear_cart(
-    cart_service: web::Data<CartService>,
-    req: web::HttpRequest,
-) -> impl Responder {
-    // Extract user_id from JWT token in header
-    if let Some(auth_header) = req.headers().get("Authorization") {
-        if let Ok(auth_str) = auth_header.to_str() {
-            if auth_str.starts_with("Bearer ") {
-                let token = &auth_str[7..]; // Skip "Bearer " prefix
-                if let Ok(claims) = validate_token(token) {
-                    let user_id = claims.sub.parse::<i32>().unwrap_or(0);
-
-                    if let Some(cart) = cart_service.clear_cart(user_id) {
-                        return HttpResponse::Ok().json(cart);
-                    }
-                    return HttpResponse::NotFound().json(serde_json::json!({
-                        "error": "Cart not found"
-                    }));
-                }
-            }
-        }
-    }
-
-    HttpResponse::Unauthorized().finish()
+    // Use user_id for cart operations
 }
 ```
 
-**API Features:**
-- JWT authentication required for all endpoints
-- GET /api/cart - Retrieve user's cart
-- POST /api/cart/add - Add product to cart with inventory validation
-- DELETE /api/cart/remove/{product_id} - Remove item from cart
-- POST /api/cart/clear - Clear all items from cart
-- Proper error responses for auth failures, missing products, and insufficient inventory
+Returns `401 Unauthorized` if authentication fails at any step.
 
-### 4. `src/api/mod.rs`
-Update to include cart routes module:
+#### get_cart Handler
+- Authenticates user
+- Gets cart from service
+- Returns cart JSON or creates empty cart
+
+#### add_item Handler
+- Authenticates user
+- Parses AddItemRequest from body
+- Looks up product with ProductService
+- Validates inventory >= requested quantity
+- Adds item to cart via CartService
+- Returns updated cart JSON
+- Returns 400 if insufficient inventory
+- Returns 404 if product not found
+
+#### remove_item Handler
+- Authenticates user
+- Extracts product_id from path parameter
+- Removes item from cart
+- Returns updated cart JSON
+- Returns 404 if item not in cart
+
+#### clear_cart Handler
+- Authenticates user
+- Clears all items from cart
+- Returns empty cart JSON
+
+### Step 3: Update API Module (src/api/mod.rs)
+Add cart_routes to module exports:
 
 ```rust
 pub mod routes;
 pub mod cart_routes;
 ```
 
-### 5. `src/api/routes.rs`
-Update to configure cart routes:
+### Step 4: Update Route Configuration (src/api/routes.rs)
+Integrate cart routes into main API:
 
 ```rust
-// Add to existing imports
 use crate::api::cart_routes::configure_cart_routes;
 
-// Update configure_routes function
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/api")
             .service(health_check)
             .service(web::scope("/users").configure(user_routes))
             .service(web::scope("/products").configure(product_routes))
-            .configure(configure_cart_routes)  // Add this line
+            .configure(configure_cart_routes)  // Add cart routes
     );
 }
 ```
 
-## Implementation Steps
+Note: Cart routes already have `/cart` scope, so they nest under `/api/cart`.
 
-1. **Create Cart Service Module**
-   - Create `src/cart/` directory if it doesn't exist
-   - Create `src/cart/mod.rs` with service export
-   - Ensure proper visibility with `pub use` statement
+### Step 5: Update Main Application (src/main.rs)
+Register CartService with Actix-web application data:
 
-2. **Implement Cart Data Models and Service**
-   - Create `src/cart/service.rs`
-   - Define `CartItem` and `Cart` structs with appropriate derives
-   - Implement `CartService` with HashMap-based storage
-   - Implement all service methods: new, get_or_create_cart, add_item, remove_item, get_cart, clear_cart
-   - Ensure thread-safety with Arc<Mutex<HashMap>>
+```rust
+use crate::cart::CartService;
 
-3. **Create Cart API Routes**
-   - Create `src/api/cart_routes.rs`
-   - Define `AddItemRequest` DTO
-   - Implement `configure_cart_routes` function
-   - Implement all handler functions with JWT validation
-   - Add product validation and inventory checking
-   - Return appropriate HTTP status codes
+let cart_service = web::Data::new(CartService::new());
 
-4. **Update API Module Configuration**
-   - Modify `src/api/mod.rs` to declare cart_routes module
-   - Modify `src/api/routes.rs` to import and configure cart routes
-   - Ensure cart routes are under /api/cart path
+HttpServer::new(move || {
+    App::new()
+        .app_data(product_service.clone())
+        .app_data(cart_service.clone())  // Add cart service
+        .configure(api::routes::configure_routes)
+})
+```
 
-5. **Validation**
-   - Run `cargo check` to ensure no syntax errors
-   - Verify all imports are correct (auth::jwt, catalog::ProductService)
-   - Check that JWT validation is implemented correctly
-   - Ensure thread-safety mechanisms are correct
+## Architectural Considerations
 
-## Technical Considerations
+### Multi-Module Integration
+This task integrates three previous tasks:
+- **Task 2**: Provides routing infrastructure
+- **Task 3**: Provides JWT validation
+- **Task 4**: Provides product lookup
 
-### Authentication Integration
-- All cart operations require valid JWT token
-- Token extracted from Authorization header (Bearer scheme)
-- User ID parsed from JWT claims (sub field)
-- 401 Unauthorized returned for invalid/missing tokens
+Clean dependency injection via Actix-web's `Data` extractor.
 
-### Product Integration
-- ProductService used to validate products exist
-- Inventory checked before adding to cart
-- Product snapshot (name, price) stored in CartItem
-- Prevents issues with product changes after adding to cart
+### Authentication Pattern
+JWT-based stateless authentication:
+- No server-side session storage
+- User identity travels with each request
+- Token validation on every cart operation
+- Consistent auth pattern across all endpoints
 
-### Data Model Design
-- **CartItem**: Stores product snapshot to avoid stale references
-- **Cart**: User-specific with list of items
-- HashMap storage allows O(1) cart lookup by ID
-- User-to-cart relationship maintained through iteration
+### Data Denormalization
+CartItem stores product_name and unit_price:
+- **Pro**: Cart remains valid if product changes or is deleted
+- **Pro**: Faster cart display (no additional product lookups)
+- **Con**: Price updates don't affect existing carts
+- **Real-world**: This matches e-commerce behavior (cart locks in price)
+
+### Inventory Validation
+Checks inventory at add time only:
+- Prevents adding unavailable items
+- Doesn't reserve inventory (race condition possible)
+- Real-world: Would need distributed locking or optimistic concurrency
 
 ### Thread Safety
-- **Arc<Mutex<HashMap>>**: Allows shared ownership across handlers
-- Mutex ensures only one thread modifies carts at a time
-- Cloning carts after operations to release locks quickly
-- Suitable for test project; production would use database
+Same Arc<Mutex<>> pattern as ProductService:
+- Safe for concurrent access
+- HashMap provides O(1) cart lookup
+- Short lock durations
 
-### Error Handling
-- Returns appropriate HTTP status codes (200, 400, 401, 404)
-- JSON error messages for bad requests
-- Graceful handling of missing products and inventory issues
+## Risks and Considerations
 
-## Integration Points
+1. **Race Conditions**: Inventory check then add is not atomic. Multiple users could add the last item simultaneously. Production needs pessimistic locking or optimistic concurrency control.
 
-### With Task 3 (User Authentication)
-- Uses `validate_token()` function from auth::jwt module
-- Extracts user_id from JWT claims
-- Relies on JWT token format and validation logic
+2. **Cart Expiration**: No TTL on carts. Memory grows unbounded. Production needs cart expiration and cleanup.
 
-### With Task 4 (Product Catalog)
-- Uses `ProductService::get_by_id()` to validate products
-- Checks `product.inventory_count` for availability
-- Stores product snapshot (name, price) in cart items
+3. **Inventory Reservation**: Items in cart aren't reserved. Checkout might fail if inventory runs out. Production needs reservation system.
 
-### Used By Task 7 (Integration Tests)
-- Full user flow tests will:
-  - Create products
-  - Generate JWT tokens
-  - Add products to cart
-  - Verify cart contents
+4. **Price Changes**: Cart stores snapshot price. Good for user experience but requires business logic for handling price changes at checkout.
 
-## Risks and Mitigation
+5. **Authentication Error Handling**: Returns generic 401 Unauthorized. Production should distinguish between expired tokens, invalid tokens, etc.
 
-**Risk**: Dependency on Tasks 3 and 4 completion
-- **Mitigation**: This is a Level 1 task that should wait for Level 0 tasks to complete. The CTO platform manages this dependency.
+6. **User ID Parsing**: Converts string user_id to i32. Could fail if JWT contains non-integer ID. Production needs robust error handling.
 
-**Risk**: JWT validation might fail if Task 3 implementation changes
-- **Mitigation**: Using standard JWT validation pattern. Task 3 provides stable interface.
-
-**Risk**: Product service integration might have issues
-- **Mitigation**: Using simple get_by_id method that's straightforward to implement in Task 4.
-
-**Risk**: Race conditions with concurrent cart modifications
-- **Mitigation**: Using Mutex ensures atomic operations. In-memory design is simple for test purposes.
+## Testing Strategy
+See `acceptance-criteria.md` for detailed validation steps.
 
 ## Success Criteria
+- All cart files created
+- Cart service manages user-specific carts
+- API endpoints require valid JWT authentication
+- Products are validated before adding to cart
+- Inventory is checked before adding items
+- All cart operations work correctly
+- Integration with Tasks 2, 3, and 4 succeeds
 
-1. ✅ `src/cart/mod.rs` exists and exports CartService
-2. ✅ `src/cart/service.rs` exists with complete implementation
-3. ✅ CartItem and Cart structs properly defined
-4. ✅ CartService implements all required methods
-5. ✅ Thread-safe storage with Arc<Mutex<HashMap>>
-6. ✅ `src/api/cart_routes.rs` exists with all four endpoints
-7. ✅ JWT authentication implemented for all endpoints
-8. ✅ Product validation and inventory checking implemented
-9. ✅ `src/api/mod.rs` updated to include cart_routes
-10. ✅ `src/api/routes.rs` updated to configure cart routes
-11. ✅ Code passes `cargo check` without errors
-12. ✅ Proper error responses for auth, validation, and inventory failures
-13. ✅ Integration with Tasks 3 and 4 is correct
+## Related Tasks
+- **Task 2**: API Endpoints (provides routing infrastructure)
+- **Task 3**: User Authentication (provides JWT validation)
+- **Task 4**: Product Catalog (provides product lookup)
+- **Task 7**: Integration Tests (will test complete cart flow)
 
-## Estimated Effort
-**45 minutes** - Service implementation, API routes with authentication, integration with product catalog, and error handling
+## Diagram
+See `diagrams.mmd` for visual representation of cart architecture, authentication flow, and module integration.
+
+## Production Improvements (Not in Scope)
+- Database persistence
+- Cart expiration/TTL
+- Inventory reservation system
+- Optimistic locking for race conditions
+- Better error types (not generic 401)
+- Cart item quantity limits
+- Calculate cart totals server-side
+- Apply discounts/promotions
+- Guest cart support (pre-authentication)
+- Cart merging (guest → authenticated user)
+- Websocket for real-time inventory updates
+
+## References
+- [Actix-web Data Extraction](https://actix.rs/docs/extractors/)
+- [Actix-web Middleware](https://actix.rs/docs/middleware/)
+- Project PRD: `.taskmaster/docs/prd.txt`
+- Task 3 Authentication: `.taskmaster/docs/task-3/`
+- Task 4 Catalog: `.taskmaster/docs/task-4/`

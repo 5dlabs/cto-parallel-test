@@ -1,52 +1,48 @@
 # Task 4: Product Catalog Module
 
 ## Overview
-Create product catalog and inventory management functionality using Rust. This is a foundational Level 0 task that has no dependencies and should execute in parallel with other Level 0 tasks (Tasks 1, 3, and 6).
+Create product catalog and inventory management functionality for the Rust API project. This is a Level 0 task (no dependencies) that implements product models, service logic, and filtering capabilities for an e-commerce catalog.
 
 ## Context
-This task is part of the parallel task execution test project. It establishes the product catalog foundation that Task 5 (Shopping Cart API) will depend on. The implementation uses in-memory storage with Arc<Mutex<Vec>> for thread-safe product management and rust_decimal for precise price handling.
+This task provides the product management foundation for the application. It enables product creation, retrieval, inventory management, and filtering that will be consumed by Task 5 (Shopping Cart API) when users add items to their carts.
 
 ## Objectives
-1. Create product catalog module structure in `src/catalog/mod.rs`
-2. Define product models with rust_decimal for prices in `src/catalog/models.rs`
-3. Implement ProductService with inventory management in `src/catalog/service.rs`
-4. Add rust_decimal dependency to `Cargo.toml`
+1. Define product data models with pricing and inventory
+2. Implement in-memory product service with CRUD operations
+3. Create advanced filtering capabilities (price range, stock status, name search)
+4. Provide thread-safe service for concurrent access
+5. Support inventory management operations
 
 ## Dependencies
-**None** - This is a Level 0 task that can run independently.
+**None** - This is a Level 0 task that can run independently in parallel with Tasks 1, 3, and 6.
 
-**Depended Upon By:**
-- **Task 5 (Shopping Cart API)** - Level 1 - Uses ProductService to validate products and check inventory
+## Files to Create
+- `src/catalog/mod.rs` - Catalog module exports
+- `src/catalog/models.rs` - Product data models
+- `src/catalog/service.rs` - Product service with business logic
+- `Cargo.toml` - Updates for decimal number handling
 
-## Files to Create/Modify
+## Technical Specifications
 
-### 1. `src/catalog/mod.rs`
-Module declaration file that exports catalog components:
+### Data Types
+- **Decimal Handling**: rust_decimal 1.30 with serde support for precise price calculations
+- **Thread Safety**: Arc<Mutex<T>> for shared mutable state
+- **Concurrency**: Service designed for multi-threaded web server access
 
+### Product Model
 ```rust
-pub mod models;
-pub mod service;
-
-pub use self::models::Product;
-pub use self::service::ProductService;
-```
-
-### 2. `src/catalog/models.rs`
-Product data models with rust_decimal for precise price handling:
-
-```rust
-use serde::{Serialize, Deserialize};
-use rust_decimal::Decimal;
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Product {
     pub id: i32,
     pub name: String,
     pub description: String,
-    pub price: Decimal,
+    pub price: Decimal,           // Precise decimal for money
     pub inventory_count: i32,
 }
+```
 
+### New Product DTO
+```rust
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewProduct {
     pub name: String,
@@ -54,7 +50,10 @@ pub struct NewProduct {
     pub price: Decimal,
     pub inventory_count: i32,
 }
+```
 
+### Product Filter
+```rust
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProductFilter {
     pub name_contains: Option<String>,
@@ -64,207 +63,205 @@ pub struct ProductFilter {
 }
 ```
 
-**Key Features:**
-- `Product`: Complete product with ID
-- `NewProduct`: DTO for product creation
-- `ProductFilter`: Query parameters for filtering
-- Uses `rust_decimal::Decimal` for precise monetary values
-- Implements `Serialize`/`Deserialize` for JSON API support
-- `Clone` trait for in-memory operations
+## Implementation Plan
 
-### 3. `src/catalog/service.rs`
-ProductService with in-memory storage and inventory management:
-
-```rust
-use crate::catalog::models::{Product, NewProduct, ProductFilter};
-use rust_decimal::Decimal;
-use std::sync::{Arc, Mutex};
-
-// In a real app, this would interact with the database
-pub struct ProductService {
-    products: Arc<Mutex<Vec<Product>>>,
-    next_id: Arc<Mutex<i32>>,
-}
-
-impl ProductService {
-    pub fn new() -> Self {
-        ProductService {
-            products: Arc::new(Mutex::new(Vec::new())),
-            next_id: Arc::new(Mutex::new(1)),
-        }
-    }
-
-    pub fn create(&self, new_product: NewProduct) -> Product {
-        let mut products = self.products.lock().unwrap();
-        let mut next_id = self.next_id.lock().unwrap();
-
-        let product = Product {
-            id: *next_id,
-            name: new_product.name,
-            description: new_product.description,
-            price: new_product.price,
-            inventory_count: new_product.inventory_count,
-        };
-
-        *next_id += 1;
-        products.push(product.clone());
-        product
-    }
-
-    pub fn get_all(&self) -> Vec<Product> {
-        let products = self.products.lock().unwrap();
-        products.clone()
-    }
-
-    pub fn get_by_id(&self, id: i32) -> Option<Product> {
-        let products = self.products.lock().unwrap();
-        products.iter().find(|p| p.id == id).cloned()
-    }
-
-    pub fn update_inventory(&self, id: i32, new_count: i32) -> Option<Product> {
-        let mut products = self.products.lock().unwrap();
-        if let Some(product) = products.iter_mut().find(|p| p.id == id) {
-            product.inventory_count = new_count;
-            Some(product.clone())
-        } else {
-            None
-        }
-    }
-
-    pub fn filter(&self, filter: ProductFilter) -> Vec<Product> {
-        let products = self.products.lock().unwrap();
-        products
-            .iter()
-            .filter(|p| {
-                let name_match = filter.name_contains
-                    .as_ref()
-                    .map_or(true, |name| p.name.to_lowercase().contains(&name.to_lowercase()));
-
-                let min_price_match = filter.min_price
-                    .as_ref()
-                    .map_or(true, |min| p.price >= *min);
-
-                let max_price_match = filter.max_price
-                    .as_ref()
-                    .map_or(true, |max| p.price <= *max);
-
-                let in_stock_match = filter.in_stock
-                    .map_or(true, |in_stock| (p.inventory_count > 0) == in_stock);
-
-                name_match && min_price_match && max_price_match && in_stock_match
-            })
-            .cloned()
-            .collect()
-    }
-}
-```
-
-**Service Features:**
-- Thread-safe in-memory storage using `Arc<Mutex<Vec<Product>>>`
-- Auto-incrementing ID generation
-- CRUD operations: create, get_all, get_by_id, update_inventory
-- Advanced filtering by name, price range, and stock status
-- Case-insensitive name search
-- Returns cloned products to avoid holding locks
-
-### 4. `Cargo.toml` Updates
-Add rust_decimal dependency:
+### Step 1: Update Cargo.toml
+Add decimal handling dependency:
 
 ```toml
 [dependencies]
 rust_decimal = { version = "1.30", features = ["serde"] }
 ```
 
-**Dependency Features:**
-- `rust_decimal` for precise decimal arithmetic (critical for monetary values)
-- `serde` feature for JSON serialization support
+**Why rust_decimal**: Floating-point arithmetic (f32/f64) is imprecise for financial calculations. Decimal provides exact decimal arithmetic suitable for prices.
 
-## Implementation Steps
+### Step 2: Create Module Exports (src/catalog/mod.rs)
+```rust
+pub mod models;
+pub mod service;
 
-1. **Create Module Structure**
-   - Create `src/catalog/` directory if it doesn't exist
-   - Create `src/catalog/mod.rs` with module exports
-   - Ensure proper visibility with `pub use` statements
+pub use self::models::Product;
+pub use self::service::ProductService;
+```
 
-2. **Define Product Models**
-   - Create `src/catalog/models.rs`
-   - Define `Product`, `NewProduct`, and `ProductFilter` structs
-   - Use `rust_decimal::Decimal` for the price field
-   - Add appropriate derives: `Debug`, `Serialize`, `Deserialize`, `Clone`
+Clean public interface exposing key types.
 
-3. **Implement ProductService**
-   - Create `src/catalog/service.rs`
-   - Implement `ProductService` struct with Arc<Mutex> storage
-   - Implement `new()` constructor
-   - Implement all service methods: create, get_all, get_by_id, update_inventory, filter
-   - Ensure thread-safety with proper mutex locking
+### Step 3: Implement Data Models (src/catalog/models.rs)
+Define three model types:
 
-4. **Update Dependencies**
-   - Modify `Cargo.toml` to include rust_decimal with serde feature
-   - Ensure version compatibility (1.30+)
+#### Product
+Full product with ID (represents stored product)
 
-5. **Validation**
-   - Run `cargo check` to ensure no syntax errors
-   - Verify all structs compile correctly
-   - Check that rust_decimal dependency resolves
-   - Ensure thread-safety mechanisms are correct
+#### NewProduct
+Product without ID (for creation requests)
 
-## Technical Considerations
+#### ProductFilter
+Optional filter criteria for querying products
 
-### Data Type Choice
-- **rust_decimal**: Provides exact decimal arithmetic needed for monetary values
-- Avoids floating-point precision issues (e.g., 0.1 + 0.2 != 0.3)
-- Serializes cleanly to/from JSON
+**Design Note**: Separation of Product and NewProduct follows the DTO pattern - creation doesn't have ID, existing products do.
+
+### Step 4: Implement Product Service (src/catalog/service.rs)
+In-memory service with thread-safe operations:
+
+#### Data Structure
+```rust
+pub struct ProductService {
+    products: Arc<Mutex<Vec<Product>>>,
+    next_id: Arc<Mutex<i32>>,
+}
+```
+
+Uses `Arc<Mutex<>>` for:
+- **Arc**: Atomic Reference Counting for sharing across threads
+- **Mutex**: Mutual exclusion for safe concurrent modification
+- Separate locks for products and ID to minimize contention
+
+#### Core Methods
+
+**`new() -> Self`**
+- Initializes empty product list
+- Sets next_id to 1
+- Returns ready-to-use service instance
+
+**`create(&self, new_product: NewProduct) -> Product`**
+- Acquires lock on products and next_id
+- Assigns ID from next_id counter
+- Increments next_id
+- Converts NewProduct to Product
+- Stores in vector
+- Returns created product with ID
+
+**`get_all(&self) -> Vec<Product>`**
+- Acquires read lock on products
+- Clones entire vector
+- Returns owned copy (safe to use after lock released)
+
+**`get_by_id(&self, id: i32) -> Option<Product>`**
+- Acquires read lock on products
+- Searches for product by ID
+- Returns cloned product if found, None otherwise
+
+**`update_inventory(&self, id: i32, new_count: i32) -> Option<Product>`**
+- Acquires write lock on products
+- Finds product by ID (mutable reference)
+- Updates inventory_count
+- Returns cloned updated product
+
+**`filter(&self, filter: ProductFilter) -> Vec<Product>`**
+- Acquires read lock on products
+- Applies all filter criteria:
+  - `name_contains`: Case-insensitive substring search
+  - `min_price`: Price >= minimum
+  - `max_price`: Price <= maximum
+  - `in_stock`: inventory_count > 0 matches true
+- Combines all filters with AND logic
+- Returns cloned filtered products
+
+### Step 5: Filtering Logic Implementation
+```rust
+products.iter().filter(|p| {
+    let name_match = filter.name_contains
+        .as_ref()
+        .map_or(true, |name| p.name.to_lowercase().contains(&name.to_lowercase()));
+
+    let min_price_match = filter.min_price
+        .as_ref()
+        .map_or(true, |min| p.price >= *min);
+
+    let max_price_match = filter.max_price
+        .as_ref()
+        .map_or(true, |max| p.price <= *max);
+
+    let in_stock_match = filter.in_stock
+        .map_or(true, |in_stock| (p.inventory_count > 0) == in_stock);
+
+    name_match && min_price_match && max_price_match && in_stock_match
+}).cloned().collect()
+```
+
+**Design Decisions**:
+- `map_or(true, ...)`: If filter field is None, it matches everything
+- Case-insensitive name search for better UX
+- All filters are inclusive (>= and <=)
+- Explicit clone to return owned data
+
+## Architectural Considerations
+
+### In-Memory Storage
+**For this test project**: Products stored in memory (Vec<Product>)
+**Production alternative**: Replace with database repository pattern, keeping same interface
 
 ### Thread Safety
-- **Arc<Mutex<Vec<Product>>>**: Allows shared ownership across threads
-- Mutex ensures only one thread modifies data at a time
-- Cloning products after read to release locks quickly
-- Suitable for test project; production would use database
+Service is `Send + Sync`:
+- Can be shared across Actix-web worker threads
+- Mutex ensures safe concurrent access
+- Short critical sections (lock, operate, unlock)
 
-### Service Design Pattern
-- Encapsulates all product operations in one service
-- Stateful service with internal storage
-- Can be easily converted to database-backed implementation
-- Methods return owned data (Product) rather than references
+### Decimal Precision
+Using `rust_decimal::Decimal` instead of `f64`:
+- Exact decimal representation
+- No floating-point rounding errors
+- Essential for financial calculations
+- Example: 0.1 + 0.2 = 0.3 exactly (not 0.30000000000000004)
 
-### Filtering Implementation
-- Flexible filtering with optional criteria
-- All filters applied simultaneously (AND logic)
-- Case-insensitive name matching
-- Price comparisons using Decimal's Ord trait
+### Service Pattern
+- Encapsulates business logic
+- Hides storage implementation
+- Testable without database
+- Can be mocked for testing
 
-## Integration Points
+### Memory Efficiency
+Current implementation clones products on read:
+- **Pro**: No lock held while consumer uses data
+- **Con**: Memory overhead for large catalogs
+- **Alternative**: Return references with lifetime (requires lifetime management)
 
-- **Task 5 (Shopping Cart API)**: Will use ProductService to:
-  - Validate products exist before adding to cart
-  - Check inventory availability
-  - Retrieve product details for cart items
-  - Display product names and prices in cart
+## Risks and Considerations
 
-## Risks and Mitigation
+1. **Memory Storage**: Data lost on server restart. Acceptable for test project, unacceptable for production.
 
-**Risk**: Cargo.toml conflicts with Task 1 (Database Schema)
-- **Mitigation**: This is expected and will be handled by the CTO platform's conflict detection. Both tasks add different dependencies.
+2. **Linear Search**: `get_by_id` and `filter` are O(n). For large catalogs, use HashMap for ID lookups and indexed search.
 
-**Risk**: Thread safety issues with concurrent access
-- **Mitigation**: Using Arc<Mutex> pattern ensures thread-safe access. In-memory design is simple for test purposes.
+3. **Lock Contention**: Single lock on products vector. High-traffic scenarios might benefit from read-write lock (RwLock) or sharding.
 
-**Risk**: rust_decimal version compatibility
-- **Mitigation**: Specifying version 1.30+ with serde feature ensures compatibility with other dependencies
+4. **Clone Overhead**: Every read clones products. For large product structures, consider Arc-wrapping individual products.
+
+5. **No Pagination**: `get_all` returns entire catalog. Production would need pagination with limit/offset.
+
+6. **ID Generation**: Simple counter. Production would use database sequences or UUIDs.
+
+## Testing Strategy
+See `acceptance-criteria.md` for detailed validation steps.
 
 ## Success Criteria
+- All catalog files created
+- Product CRUD operations work correctly
+- Filtering combines multiple criteria correctly
+- Inventory management updates products
+- Thread-safe service compiles
+- Compatible with Task 5's requirements
 
-1. ✅ `src/catalog/mod.rs` exists and exports Product and ProductService
-2. ✅ `src/catalog/models.rs` exists with Product, NewProduct, and ProductFilter definitions
-3. ✅ `src/catalog/service.rs` exists with complete ProductService implementation
-4. ✅ All models use rust_decimal::Decimal for price fields
-5. ✅ ProductService implements all required methods correctly
-6. ✅ Thread-safe storage with Arc<Mutex<Vec<Product>>>
-7. ✅ `Cargo.toml` includes rust_decimal dependency with serde feature
-8. ✅ Code passes `cargo check` without errors
-9. ✅ Filter method supports all query types
-10. ✅ Module is ready for integration with Task 5
+## Related Tasks
+- **Task 5**: Shopping Cart API (depends on this task for product validation)
+- **Task 7**: Integration Tests (will test product operations)
+- **Independent of**: Tasks 1, 3, 6 (runs in parallel)
 
-## Estimated Effort
-**40 minutes** - Module creation with in-memory service implementation, filtering logic, and thread-safe storage patterns
+## Diagram
+See `diagrams.mmd` for visual representation of the service architecture and data models.
+
+## Production Improvements (Not in Scope)
+- Database persistence layer
+- Pagination for large catalogs
+- Full-text search for product names
+- Category/tag system
+- Product images and media
+- Price history and analytics
+- Soft delete for discontinued products
+- Audit log for inventory changes
+- Bulk import/export capabilities
+
+## References
+- [rust_decimal Documentation](https://docs.rs/rust_decimal/)
+- [Arc Documentation](https://doc.rust-lang.org/std/sync/struct.Arc.html)
+- [Mutex Documentation](https://doc.rust-lang.org/std/sync/struct.Mutex.html)
+- Project PRD: `.taskmaster/docs/prd.txt`

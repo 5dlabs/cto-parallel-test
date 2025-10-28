@@ -1,127 +1,115 @@
 # Task 6: Frontend Components
 
 ## Overview
-Create basic frontend structure and components for the application using React, Material-UI, and React Router. This is a Level 0 task that has no dependencies and should execute in parallel with other Level 0 tasks (Tasks 1, 3, and 4).
+Create basic frontend structure and components for the application using React. This is a Level 0 task (no dependencies) that establishes the UI foundation with routing, layout components, and placeholder pages for the e-commerce test application.
 
 ## Context
-This task is part of the parallel task execution test project. It establishes the frontend foundation that Task 7 (Integration Tests) will depend on. The implementation uses React 18 with Material-UI for styling and React Router for navigation, creating a placeholder e-commerce user interface.
+This task provides the client-side interface for the API built in Tasks 1-5. It demonstrates that frontend and backend development can proceed in parallel when interfaces are well-defined. The frontend will eventually consume the REST APIs but can be developed with placeholder data initially.
 
 ## Objectives
-1. Create `frontend/package.json` with React and Material-UI dependencies
-2. Create `frontend/src/App.js` as the main application component with routing
-3. Create basic UI components: Header, Footer, HomePage, ProductList, ProductDetail, Cart, Login, Register
-4. Set up Material-UI theming and consistent design
-5. Implement React Router for client-side navigation
+1. Set up React application with routing
+2. Create Material-UI themed layout components (Header, Footer)
+3. Implement placeholder pages for all routes
+4. Configure navigation between pages
+5. Establish component structure for future API integration
 
 ## Dependencies
-**None** - This is a Level 0 task that can run independently.
-
-**Depended Upon By:**
-- **Task 7 (Integration Tests)** - Level 2 - Will test the complete application including frontend
+**None** - This is a Level 0 task that can run independently in parallel with Tasks 1, 3, and 4.
 
 ## Files to Create
+- `frontend/package.json` - Node.js dependencies and scripts
+- `frontend/src/App.js` - Main application with routing
+- `frontend/src/components/Header.js` - Navigation header
+- `frontend/src/components/Footer.js` - Page footer
+- `frontend/src/components/HomePage.js` - Landing page
+- `frontend/src/components/ProductList.js` - Product catalog page
+- `frontend/src/components/ProductDetail.js` - Product detail page (placeholder)
+- `frontend/src/components/Cart.js` - Shopping cart page (placeholder)
+- `frontend/src/components/Login.js` - Login page (placeholder)
+- `frontend/src/components/Register.js` - Registration page (placeholder)
 
-### 1. `frontend/package.json`
-Package configuration with all necessary dependencies:
+## Technical Specifications
 
-```json
-{
-  "name": "parallel-task-execution-test-frontend",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.14.2",
-    "axios": "^1.4.0",
-    "@mui/material": "^5.14.0",
-    "@mui/icons-material": "^5.14.0",
-    "@emotion/react": "^11.11.1",
-    "@emotion/styled": "^11.11.0"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "devDependencies": {
-    "react-scripts": "5.0.1"
-  }
-}
+### Technology Stack
+- **Framework**: React 18.2.0
+- **Routing**: React Router DOM 6.14.2
+- **UI Library**: Material-UI (MUI) 5.14.0
+- **HTTP Client**: Axios 1.4.0 (for future API calls)
+- **Styling**: Emotion (MUI's styling solution)
+- **Build Tool**: React Scripts 5.0.1 (Create React App)
+
+### Route Structure
+```
+/ → HomePage (landing page)
+/products → ProductList (browse products)
+/products/:id → ProductDetail (product details)
+/cart → Cart (shopping cart)
+/login → Login (authentication)
+/register → Register (user registration)
 ```
 
-**Dependencies:**
-- `react` & `react-dom`: Core React framework
-- `react-router-dom`: Client-side routing
-- `axios`: HTTP client for API calls
-- `@mui/material` & `@mui/icons-material`: Material-UI components
-- `@emotion/react` & `@emotion/styled`: CSS-in-JS for Material-UI
-- `react-scripts`: Build tooling and dev server
+### Component Hierarchy
+```
+App (Router, Theme Provider)
+├── Header (Navigation, Cart Badge)
+├── Routes
+│   ├── HomePage
+│   ├── ProductList
+│   ├── ProductDetail
+│   ├── Cart
+│   ├── Login
+│   └── Register
+└── Footer
+```
 
-### 2. `frontend/src/App.js`
-Main application component with routing and theming:
+## Implementation Plan
+
+### Step 1: Create package.json
+Define project dependencies and scripts:
+
+**Dependencies**:
+- React core libraries (react, react-dom)
+- React Router for navigation
+- Material-UI for components
+- Axios for API calls (future use)
+- Emotion for styling (required by MUI)
+
+**Scripts**:
+- `start` - Development server (port 3000)
+- `build` - Production build
+- `test` - Jest test runner
+- `eject` - Eject from CRA (not recommended)
+
+**Configuration**:
+- ESLint extends react-app
+- Browserslist for target browsers
+
+### Step 2: Create Main Application (frontend/src/App.js)
+Set up routing and theming:
 
 ```jsx
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 
-// Import components
-import Header from './components/Header';
-import Footer from './components/Footer';
-import HomePage from './components/HomePage';
-import ProductList from './components/ProductList';
-import ProductDetail from './components/ProductDetail';
-import Cart from './components/Cart';
-import Login from './components/Login';
-import Register from './components/Register';
+// Import all components
 
-// Create theme
 const theme = createTheme({
   palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
+    primary: { main: '#1976d2' },    // Blue
+    secondary: { main: '#dc004e' },  // Pink
   },
 });
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <CssBaseline />
+      <CssBaseline />  {/* Normalize CSS */}
       <Router>
         <Header />
         <main style={{ padding: '20px', minHeight: 'calc(100vh - 130px)' }}>
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/products" element={<ProductList />} />
-            <Route path="/products/:id" element={<ProductDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            {/* Route definitions */}
           </Routes>
         </main>
         <Footer />
@@ -129,145 +117,209 @@ function App() {
     </ThemeProvider>
   );
 }
-
-export default App;
 ```
 
-### 3. Component Files
+**Design Decisions**:
+- `CssBaseline` normalizes CSS across browsers
+- Theme defines consistent color palette
+- Main element has padding and min-height for layout
+- Router wraps entire app for navigation
 
-**`frontend/src/components/Header.js`** - Application header with navigation:
-- AppBar with logo and navigation links
-- Shopping cart badge showing item count
-- Login/Logout button (placeholder logic)
+### Step 3: Create Header Component
+Navigation bar with cart badge:
 
-**`frontend/src/components/Footer.js`** - Application footer:
-- Copyright information
-- Simple footer layout
+**Features**:
+- App title/logo linking to home
+- Products navigation link
+- Cart icon with badge (count placeholder)
+- Login/Logout button (authentication state placeholder)
+- Material-UI AppBar and Toolbar
+- ShoppingCartIcon with Badge for cart items
 
-**`frontend/src/components/HomePage.js`** - Landing page:
-- Welcome message
-- Call-to-action button to product listing
+**State Placeholder**:
+```jsx
+const isLoggedIn = false;        // TODO: Connect to auth context
+const cartItemCount = 0;         // TODO: Connect to cart state
+```
 
-**`frontend/src/components/ProductList.js`** - Product catalog view:
-- Grid layout of product cards
-- Placeholder product data
-- Links to product detail pages
-- Add to cart buttons (placeholder)
+### Step 4: Create Footer Component
+Simple copyright footer:
 
-**`frontend/src/components/ProductDetail.js`** - Individual product view:
-- Product details display
-- Add to cart functionality (placeholder)
-- Back to products link
+**Features**:
+- Centered content in Container
+- Current year (dynamic)
+- Minimal styling
+- Uses Material-UI Box for layout
 
-**`frontend/src/components/Cart.js`** - Shopping cart view:
-- List of cart items
-- Quantity controls (placeholder)
-- Remove item buttons (placeholder)
-- Total price calculation (placeholder)
+### Step 5: Create HomePage Component
+Landing page with call-to-action:
 
-**`frontend/src/components/Login.js`** - Login form:
-- Email and password fields
-- Login button (placeholder submission)
-- Link to register page
+**Features**:
+- Hero section with welcome message
+- "Shop Now" button linking to products
+- Centered layout with Material-UI Container
+- Typography components for headings
 
-**`frontend/src/components/Register.js`** - Registration form:
-- Username, email, password fields
-- Register button (placeholder submission)
+### Step 6: Create ProductList Component
+Product catalog with placeholder data:
+
+**Features**:
+- Grid layout (3 columns on desktop)
+- Product cards with:
+  - Placeholder image (grey box)
+  - Product name and price
+  - Description
+  - "View Details" and "Add to Cart" buttons
+- Hardcoded product array (3 sample products)
+- Material-UI Grid, Card, CardContent, CardMedia
+
+**Placeholder Data**:
+```jsx
+const products = [
+  { id: 1, name: 'Product 1', price: 19.99, description: '...' },
+  { id: 2, name: 'Product 2', price: 29.99, description: '...' },
+  { id: 3, name: 'Product 3', price: 39.99, description: '...' },
+];
+```
+
+Future: Replace with API call to backend
+
+### Step 7: Create Placeholder Components
+Simple placeholders for remaining routes:
+
+**ProductDetail** (frontend/src/components/ProductDetail.js):
+- Extract product ID from route params
+- Display "Product Detail - ID: {id}"
+- Placeholder for full product information
+- Future: Fetch product details from API
+
+**Cart** (frontend/src/components/Cart.js):
+- Display "Shopping Cart"
+- Placeholder for cart items list
+- Placeholder for cart total
+- Future: Display items from cart API
+
+**Login** (frontend/src/components/Login.js):
+- Login form with email and password fields
+- Submit button (no functionality)
+- Link to registration page
+- Future: Connect to authentication API
+
+**Register** (frontend/src/components/Register.js):
+- Registration form fields
+- Submit button (no functionality)
 - Link to login page
+- Future: Connect to user registration API
 
-## Implementation Steps
+All placeholders use Material-UI components for consistency.
 
-1. **Create Frontend Directory Structure**
-   - Create `frontend/` directory in project root
-   - Create `frontend/src/` subdirectory
-   - Create `frontend/src/components/` subdirectory
+### Step 8: Directory Structure
+```
+frontend/
+├── package.json
+├── public/
+│   └── index.html (Create React App default)
+├── src/
+│   ├── App.js
+│   ├── index.js (Create React App default)
+│   └── components/
+│       ├── Header.js
+│       ├── Footer.js
+│       ├── HomePage.js
+│       ├── ProductList.js
+│       ├── ProductDetail.js
+│       ├── Cart.js
+│       ├── Login.js
+│       └── Register.js
+```
 
-2. **Set Up Package Configuration**
-   - Create `frontend/package.json` with all dependencies
-   - Specify correct versions for React 18 and Material-UI 5
-   - Configure scripts for development and production
+## Architectural Considerations
 
-3. **Implement Main Application**
-   - Create `frontend/src/App.js` with routing setup
-   - Configure Material-UI theme with primary/secondary colors
-   - Set up route definitions for all pages
-   - Add ThemeProvider and CssBaseline for consistent styling
+### Component-Based Architecture
+- Each page is a separate component
+- Shared layout (Header/Footer) wraps all routes
+- Components are self-contained and reusable
 
-4. **Create Layout Components**
-   - Implement Header component with AppBar and navigation
-   - Implement Footer component with copyright
-   - Ensure consistent layout across all pages
+### State Management
+**Current**: Local component state and props
+**Future**: Consider React Context or Redux for:
+- User authentication state
+- Shopping cart state
+- Global application state
 
-5. **Create Page Components**
-   - Implement HomePage with welcome message
-   - Implement ProductList with grid layout and placeholder data
-   - Implement ProductDetail as placeholder
-   - Implement Cart, Login, Register as placeholders
-   - Use Material-UI components for consistent design
+### Styling Strategy
+Material-UI provides:
+- Consistent design language
+- Responsive components
+- Theme customization
+- Built-in accessibility
 
-6. **Validation**
-   - Verify all files are created
-   - Check that package.json has correct dependencies
-   - Ensure component imports and exports are correct
-   - Run `npm install` to verify dependencies resolve
-   - Run `npm start` to verify application loads
+### Routing
+React Router v6 features:
+- Declarative route configuration
+- Nested routes support
+- URL parameter extraction
+- Link component for navigation
 
-## Technical Considerations
+### Placeholder Pattern
+Components render static content initially:
+- **Benefit**: UI development proceeds independently
+- **Benefit**: Defines API contract (what data is needed)
+- **Future**: Replace placeholders with API calls using Axios
 
-### Framework Choice
-- **React 18**: Latest stable version with modern features
-- **Material-UI 5**: Comprehensive component library
-- **React Router 6**: Modern routing with hooks
+## Future API Integration Points
 
-### Component Architecture
-- Functional components with hooks (modern React pattern)
-- Simple prop-based data flow
-- No state management library needed for test project
-- Placeholder logic for backend integration
+1. **Authentication**:
+   - Login form → POST /api/auth/login
+   - Register form → POST /api/auth/register
+   - Store JWT token in localStorage
+   - Add Authorization header to requests
 
-### Styling Approach
-- Material-UI components for consistent design
-- Custom theme with primary/secondary colors
-- Minimal custom styling
-- Responsive design with Material-UI's Grid
+2. **Products**:
+   - ProductList → GET /api/products
+   - ProductDetail → GET /api/products/:id
 
-### Development Experience
-- Hot reload with react-scripts
-- No build configuration needed (Create React App approach)
-- Simple folder structure
+3. **Cart**:
+   - Cart component → GET /api/cart
+   - Add to cart → POST /api/cart/add
+   - Remove from cart → DELETE /api/cart/remove/:id
 
-## Integration Points
+4. **State Management**:
+   - Create AuthContext for user state
+   - Create CartContext for cart state
+   - Use React Context API or state management library
 
-- **Task 7 (Integration Tests)**: Will verify frontend serves correctly
-- **Future Backend Integration**: Components have placeholders for API calls with axios
-- **Authentication Flow**: Login/Register components ready for backend integration
-- **Shopping Cart**: Cart component ready to connect with Task 5's cart API
-
-## Risks and Mitigation
-
-**Risk**: npm dependencies might have version conflicts
-- **Mitigation**: Using specific version ranges known to work together
-
-**Risk**: Component imports might fail
-- **Mitigation**: Following standard React component patterns
-
-**Risk**: Material-UI setup might be incorrect
-- **Mitigation**: Using standard Material-UI setup pattern with ThemeProvider
+## Testing Strategy
+See `acceptance-criteria.md` for detailed validation steps.
 
 ## Success Criteria
+- All frontend files created
+- Application starts without errors
+- All routes are accessible
+- Navigation works between pages
+- Components render correctly
+- Responsive layout on different screen sizes
+- Material-UI theme applied consistently
 
-1. ✅ `frontend/package.json` exists with all required dependencies
-2. ✅ Correct versions specified: React 18.2.0, Material-UI 5.14.0
-3. ✅ `frontend/src/App.js` exists with routing configuration
-4. ✅ Material-UI theme configured with primary/secondary colors
-5. ✅ All 8 component files created in `frontend/src/components/`
-6. ✅ Header component with AppBar and navigation
-7. ✅ ProductList component with grid layout and placeholder data
-8. ✅ All routes defined: /, /products, /products/:id, /cart, /login, /register
-9. ✅ Components use Material-UI components consistently
-10. ✅ Application can be started with `npm install && npm start`
-11. ✅ No console errors on initial load
-12. ✅ Navigation between pages works correctly
+## Related Tasks
+- **Independent of** all backend tasks (runs in parallel)
+- **Task 7**: Integration Tests (will eventually test frontend-backend integration)
 
-## Estimated Effort
-**35 minutes** - Frontend structure creation, component implementation with Material-UI, and routing setup
+## Risks and Considerations
+
+1. **No Backend Integration**: Components use placeholder data. Integration with backend APIs is future work.
+
+2. **No State Management**: Authentication and cart state are not persisted or shared between components.
+
+3. **No Error Handling**: No error boundaries or API error handling.
+
+4. **Basic Styling**: Minimal custom styling, relying on Material-UI defaults.
+
+5. **No Testing**: No unit tests or component tests included.
+
+## References
+- [React Documentation](https://react.dev/)
+- [React Router Documentation](https://reactrouter.com/)
+- [Material-UI Documentation](https://mui.com/)
+- [Create React App](https://create-react-app.dev/)
+- Project PRD: `.taskmaster/docs/prd.txt`

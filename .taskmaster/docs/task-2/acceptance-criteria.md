@@ -1,210 +1,205 @@
-# Acceptance Criteria: API Endpoints
+# Task 2: API Endpoints - Acceptance Criteria
 
-## Required Files
+## File Creation Criteria
 
-### ✅ `src/api/mod.rs`
-- [ ] File exists at `src/api/mod.rs`
-- [ ] Contains `pub mod routes;` declaration
-- [ ] Properly exports routes module
+### ✅ Required Files Exist
+- [ ] `src/api/mod.rs` exists
+- [ ] `src/api/routes.rs` exists
+- [ ] `src/main.rs` exists (created or updated)
+- [ ] `Cargo.toml` has been updated with web dependencies
 
-### ✅ `src/api/routes.rs`
-- [ ] File exists at `src/api/routes.rs`
-- [ ] Contains `configure_routes` function accepting `&mut web::ServiceConfig`
-- [ ] Implements health check handler at `/api/health` route
-- [ ] Health check returns JSON `{"status": "ok"}` with 200 status
-- [ ] Contains `user_routes` placeholder function returning 501 Not Implemented
-- [ ] Contains `product_routes` placeholder function returning 501 Not Implemented
-- [ ] Imports `crate::schema` to establish Task 1 dependency
-- [ ] Uses Actix-web routing with `web::scope` pattern
-- [ ] Health check handler uses `#[actix_web::get("/health")]` attribute
+## Code Quality Criteria
 
-### ✅ `src/main.rs`
-- [ ] File exists at `src/main.rs`
+### ✅ API Module (src/api/mod.rs)
+- [ ] Contains `pub mod routes;` export
+- [ ] Valid Rust module syntax
+- [ ] Properly exposes routes submodule
+
+### ✅ Routes Module (src/api/routes.rs)
+- [ ] Imports required Actix-web types (web, HttpResponse, Scope)
+- [ ] Imports `crate::schema` (validates Task 1 dependency)
+- [ ] Contains `configure_routes(cfg: &mut web::ServiceConfig)` function
+- [ ] Creates `/api` base scope
+- [ ] Registers `health_check` handler
+- [ ] Creates nested `/users` scope with `user_routes` configuration
+- [ ] Creates nested `/products` scope with `product_routes` configuration
+- [ ] Health check handler:
+  - Uses `#[actix_web::get("/health")]` attribute macro
+  - Declared as `async fn health_check() -> HttpResponse`
+  - Returns `HttpResponse::Ok().json(...)` with status object
+  - JSON body contains `{"status": "ok"}`
+- [ ] `user_routes(cfg: &mut web::ServiceConfig)` placeholder exists
+  - Returns `HttpResponse::NotImplemented()` for empty resource
+- [ ] `product_routes(cfg: &mut web::ServiceConfig)` placeholder exists
+  - Returns `HttpResponse::NotImplemented()` for empty resource
+
+### ✅ Main Application (src/main.rs)
+- [ ] Uses `#[actix_web::main]` attribute macro
 - [ ] Imports `actix_web::{App, HttpServer}`
-- [ ] Declares `mod api;` module
-- [ ] Declares `mod schema;` module
-- [ ] Contains async main function with `#[actix_web::main]` attribute
-- [ ] Creates HttpServer with App configuration
-- [ ] Calls `api::routes::configure_routes` in app configuration
-- [ ] Binds server to `127.0.0.1:8080`
-- [ ] Returns `std::io::Result<()>`
-- [ ] Includes startup message logging
+- [ ] Declares `mod api;`
+- [ ] Declares `mod schema;`
+- [ ] `main()` function signature: `async fn main() -> std::io::Result<()>`
+- [ ] Creates `HttpServer::new()` with app factory
+- [ ] App factory creates `App::new()`
+- [ ] Configures app with `.configure(api::routes::configure_routes)`
+- [ ] Binds to `"127.0.0.1:8080"`
+- [ ] Calls `.run().await`
+- [ ] Prints startup message (e.g., "Starting API server")
 
-### ✅ `Cargo.toml` Updates
-- [ ] Contains `actix-web = "4.3.1"` dependency
-- [ ] Contains `serde = { version = "1.0", features = ["derive"] }` dependency
-- [ ] Contains `serde_json = "1.0"` dependency
+### ✅ Dependencies (Cargo.toml)
+- [ ] Includes `actix-web = "4.3.1"`
+- [ ] Includes `serde = { version = "1.0", features = ["derive"] }`
+- [ ] Includes `serde_json = "1.0"`
+- [ ] Dependencies from Task 1 still present (diesel, r2d2, dotenv)
 - [ ] All dependencies in `[dependencies]` section
-- [ ] Successfully merges with Task 1 database dependencies
+- [ ] Valid TOML syntax
 
-## Functional Requirements
+## Compilation and Runtime Criteria
 
-### Route Structure
-- [ ] `/api` base scope configured
-- [ ] `/api/health` endpoint accessible
-- [ ] `/api/users` scope configured (placeholder)
-- [ ] `/api/products` scope configured (placeholder)
-- [ ] Route hierarchy matches specification
+### ✅ Build Verification
+- [ ] `cargo check` completes without errors
+- [ ] `cargo build` completes successfully
+- [ ] No warnings related to unused imports
+- [ ] Schema module import resolves (Task 1 complete)
 
-### Health Check Endpoint
-- [ ] Responds to GET requests
-- [ ] Returns 200 OK status code
-- [ ] Response body is valid JSON
-- [ ] JSON contains `status` field with value `"ok"`
-- [ ] No authentication required
+### ✅ Server Startup
+- [ ] `cargo run` starts server without panicking
+- [ ] Server binds to port 8080 successfully
+- [ ] Startup message printed to console
+- [ ] Server accepts HTTP connections
 
-### Placeholder Routes
-- [ ] User routes return 501 Not Implemented
-- [ ] Product routes return 501 Not Implemented
-- [ ] Placeholders are ready for Task 3/4 implementation
-- [ ] Comments indicate future implementation
+### ✅ Endpoint Functionality
+- [ ] Health check endpoint accessible at `/api/health`
+- [ ] Health check returns HTTP 200 OK
+- [ ] Health check returns JSON with `Content-Type: application/json`
+- [ ] Health check body matches `{"status":"ok"}` (spacing may vary)
+- [ ] User routes scope exists at `/api/users`
+- [ ] User placeholder returns HTTP 501 Not Implemented
+- [ ] Product routes scope exists at `/api/products`
+- [ ] Product placeholder returns HTTP 501 Not Implemented
 
-## Validation Tests
+## Integration Criteria
 
-### Compilation Tests
+### ✅ Task 1 Integration
+- [ ] Successfully imports `crate::schema`
+- [ ] Compilation succeeds with schema definitions present
+- [ ] No conflicts in Cargo.toml dependencies
+
+### ✅ Extensibility for Future Tasks
+- [ ] Route configuration pattern allows Task 3 to implement user authentication
+- [ ] Route configuration pattern allows Task 4 to implement product catalog
+- [ ] Route configuration pattern allows Task 5 to add cart routes
+- [ ] Modular structure supports testing in Task 7
+
+## Testing Commands
+
+### Manual Validation Steps
+
+1. **Verify File Existence**
+   ```bash
+   ls -la src/api/mod.rs
+   ls -la src/api/routes.rs
+   ls -la src/main.rs
+   ```
+
+2. **Check Rust Compilation**
+   ```bash
+   cargo check
+   cargo build
+   ```
+
+3. **Validate Dependencies**
+   ```bash
+   cargo tree | grep actix-web
+   cargo tree | grep serde
+   ```
+
+4. **Start Server**
+   ```bash
+   cargo run &
+   sleep 2  # Wait for server startup
+   ```
+
+5. **Test Health Check Endpoint**
+   ```bash
+   curl -i http://localhost:8080/api/health
+   # Expected: HTTP/1.1 200 OK
+   # Expected body: {"status":"ok"}
+   ```
+
+6. **Test Placeholder Routes**
+   ```bash
+   curl -i http://localhost:8080/api/users
+   # Expected: HTTP/1.1 501 Not Implemented
+
+   curl -i http://localhost:8080/api/products
+   # Expected: HTTP/1.1 501 Not Implemented
+   ```
+
+7. **Stop Server**
+   ```bash
+   pkill -f "cargo run"
+   ```
+
+### Automated Test Script
 ```bash
-cargo check
-```
-- [ ] Compiles without errors
-- [ ] No warnings related to new code
-- [ ] All imports resolve correctly
-- [ ] Async syntax is correct
+#!/bin/bash
+set -e
 
-### Dependency Resolution
-```bash
-cargo tree | grep actix-web
-```
-- [ ] Actix-web dependency resolves
-- [ ] Version 4.3.1 is used
-- [ ] No conflicting dependencies
+echo "Building project..."
+cargo build --quiet
 
-### Module Structure
-```bash
-ls -la src/api/
-```
-- [ ] Directory exists
-- [ ] Contains mod.rs
-- [ ] Contains routes.rs
-
-### Import Validation
-- [ ] `use crate::schema;` compiles successfully
-- [ ] Confirms Task 1 dependency is satisfied
-- [ ] Schema types are accessible (even if not used yet)
-
-## Integration Tests (Optional)
-
-### Server Startup Test
-```bash
+echo "Starting server..."
 cargo run &
-sleep 2
-curl http://localhost:8080/api/health
-pkill -f "cargo run"
-```
-- [ ] Server starts without errors
-- [ ] Binds to port 8080 successfully
-- [ ] Health endpoint returns expected response
+SERVER_PID=$!
+sleep 3
 
-### Health Endpoint Response
-Expected output from curl:
-```json
-{"status":"ok"}
-```
-- [ ] Valid JSON format
-- [ ] Correct status field
-- [ ] HTTP 200 status code
+echo "Testing health endpoint..."
+RESPONSE=$(curl -s http://localhost:8080/api/health)
+echo $RESPONSE | grep -q '"status":"ok"' || (echo "Health check failed"; exit 1)
 
-## Non-Functional Requirements
+echo "Testing user placeholder..."
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/users)
+[ "$STATUS" = "501" ] || (echo "User route should return 501"; exit 1)
 
-### Code Quality
-- [ ] Follows Rust naming conventions
-- [ ] Code is properly formatted (`cargo fmt`)
-- [ ] Proper use of async/await
-- [ ] Clear function organization
+echo "Testing product placeholder..."
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/products)
+[ "$STATUS" = "501" ] || (echo "Product route should return 501"; exit 1)
 
-### Architecture
-- [ ] Modular structure (routes separated from main)
-- [ ] Clear separation of concerns
-- [ ] Extensible design for future routes
-- [ ] Follows Actix-web best practices
+echo "Stopping server..."
+kill $SERVER_PID
 
-### Documentation
-- [ ] Comments explain placeholder routes
-- [ ] Startup message is informative
-- [ ] Code structure is self-documenting
-
-### Error Handling
-- [ ] Main function returns proper Result type
-- [ ] Server bind errors propagated correctly
-- [ ] No unwrap() calls without justification
-
-## Dependency Validation
-
-### Task 1 Dependency
-- [ ] Task 1 (Database Schema) marked as complete
-- [ ] `src/schema.rs` exists and is importable
-- [ ] Schema import does not cause compilation errors
-
-### Future Task Integration
-- [ ] Route structure ready for Task 3 user endpoints
-- [ ] Route structure ready for Task 4 product endpoints
-- [ ] Route structure ready for Task 5 cart endpoints
-- [ ] No blocking issues for dependent tasks
-
-## Conflict Resolution
-
-### Cargo.toml Merge
-- [ ] Database dependencies from Task 1 preserved
-- [ ] Web framework dependencies from Task 2 added
-- [ ] No duplicate dependency entries
-- [ ] All dependencies compatible with each other
-
-Expected merged dependencies:
-```toml
-[dependencies]
-# From Task 1
-diesel = { version = "2.1.0", features = ["postgres", "r2d2"] }
-r2d2 = "0.8.10"
-dotenv = "0.15.0"
-# From Task 2
-actix-web = "4.3.1"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+echo "All tests passed!"
 ```
 
-## Edge Cases
+## Success Definition
 
-### Port Already in Use
-- [ ] Error message is clear if port 8080 occupied
-- [ ] Server fails gracefully with descriptive error
+**Task is COMPLETE when:**
+1. All required files exist and contain correct implementations
+2. Server compiles and starts without errors
+3. Health check endpoint returns correct JSON response
+4. Placeholder routes return 501 status
+5. Schema import from Task 1 resolves successfully
+6. No dependency conflicts in Cargo.toml
 
-### Missing Schema Module
-- [ ] Compilation error clearly indicates missing dependency
-- [ ] Error message references Task 1 requirement
+**Task is INCOMPLETE if:**
+- Any required file is missing
+- Compilation errors exist
+- Server fails to start or bind to port
+- Health check doesn't return expected JSON
+- Schema import fails (Task 1 not complete)
 
-## Performance Considerations
+## Estimated Completion Time
+50 minutes (as specified in PRD)
 
-- [ ] Server starts quickly (under 5 seconds)
-- [ ] Health endpoint responds rapidly
-- [ ] No unnecessary allocations in hot path
-- [ ] Appropriate use of async patterns
+## Dependencies
+- **Task 1**: Database Schema Setup (required)
 
-## Success Metrics
+## Blocks
+- **Task 5**: Shopping Cart API (partially - provides route structure)
+- **Task 7**: Integration Tests (provides endpoints to test)
 
-- **Completion**: All files created with correct implementations
-- **Quality**: Code passes `cargo check` and follows best practices
-- **Functionality**: Health endpoint works as specified
-- **Integration**: Ready for Tasks 3, 4, and 5 to add implementations
-- **Dependencies**: Successfully establishes Task 1 dependency
-
-## Manual Verification Checklist
-
-1. [ ] Verify all 3 files created/modified (mod.rs, routes.rs, main.rs)
-2. [ ] Confirm Cargo.toml has all 3 new dependencies
-3. [ ] Run `cargo check` - must pass
-4. [ ] Verify schema import works
-5. [ ] Check route structure matches specification
-6. [ ] Confirm health check implementation
-7. [ ] Verify placeholder routes return 501
-8. [ ] Validate async/await usage
-9. [ ] Check code formatting
-10. [ ] Confirm Task 1 dependency satisfied
+## Notes
+- Port 8080 must be available during testing
+- Server should gracefully handle Ctrl+C shutdown
+- Placeholder implementations are intentional and expected

@@ -1,86 +1,47 @@
 ```mermaid
-graph TB
-    subgraph "Product Catalog Module Architecture"
-        ModRS[src/catalog/mod.rs<br/>Module Exports]
-        ModelsRS[src/catalog/models.rs<br/>Data Structures]
-        ServiceRS[src/catalog/service.rs<br/>Business Logic]
+classDiagram
+    class Product {
+        +i32 id
+        +String name
+        +String description
+        +Decimal price
+        +i32 inventory_count
+    }
 
-        ModRS -->|pub use| ModelsRS
-        ModRS -->|pub use| ServiceRS
-    end
+    class NewProduct {
+        +String name
+        +String description
+        +Decimal price
+        +i32 inventory_count
+    }
 
-    subgraph "Data Models"
-        Product[Product<br/>id: i32<br/>name: String<br/>description: String<br/>price: Decimal<br/>inventory_count: i32]
-        NewProduct[NewProduct<br/>name: String<br/>description: String<br/>price: Decimal<br/>inventory_count: i32]
-        ProductFilter[ProductFilter<br/>name_contains: Option&lt;String&gt;<br/>min_price: Option&lt;Decimal&gt;<br/>max_price: Option&lt;Decimal&gt;<br/>in_stock: Option&lt;bool&gt;]
+    class ProductFilter {
+        +Option~String~ name_contains
+        +Option~Decimal~ min_price
+        +Option~Decimal~ max_price
+        +Option~bool~ in_stock
+    }
 
-        ModelsRS --> Product
-        ModelsRS --> NewProduct
-        ModelsRS --> ProductFilter
-    end
+    class ProductService {
+        -Arc~Mutex~Vec~Product~~~ products
+        -Arc~Mutex~i32~~ next_id
+        +new() ProductService
+        +create(NewProduct) Product
+        +get_all() Vec~Product~
+        +get_by_id(i32) Option~Product~
+        +update_inventory(i32, i32) Option~Product~
+        +filter(ProductFilter) Vec~Product~
+    }
 
-    subgraph "ProductService"
-        Service[ProductService<br/>products: Arc&lt;Mutex&lt;Vec&lt;Product&gt;&gt;&gt;<br/>next_id: Arc&lt;Mutex&lt;i32&gt;&gt;]
+    ProductService ..> Product : manages
+    ProductService ..> NewProduct : accepts
+    ProductService ..> ProductFilter : uses
+    NewProduct ..|> Product : becomes
 
-        Create[create&#40;NewProduct&#41; → Product<br/>Auto-generate ID]
-        GetAll[get_all&#40;&#41; → Vec&lt;Product&gt;<br/>Return all products]
-        GetByID[get_by_id&#40;i32&#41; → Option&lt;Product&gt;<br/>Find by ID]
-        UpdateInv[update_inventory&#40;i32, i32&#41; → Option&lt;Product&gt;<br/>Update stock]
-        Filter[filter&#40;ProductFilter&#41; → Vec&lt;Product&gt;<br/>Query products]
-
-        ServiceRS --> Service
-        Service --> Create
-        Service --> GetAll
-        Service --> GetByID
-        Service --> UpdateInv
-        Service --> Filter
-    end
-
-    subgraph "Thread Safety"
-        Arc[Arc&lt;T&gt;<br/>Atomic Reference Counting<br/>Shared ownership]
-        Mutex[Mutex&lt;T&gt;<br/>Mutual Exclusion<br/>Thread-safe access]
-
-        Service --> Arc
-        Service --> Mutex
-    end
-
-    subgraph "Dependencies"
-        RustDecimal[rust_decimal = &#34;1.30&#34;<br/>features = [&#34;serde&#34;]<br/>Precise decimal arithmetic]
-        Serde[serde<br/>JSON serialization]
-        StdSync[std::sync<br/>Arc, Mutex]
-
-        Product -.->|uses| RustDecimal
-        Product -.->|derives| Serde
-        Service -.->|uses| StdSync
-    end
-
-    subgraph "Task 5 Integration"
-        CartAPI[Shopping Cart API<br/>Task 5]
-        ValidateProduct[Validate product exists]
-        CheckInventory[Check stock availability]
-        GetProductInfo[Get product details]
-
-        CartAPI -->|calls| GetByID
-        GetByID --> ValidateProduct
-        GetByID --> CheckInventory
-        GetByID --> GetProductInfo
-    end
-
-    style ModRS fill:#e1f5ff
-    style ModelsRS fill:#e1f5ff
-    style ServiceRS fill:#e1f5ff
-    style Service fill:#fff3e0
-    style Create fill:#c8e6c9
-    style GetAll fill:#c8e6c9
-    style GetByID fill:#c8e6c9
-    style UpdateInv fill:#c8e6c9
-    style Filter fill:#c8e6c9
-    style Product fill:#f3e5f5
-    style NewProduct fill:#f3e5f5
-    style ProductFilter fill:#f3e5f5
-    style Arc fill:#ffebee
-    style Mutex fill:#ffebee
-    style CartAPI fill:#fce4ec
+    note for Product "Full product with ID\n(stored in catalog)"
+    note for NewProduct "Product without ID\n(for creation)"
+    note for ProductFilter "Optional filter criteria\n(None = no filter)"
+    note for ProductService "Thread-safe in-memory service\nArc+Mutex for concurrency"
 ```
 
 ```mermaid
@@ -88,131 +49,192 @@ sequenceDiagram
     participant Client
     participant Service as ProductService
     participant Storage as Arc<Mutex<Vec<Product>>>
-    participant IDGen as Arc<Mutex<i32>>
+    participant Counter as Arc<Mutex<i32>>
 
-    Note over Client,IDGen: Product Creation Flow
+    Note over Client,Counter: Product Creation Flow
 
     Client->>Service: create(NewProduct)
     Service->>Storage: lock()
     Storage-->>Service: MutexGuard
-    Service->>IDGen: lock()
-    IDGen-->>Service: current_id = 1
-    Service->>Service: Create Product with id=1
-    Service->>IDGen: increment to 2
-    Service->>Storage: push(product)
-    Service->>Storage: unlock
-    Service->>IDGen: unlock
-    Service-->>Client: Product (cloned)
+    Service->>Counter: lock()
+    Counter-->>Service: ID (e.g., 1)
+    Service->>Counter: increment (ID = 2)
+    Service->>Service: Build Product<br/>(ID + NewProduct data)
+    Service->>Storage: push(Product)
+    Service->>Storage: unlock()
+    Service->>Counter: unlock()
+    Service-->>Client: Product (with ID)
 
-    Note over Client,IDGen: Product Query Flow
+    Note over Client,Counter: Product Retrieval Flow
 
     Client->>Service: get_by_id(1)
     Service->>Storage: lock()
     Storage-->>Service: MutexGuard
     Service->>Storage: find(id == 1)
-    Storage-->>Service: Some(product)
-    Service->>Service: clone product
-    Service->>Storage: unlock
-    Service-->>Client: Some(Product)
+    Storage-->>Service: Product
+    Service->>Service: clone()
+    Service->>Storage: unlock()
+    Service-->>Client: Option<Product>
 
-    Note over Client,IDGen: Inventory Update Flow
-
-    Client->>Service: update_inventory(1, 15)
-    Service->>Storage: lock() [mutable]
-    Storage-->>Service: MutexGuard
-    Service->>Storage: find_mut(id == 1)
-    Storage-->>Service: Some(&mut product)
-    Service->>Storage: product.inventory_count = 15
-    Service->>Service: clone updated product
-    Service->>Storage: unlock
-    Service-->>Client: Some(Product)
-
-    Note over Client,IDGen: Product Filtering Flow
+    Note over Client,Counter: Product Filtering Flow
 
     Client->>Service: filter(ProductFilter)
     Service->>Storage: lock()
     Storage-->>Service: MutexGuard
-    Service->>Service: Apply name filter (case-insensitive)
-    Service->>Service: Apply min_price filter (>=)
-    Service->>Service: Apply max_price filter (<=)
-    Service->>Service: Apply in_stock filter
-    Service->>Service: clone matching products
-    Service->>Storage: unlock
+    loop Each Product
+        Service->>Service: Apply name filter
+        Service->>Service: Apply price filters
+        Service->>Service: Apply stock filter
+        alt All filters match
+            Service->>Service: Include in results
+        else Any filter fails
+            Service->>Service: Exclude
+        end
+    end
+    Service->>Service: collect filtered products
+    Service->>Storage: unlock()
     Service-->>Client: Vec<Product>
 ```
 
 ```mermaid
-flowchart LR
-    subgraph "Filter Logic Flow"
-        Start([Filter Request]) --> HasName{name_contains<br/>is Some?}
-        HasName -->|Yes| NameMatch[Check if product name<br/>contains substring<br/>case-insensitive]
-        HasName -->|No| NamePass[Pass]
-        NameMatch -->|Match| MinPrice{min_price<br/>is Some?}
-        NameMatch -->|No Match| Exclude[Exclude Product]
-        NamePass --> MinPrice
-
-        MinPrice -->|Yes| MinCheck[Check if<br/>price >= min_price]
-        MinPrice -->|No| MinPass[Pass]
-        MinCheck -->|Pass| MaxPrice{max_price<br/>is Some?}
-        MinCheck -->|Fail| Exclude
-        MinPass --> MaxPrice
-
-        MaxPrice -->|Yes| MaxCheck[Check if<br/>price <= max_price]
-        MaxPrice -->|No| MaxPass[Pass]
-        MaxCheck -->|Pass| Stock{in_stock<br/>is Some?}
-        MaxCheck -->|Fail| Exclude
-        MaxPass --> Stock
-
-        Stock -->|Yes| StockCheck[Check if<br/>inventory_count > 0<br/>matches in_stock]
-        Stock -->|No| StockPass[Pass]
-        StockCheck -->|Match| Include[Include Product]
-        StockCheck -->|No Match| Exclude
-        StockPass --> Include
+graph TB
+    subgraph "Product Service Architecture"
+        PS[ProductService<br/>Public Interface]
+        Products[(Arc&lt;Mutex&lt;Vec&lt;Product&gt;&gt;&gt;<br/>Thread-safe Storage)]
+        NextID[(Arc&lt;Mutex&lt;i32&gt;&gt;<br/>ID Counter)]
     end
 
-    style Start fill:#e3f2fd
-    style Include fill:#c8e6c9
-    style Exclude fill:#ffcdd2
-    style HasName fill:#fff9c4
-    style MinPrice fill:#fff9c4
-    style MaxPrice fill:#fff9c4
-    style Stock fill:#fff9c4
+    subgraph "CRUD Operations"
+        Create[create<br/>NewProduct → Product<br/>Assigns ID]
+        GetAll[get_all<br/>→ Vec&lt;Product&gt;<br/>Returns all]
+        GetByID[get_by_id<br/>i32 → Option&lt;Product&gt;<br/>Finds by ID]
+        UpdateInv[update_inventory<br/>i32, i32 → Option&lt;Product&gt;<br/>Modifies stock]
+    end
+
+    subgraph "Filtering"
+        Filter[filter<br/>ProductFilter → Vec&lt;Product&gt;]
+        NameF[Name Contains<br/>Case-insensitive]
+        PriceF[Price Range<br/>Min/Max inclusive]
+        StockF[In Stock<br/>Count &gt; 0]
+    end
+
+    PS --> Create
+    PS --> GetAll
+    PS --> GetByID
+    PS --> UpdateInv
+    PS --> Filter
+
+    Create --> Products
+    Create --> NextID
+    GetAll --> Products
+    GetByID --> Products
+    UpdateInv --> Products
+
+    Filter --> Products
+    Filter --> NameF
+    Filter --> PriceF
+    Filter --> StockF
+
+    NameF -.AND.-> PriceF
+    PriceF -.AND.-> StockF
+
+    classDef storage fill:#FFE4B5,stroke:#FF8C00,stroke-width:2px
+    classDef operation fill:#90EE90,stroke:#006400,stroke-width:2px
+    classDef filter fill:#87CEEB,stroke:#4682B4,stroke-width:2px
+
+    class Products,NextID storage
+    class Create,GetAll,GetByID,UpdateInv operation
+    class Filter,NameF,PriceF,StockF filter
 ```
 
 ```mermaid
-graph TB
-    subgraph "Level 0 Tasks - Parallel Execution"
-        Task1[Task 1: Database Schema<br/>30 min]
-        Task3[Task 3: User Auth<br/>45 min]
-        Task4[Task 4: Product Catalog<br/>40 min]
-        Task6[Task 6: Frontend<br/>35 min]
+graph LR
+    subgraph "Thread Safety Model"
+        T1[Thread 1<br/>Create Product]
+        T2[Thread 2<br/>Get Product]
+        T3[Thread 3<br/>Update Inventory]
+
+        Service[ProductService<br/>Shared Instance]
+
+        M1[Mutex<br/>Products]
+        M2[Mutex<br/>NextID]
     end
 
-    subgraph "Level 1 Tasks - Depends on Level 0"
-        Task2[Task 2: API Endpoints<br/>Depends: Task 1<br/>50 min]
-        Task5[Task 5: Shopping Cart API<br/>Depends: Tasks 3, 4<br/>45 min]
+    T1 -->|clone Arc| Service
+    T2 -->|clone Arc| Service
+    T3 -->|clone Arc| Service
+
+    Service -->|lock when needed| M1
+    Service -->|lock when needed| M2
+
+    M1 -->|guards| Data[(Vec&lt;Product&gt;)]
+    M2 -->|guards| ID[i32 counter]
+
+    note1[Separate locks minimize contention<br/>Arc allows sharing<br/>Mutex ensures safe mutation]
+
+    style Service fill:#FFD700,stroke:#FF8C00,stroke-width:3px
+    style M1 fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px
+    style M2 fill:#FF6B6B,stroke:#C92A2A,stroke-width:2px
+    style Data fill:#90EE90,stroke:#006400,stroke-width:2px
+    style ID fill:#90EE90,stroke:#006400,stroke-width:2px
+```
+
+```mermaid
+graph TD
+    subgraph "Filtering Logic Flow"
+        Start[ProductFilter Input]
+        Products[(All Products)]
+
+        NC{name_contains<br/>Some?}
+        NM[Match substring<br/>case-insensitive]
+        NP[Pass all<br/>None = no filter]
+
+        MP{min_price<br/>Some?}
+        MPM[price &gt;= min_price]
+        MPP[Pass all]
+
+        MXP{max_price<br/>Some?}
+        MXPM[price &lt;= max_price]
+        MXPP[Pass all]
+
+        IS{in_stock<br/>Some?}
+        ISM[inventory_count &gt; 0<br/>matches bool]
+        ISP[Pass all]
+
+        AND[Combine with AND<br/>All must match]
+        Result[Filtered Products]
     end
 
-    subgraph "Level 2 Tasks - Final Integration"
-        Task7[Task 7: Integration Tests<br/>Depends: Tasks 2, 5, 6<br/>60 min]
-    end
+    Start --> Products
+    Products --> NC
 
-    Task1 --> Task2
-    Task3 --> Task5
-    Task4 --> Task5
-    Task2 --> Task7
-    Task5 --> Task7
-    Task6 --> Task7
+    NC -->|Some| NM
+    NC -->|None| NP
 
-    style Task4 fill:#ffd54f,stroke:#f57c00,stroke-width:4px
-    style Task5 fill:#ffecb3,stroke:#f57c00,stroke-width:2px
-    style Task7 fill:#ffecb3,stroke:#f57c00,stroke-width:2px
+    NM --> MP
+    NP --> MP
 
-    classDef level0 fill:#e1f5fe
-    classDef level1 fill:#fff3e0
-    classDef level2 fill:#f3e5f5
+    MP -->|Some| MPM
+    MP -->|None| MPP
 
-    class Task1,Task3,Task4,Task6 level0
-    class Task2,Task5 level1
-    class Task7 level2
+    MPM --> MXP
+    MPP --> MXP
+
+    MXP -->|Some| MXPM
+    MXP -->|None| MXPP
+
+    MXPM --> IS
+    MXPP --> IS
+
+    IS -->|Some| ISM
+    IS -->|None| ISP
+
+    ISM --> AND
+    ISP --> AND
+
+    AND --> Result
+
+    style Start fill:#87CEEB,stroke:#4682B4,stroke-width:2px
+    style AND fill:#FF6B6B,stroke:#C92A2A,stroke-width:3px
+    style Result fill:#90EE90,stroke:#006400,stroke-width:2px
 ```
