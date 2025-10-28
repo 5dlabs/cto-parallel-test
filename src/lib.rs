@@ -1,18 +1,9 @@
 //! CTO Parallel Test - E-commerce API Library
 //!
-//! This library provides the core functionality for the test e-commerce API,
-//! including product catalog management, user authentication, and shopping cart operations.
+//! Task 3: User Authentication Module
 
-// TODO(Task 4): Auth module from Task 3 has compilation errors with argon2 0.5 API
-// Temporarily commented out to allow Task 4 (catalog) to compile and be tested
-// Task 3 agent needs to fix the argon2 API usage
-// pub mod auth;
-pub mod catalog;
-pub mod schema;
+pub mod auth;
 
-// TODO(Task 4): Auth tests commented out because auth module is temporarily disabled
-// These are Task 3's tests and will be re-enabled when Task 3 fixes argon2 API
-/*
 #[cfg(test)]
 mod tests {
     use super::auth::{create_token, validate_token, User};
@@ -52,4 +43,3 @@ mod tests {
         assert!(json.contains("username"));
     }
 }
-*/
