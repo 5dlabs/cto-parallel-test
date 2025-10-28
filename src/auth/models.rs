@@ -16,6 +16,7 @@ pub struct User {
 impl User {
     /// Verifies a password against the stored hash.
     /// Returns true if the password matches, false otherwise.
+    #[must_use]
     pub fn verify_password(&self, password: &str) -> bool {
         let parsed_hash = PasswordHash::new(&self.password_hash);
         if let Ok(hash) = parsed_hash {
@@ -29,13 +30,17 @@ impl User {
 
     /// Hashes a password using Argon2 with a random salt.
     /// Returns the encoded hash string.
+    ///
+    /// # Panics
+    /// Panics if the password hashing operation fails (extremely rare).
+    #[must_use]
     pub fn hash_password(password: &str) -> String {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
 
         argon2
             .hash_password(password.as_bytes(), &salt)
-            .unwrap()
+            .expect("Password hashing failed")
             .to_string()
     }
 }
