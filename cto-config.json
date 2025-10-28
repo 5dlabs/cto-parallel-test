@@ -8,9 +8,9 @@
       "sourceBranch": "main"
     },
     "code": {
-      "repository": "5dlabs/rust-basic-api",
-      "service": "rust-basic-api",
-      "docsRepository": "5dlabs/rust-basic-api",
+      "repository": "5dlabs/cto-parallel-test",
+      "service": "cto-parallel-test",
+      "docsRepository": "5dlabs/cto-parallel-test",
       "docsProjectDirectory": "docs",
       "workingDirectory": ".",
       "model": "gpt-5-factory-high",
@@ -35,9 +35,9 @@
       }
     },
     "play": {
-      "repository": "5dlabs/rust-basic-api",
-      "service": "rust-basic-api",
-      "docsRepository": "5dlabs/rust-basic-api",
+      "repository": "5dlabs/cto-parallel-test",
+      "service": "cto-parallel-test",
+      "docsRepository": "5dlabs/cto-parallel-test",
       "docsProjectDirectory": "docs",
       "workingDirectory": ".",
       "model": "claude-sonnet-4-5-20250929",
@@ -52,7 +52,8 @@
       "implementationMaxRetries": 10,
       "qualityMaxRetries": 5,
       "testingMaxRetries": 5,
-      "autoMerge": true
+      "autoMerge": true,
+      "parallelExecution": true
     },
     "docs_ingest": {
       "model": "claude-sonnet-4-5-20250929",
