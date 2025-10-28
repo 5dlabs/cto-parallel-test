@@ -90,19 +90,14 @@ impl ProductService {
         products
             .iter()
             .filter(|p| {
-                let name_match = filter.name_contains.as_ref().is_none_or(|name| {
-                    p.name.to_lowercase().contains(&name.to_lowercase())
-                });
-
-                let min_price_match = filter
-                    .min_price
+                let name_match = filter
+                    .name_contains
                     .as_ref()
-                    .is_none_or(|min| p.price >= *min);
+                    .is_none_or(|name| p.name.to_lowercase().contains(&name.to_lowercase()));
 
-                let max_price_match = filter
-                    .max_price
-                    .as_ref()
-                    .is_none_or(|max| p.price <= *max);
+                let min_price_match = filter.min_price.as_ref().is_none_or(|min| p.price >= *min);
+
+                let max_price_match = filter.max_price.as_ref().is_none_or(|max| p.price <= *max);
 
                 let in_stock_match = filter
                     .in_stock
