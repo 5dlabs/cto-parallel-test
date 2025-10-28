@@ -3,6 +3,7 @@
 //! This library provides the core functionality for the test e-commerce API,
 //! including product catalog management, user authentication, and shopping cart operations.
 
+pub mod api;
 // TODO(Task 4): Auth module from Task 3 has compilation errors with argon2 0.5 API
 // Temporarily commented out to allow Task 4 (catalog) to compile and be tested
 // Task 3 agent needs to fix the argon2 API usage

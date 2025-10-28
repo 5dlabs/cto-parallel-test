@@ -1,186 +1,208 @@
-# Task 1: Database Schema Setup
+# Task 2: API Endpoints
 
 ## Overview
-Create basic database schema files and configuration for the Rust API project. This is a Level 0 task (no dependencies) that establishes the foundational data layer for the application.
+Create REST API endpoints for core operations of the application using Actix-web framework. This is a Level 1 task that depends on Task 1 (Database Schema) and provides the HTTP interface layer for the application.
 
 ## Context
-This task is part of a parallel task execution test to validate the CTO platform's orchestration capabilities. The database schema will define tables for users, products, carts, and cart items that subsequent tasks will build upon.
+This task establishes the web server and routing infrastructure for the e-commerce test API. It creates the foundation that other modules (authentication, catalog, cart) will build upon by registering their route handlers.
 
 ## Objectives
-1. Define database schema with Diesel ORM
-2. Create initial migration files
-3. Configure database dependencies in Cargo.toml
-4. Establish data models for users, products, carts, and cart items
+1. Set up Actix-web HTTP server
+2. Create modular routing structure
+3. Implement health check endpoint
+4. Define placeholder route configurations for users and products
+5. Configure the main application entry point
 
 ## Dependencies
-**None** - This is a Level 0 task that can run independently in parallel with Tasks 3, 4, and 6.
+- **Task 1: Database Schema Setup** - Required to import schema definitions
 
-## Files to Create
-- `src/schema.rs` - Diesel table definitions
-- `migrations/` - Directory containing database migration files
-- `Cargo.toml` - Updates for database dependencies
+## Blocked By
+None initially, but needs Task 1's schema.rs to complete successfully.
+
+## Files to Create/Modify
+- `src/api/mod.rs` - API module exports
+- `src/api/routes.rs` - Route definitions and configuration
+- `src/main.rs` - Application entry point and server setup
+- `Cargo.toml` - Add Actix-web dependencies
 
 ## Technical Specifications
 
-### Database Technology
-- **ORM**: Diesel 2.1.0
-- **Database**: PostgreSQL (implied by Diesel features)
-- **Connection Pool**: r2d2 0.8.10
-- **Configuration**: dotenv 0.15.0
+### Web Framework
+- **Framework**: Actix-web 4.3.1
+- **Serialization**: Serde 1.0 with derive feature
+- **JSON**: serde_json 1.0
+- **Server**: Asynchronous HTTP server on 127.0.0.1:8080
 
-### Schema Design
+### Architecture Pattern
+- **Modular routing**: Separate modules for different API domains
+- **Scope-based organization**: `/api` base scope with nested scopes
+- **Configuration pattern**: ServiceConfig-based route registration
+- **Async runtime**: Actix-web's built-in async runtime
 
-#### Users Table
-```rust
-table! {
-    users (id) {
-        id -> Integer,
-        username -> Varchar,
-        email -> Varchar,
-        password_hash -> Varchar,
-        created_at -> Timestamp,
-    }
-}
+### API Structure
 ```
-
-#### Products Table
-```rust
-table! {
-    products (id) {
-        id -> Integer,
-        name -> Varchar,
-        description -> Text,
-        price -> Numeric,
-        inventory_count -> Integer,
-    }
-}
-```
-
-#### Carts Table
-```rust
-table! {
-    carts (id) {
-        id -> Integer,
-        user_id -> Integer,
-        created_at -> Timestamp,
-    }
-}
-```
-
-#### Cart Items Table
-```rust
-table! {
-    cart_items (id) {
-        id -> Integer,
-        cart_id -> Integer,
-        product_id -> Integer,
-        quantity -> Integer,
-    }
-}
+/api
+├── /health (GET) - Health check endpoint
+├── /users/* - User-related endpoints (placeholder)
+└── /products/* - Product-related endpoints (placeholder)
 ```
 
 ## Implementation Plan
 
 ### Step 1: Update Cargo.toml
-Add the following dependencies to `Cargo.toml`:
+Add web framework dependencies:
 
 ```toml
 [dependencies]
-diesel = { version = "2.1.0", features = ["postgres", "r2d2"] }
-r2d2 = "0.8.10"
-dotenv = "0.15.0"
+actix-web = "4.3.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 ```
 
-### Step 2: Create Schema File
-Create `src/schema.rs` with all table definitions using Diesel's `table!` macro. This file will be auto-generated initially by Diesel CLI but can be created manually for this test.
+**Note**: Task 1 already added database dependencies. Ensure no conflicts.
 
-### Step 3: Create Migrations Directory
-Create `migrations/` directory structure:
-- `migrations/00000000000000_diesel_initial_setup/`
-- `migrations/00000000000001_create_tables/`
+### Step 2: Create API Module (src/api/mod.rs)
+Simple module export file:
 
-Each migration should contain:
-- `up.sql` - SQL to apply the migration
-- `down.sql` - SQL to rollback the migration
-
-### Step 4: Write Migration SQL
-Example `up.sql` for initial tables:
-
-```sql
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(255) NOT NULL UNIQUE,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE products (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    price NUMERIC(10, 2) NOT NULL,
-    inventory_count INTEGER NOT NULL DEFAULT 0
-);
-
-CREATE TABLE carts (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE cart_items (
-    id SERIAL PRIMARY KEY,
-    cart_id INTEGER NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
-    product_id INTEGER NOT NULL REFERENCES products(id),
-    quantity INTEGER NOT NULL DEFAULT 1,
-    UNIQUE(cart_id, product_id)
-);
+```rust
+pub mod routes;
 ```
+
+This establishes the API module namespace and exports the routes submodule.
+
+### Step 3: Create Route Configuration (src/api/routes.rs)
+Implement the core routing logic:
+
+```rust
+use actix_web::{web, HttpResponse, Scope};
+use crate::schema;
+
+pub fn configure_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        web::scope("/api")
+            .service(health_check)
+            .service(web::scope("/users").configure(user_routes))
+            .service(web::scope("/products").configure(product_routes))
+    );
+}
+
+#[actix_web::get("/health")]
+async fn health_check() -> HttpResponse {
+    HttpResponse::Ok().json(serde_json::json!({"status": "ok"}))
+}
+
+fn user_routes(cfg: &mut web::ServiceConfig) {
+    // Placeholder - Task 3 will implement
+    cfg.service(web::resource("").route(web::get().to(|| HttpResponse::NotImplemented())));
+}
+
+fn product_routes(cfg: &mut web::ServiceConfig) {
+    // Placeholder - Task 4 will implement
+    cfg.service(web::resource("").route(web::get().to(|| HttpResponse::NotImplemented())));
+}
+```
+
+**Key Design Decisions**:
+- `configure_routes` accepts `ServiceConfig` for modular composition
+- Health check uses Actix-web's macro routing (`#[actix_web::get]`)
+- Placeholder routes return 501 Not Implemented
+- Import schema to validate Task 1 dependency
+
+### Step 4: Create Main Application (src/main.rs)
+Set up the HTTP server:
+
+```rust
+use actix_web::{App, HttpServer};
+mod api;
+mod schema;
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    println!("Starting API server");
+
+    HttpServer::new(|| {
+        App::new()
+            .configure(api::routes::configure_routes)
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
+}
+```
+
+**Key Features**:
+- Uses `#[actix_web::main]` macro for async runtime
+- Imports both `api` and `schema` modules
+- Single app instance with route configuration
+- Binds to localhost port 8080
+- Returns IO errors for proper error propagation
+
+### Step 5: Verify Dependencies Resolution
+After all file changes:
+
+```bash
+cargo check
+cargo tree
+```
+
+Ensure no dependency conflicts between Task 1's database deps and Task 2's web deps.
 
 ## Architectural Considerations
 
-### Database Choice
-PostgreSQL is selected via Diesel's features. The schema uses standard SQL types that map cleanly to Rust types through Diesel's type system.
+### Modularity
+The routing structure is designed for extension:
+- Each domain (users, products, cart) gets its own scope
+- Route configuration is delegated to domain-specific functions
+- Future tasks can implement actual handlers in separate modules
 
-### Relationship Design
-- **Users → Carts**: One-to-many relationship
-- **Carts → Cart Items**: One-to-many with CASCADE delete
-- **Products → Cart Items**: One-to-many
-- Enforced at the database level with foreign keys
+### Async Design
+- All handlers are `async fn`
+- Actix-web provides actor-based concurrency
+- Non-blocking I/O for database and external services
 
-### Scalability Notes
-This is a test/placeholder implementation. In production:
-- Consider adding indexes on frequently queried columns
-- Add created_at/updated_at to all tables
-- Implement soft deletes for audit trails
-- Consider partitioning strategies for large tables
+### Error Handling
+- Server startup errors propagate via `std::io::Result`
+- Route handlers will implement proper error responses
+- Health check always succeeds (for monitoring)
+
+### Conflict Points
+This task modifies `Cargo.toml`, which Task 1 also modified. The orchestrator must merge:
+- Task 1's database dependencies
+- Task 2's web framework dependencies
+
+Both sets are independent and should merge cleanly.
 
 ## Risks and Considerations
 
-1. **File Conflicts**: Task 2 (API Endpoints) will also modify `Cargo.toml` to add web framework dependencies. The orchestrator should detect and merge these changes.
+1. **Cargo.toml Conflicts**: Both Task 1 and Task 2 modify this file. Git merge should handle cleanly since different dependencies are added.
 
-2. **Migration Order**: Migrations must maintain referential integrity. The provided structure ensures parent tables are created before child tables.
+2. **Schema Import**: The `use crate::schema;` line validates that Task 1 completed. Without it, compilation fails.
 
-3. **Minimal Implementation**: This is intentionally minimal to focus on task orchestration testing, not production-ready database design.
+3. **Placeholder Routes**: The NotImplemented responses are intentional. Tasks 3, 4, and 5 will replace these.
+
+4. **Port Binding**: Port 8080 must be available. In a real deployment, this would be configurable.
 
 ## Testing Strategy
 See `acceptance-criteria.md` for detailed validation steps.
 
 ## Success Criteria
-- All files created in correct locations
-- Schema definitions are syntactically valid Rust code
-- Migration SQL is valid PostgreSQL
-- Dependencies resolve correctly
-- Code compiles without errors
+- HTTP server starts without errors
+- Health check endpoint responds with 200 OK
+- Placeholder routes return 501 Not Implemented
+- Code compiles with Task 1's schema
+- Dependencies resolve without conflicts
 
 ## Related Tasks
-- **Task 2**: API Endpoints (depends on this task)
-- **Task 3**: User Authentication (uses users table)
-- **Task 4**: Product Catalog (uses products table)
-- **Task 5**: Shopping Cart (depends on Tasks 3 & 4, uses carts tables)
+- **Task 1**: Database Schema (dependency - must complete first)
+- **Task 3**: User Authentication (will implement user_routes)
+- **Task 4**: Product Catalog (will implement product_routes)
+- **Task 5**: Shopping Cart (will add cart routes)
+- **Task 7**: Integration Tests (will test these endpoints)
+
+## Diagram
+See `diagrams.mmd` for visual representation of the routing structure.
 
 ## References
-- [Diesel Documentation](https://diesel.rs/)
-- [PostgreSQL Data Types](https://www.postgresql.org/docs/current/datatype.html)
+- [Actix-web Documentation](https://actix.rs/)
+- [Actix-web Routing](https://actix.rs/docs/url-dispatch/)
 - Project PRD: `.taskmaster/docs/prd.txt`
