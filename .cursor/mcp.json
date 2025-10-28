@@ -14,6 +14,11 @@
         "OPENROUTER_API_KEY": "",
         "FACTORY_API_KEY": ""
       }
+    },
+    "task-master-ai": {
+      "command": "task-master-ai",
+      "args": [],
+      "cwd": "/Users/jonathonfritz/code/work-projects/5dlabs/cto-parallel-test"
     }
   }
 }
