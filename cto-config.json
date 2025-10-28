@@ -53,7 +53,10 @@
       "qualityMaxRetries": 5,
       "testingMaxRetries": 5,
       "autoMerge": true,
-      "parallelExecution": true
+      "parallelExecution": true,
+      "integrationPrEnabled": true,
+      "conflictDetection": true,
+      "integrationBaseBranch": "main"
     },
     "docs_ingest": {
       "model": "claude-sonnet-4-5-20250929",
