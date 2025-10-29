@@ -11,6 +11,14 @@ pub struct Claims {
 
 /// Creates a JWT token for the given user ID
 /// The token expires after 24 hours
+///
+/// # Errors
+///
+/// Returns an error if JWT encoding fails (extremely rare)
+///
+/// # Panics
+///
+/// Panics if system time goes backwards (extremely rare system clock issue)
 #[allow(clippy::cast_possible_truncation)]
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
     // SystemTime::now() is appropriate here for wall-clock time in JWT tokens
@@ -39,6 +47,10 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 }
 
 /// Validates a JWT token and returns the claims if valid
+///
+/// # Errors
+///
+/// Returns an error if the token is invalid, expired, or malformed
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let secret = b"test_secret_key";
     let token_data = decode::<Claims>(
