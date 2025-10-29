@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts (will be rebuilt in container)
+target/
+Cargo.lock
+
+# Test files
+tests/
+
+# Environment files
+.env
+.env.*
+*.local
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# MCP and client config
+.mcp.json
+client-config.json
+CLAUDE.md
+coding-guidelines.md
+github-guidelines.md
