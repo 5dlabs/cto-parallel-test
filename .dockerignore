@@ -1,0 +1,39 @@
+# Git files
+.git
+.gitignore
+.github
+
+# Build artifacts
+target/
+*.o
+*.so
+*.rlib
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation
+docs/
+README.md
+*.md
+
+# Configuration files that should not be in the image
+.env
+.env.*
+
+# Test files
+tests/
+
+# CI/CD
+.gitlab-ci.yml
+.travis.yml
+
+# Hooks
+hooks/
+
+# Task configuration (for CTO orchestration)
+cto-config.json
