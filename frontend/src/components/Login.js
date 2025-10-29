@@ -30,12 +30,19 @@ function Login() {
 
   return (
     <Container maxWidth="sm">
-      <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Box
+        sx={{
+          mt: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
         <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
           <Typography variant="h4" component="h1" gutterBottom align="center">
             Login
           </Typography>
-          
+
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
             <TextField
               fullWidth
@@ -47,7 +54,7 @@ function Login() {
               margin="normal"
               required
             />
-            
+
             <TextField
               fullWidth
               label="Password"
@@ -58,7 +65,7 @@ function Login() {
               margin="normal"
               required
             />
-            
+
             <Button
               type="submit"
               fullWidth
@@ -68,10 +75,13 @@ function Login() {
             >
               Sign In
             </Button>
-            
+
             <Typography variant="body2" align="center">
               Don't have an account?{' '}
-              <Link to="/register" style={{ textDecoration: 'none', color: '#1976d2' }}>
+              <Link
+                to="/register"
+                style={{ textDecoration: 'none', color: '#1976d2' }}
+              >
                 Register here
               </Link>
             </Typography>

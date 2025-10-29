@@ -43,14 +43,21 @@ function ProductList() {
 
   return (
     <Container maxWidth="lg">
-      <Typography variant="h3" component="h1" gutterBottom sx={{ mt: 4, mb: 4 }}>
+      <Typography
+        variant="h3"
+        component="h1"
+        gutterBottom
+        sx={{ mt: 4, mb: 4 }}
+      >
         Products
       </Typography>
 
       <Grid container spacing={4}>
         {products.map((product) => (
           <Grid item key={product.id} xs={12} sm={6} md={4}>
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Card
+              sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+            >
               <CardMedia
                 component="div"
                 sx={{

@@ -32,12 +32,19 @@ function Register() {
 
   return (
     <Container maxWidth="sm">
-      <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Box
+        sx={{
+          mt: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
         <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
           <Typography variant="h4" component="h1" gutterBottom align="center">
             Register
           </Typography>
-          
+
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
             <TextField
               fullWidth
@@ -48,7 +55,7 @@ function Register() {
               margin="normal"
               required
             />
-            
+
             <TextField
               fullWidth
               label="Email"
@@ -59,7 +66,7 @@ function Register() {
               margin="normal"
               required
             />
-            
+
             <TextField
               fullWidth
               label="Password"
@@ -70,7 +77,7 @@ function Register() {
               margin="normal"
               required
             />
-            
+
             <TextField
               fullWidth
               label="Confirm Password"
@@ -81,7 +88,7 @@ function Register() {
               margin="normal"
               required
             />
-            
+
             <Button
               type="submit"
               fullWidth
@@ -91,10 +98,13 @@ function Register() {
             >
               Register
             </Button>
-            
+
             <Typography variant="body2" align="center">
               Already have an account?{' '}
-              <Link to="/login" style={{ textDecoration: 'none', color: '#1976d2' }}>
+              <Link
+                to="/login"
+                style={{ textDecoration: 'none', color: '#1976d2' }}
+              >
                 Login here
               </Link>
             </Typography>
