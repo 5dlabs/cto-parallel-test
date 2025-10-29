@@ -20,7 +20,7 @@ docs/
 
 # Build artifacts (will be rebuilt in container)
 target/
-Cargo.lock
+# NOTE: Cargo.lock should be included for reproducible builds
 
 # Test files
 tests/
