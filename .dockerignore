@@ -1,0 +1,37 @@
+# Git files
+.git
+.gitignore
+.github
+
+# Rust build artifacts
+target/
+**/*.rs.bk
+*.pdb
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation and config
+README.md
+docs/
+*.md
+cto-config.json
+
+# CI/CD
+.github/workflows/
+
+# Development files
+hooks/
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+tests/
