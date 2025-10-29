@@ -57,7 +57,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          # Only build multi-platform for main branch/tags (PRs build amd64 only for speed)
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
 
       - name: Image digest
         run: echo "Image built with digest ${{ steps.build.outputs.digest }}"
