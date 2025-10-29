@@ -9,7 +9,6 @@ import {
   CardMedia,
   CardActions,
   Button,
-  Box,
 } from '@mui/material';
 
 function ProductList() {
