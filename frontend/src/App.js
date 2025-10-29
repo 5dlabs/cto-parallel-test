@@ -31,9 +31,11 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Box
+          sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}
+        >
           <Header />
-          
+
           <Box component="main" sx={{ flexGrow: 1, py: 3 }}>
             <Routes>
               <Route path="/" element={<HomePage />} />
@@ -44,7 +46,7 @@ function App() {
               <Route path="/register" element={<Register />} />
             </Routes>
           </Box>
-          
+
           <Footer />
         </Box>
       </Router>

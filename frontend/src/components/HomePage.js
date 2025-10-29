@@ -20,11 +20,11 @@ function HomePage() {
         <Typography variant="h2" component="h1" gutterBottom>
           Welcome to E-Commerce App
         </Typography>
-        
+
         <Typography variant="h5" color="text.secondary" paragraph>
           Discover amazing products at great prices
         </Typography>
-        
+
         <Button
           variant="contained"
           size="large"

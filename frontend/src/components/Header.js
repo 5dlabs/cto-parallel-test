@@ -1,6 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, IconButton, Badge, Box } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Badge,
+  Box,
+} from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 function Header() {
@@ -11,21 +19,26 @@ function Header() {
   return (
     <AppBar position="static">
       <Toolbar>
-        <Typography variant="h6" component={Link} to="/" sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit' }}>
+        <Typography
+          variant="h6"
+          component={Link}
+          to="/"
+          sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit' }}
+        >
           E-Commerce App
         </Typography>
-        
+
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           <Button color="inherit" component={Link} to="/products">
             Products
           </Button>
-          
+
           <IconButton color="inherit" component={Link} to="/cart">
             <Badge badgeContent={cartItemCount} color="secondary">
               <ShoppingCartIcon />
             </Badge>
           </IconButton>
-          
+
           {isLoggedIn ? (
             <Button color="inherit">Logout</Button>
           ) : (
