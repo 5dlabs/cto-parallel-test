@@ -1,0 +1,8 @@
+frontend/node_modules
+frontend/build
+frontend/.git
+frontend/.gitignore
+frontend/README.md
+.git
+.github
+docs
