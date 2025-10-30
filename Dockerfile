@@ -4,7 +4,8 @@ FROM rust:1.83-slim as builder
 WORKDIR /app
 
 # Copy manifests
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
+# Note: Cargo.lock is gitignored for library crates - cargo will generate it
 
 # Copy source code
 COPY src ./src
