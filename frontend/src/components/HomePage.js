@@ -1,0 +1,30 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Container, Typography, Button, Box } from '@mui/material';
+
+function HomePage() {
+  return (
+    <Container maxWidth="md">
+      <Box sx={{ textAlign: 'center', mt: 8 }}>
+        <Typography variant="h2" component="h1" gutterBottom>
+          Welcome to E-Commerce App
+        </Typography>
+        <Typography variant="h5" color="text.secondary" paragraph>
+          Discover amazing products at great prices
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          component={Link}
+          to="/products"
+          sx={{ mt: 3 }}
+        >
+          Shop Now
+        </Button>
+      </Box>
+    </Container>
+  );
+}
+
+export default HomePage;
