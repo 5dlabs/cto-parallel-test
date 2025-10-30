@@ -21,6 +21,7 @@ pub struct NewProduct {
 }
 
 /// Filter criteria for querying products
+///
 /// All fields are optional - None means no filter on that criterion
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct ProductFilter {

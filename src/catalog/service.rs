@@ -4,16 +4,23 @@ use std::sync::{Arc, Mutex};
 /// Thread-safe in-memory product catalog service
 ///
 /// Provides CRUD operations and filtering for products with concurrent access support.
-/// Uses Arc<Mutex<>> for thread safety across multiple web server workers.
+/// Uses `Arc<Mutex<>>` for thread safety across multiple web server workers.
 pub struct ProductService {
     products: Arc<Mutex<Vec<Product>>>,
     next_id: Arc<Mutex<i32>>,
 }
 
 impl ProductService {
-    /// Creates a new empty product service
+    /// Creates a new `ProductService` with an empty product catalog.
     ///
-    /// Initializes with an empty product list and ID counter starting at 1.
+    /// # Examples
+    ///
+    /// ```
+    /// use cto_parallel_test::catalog::ProductService;
+    ///
+    /// let service = ProductService::new();
+    /// assert_eq!(service.get_all().len(), 0);
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -22,21 +29,32 @@ impl ProductService {
         }
     }
 
-    /// Creates a new product in the catalog
-    ///
-    /// Assigns a unique sequential ID and stores the product.
+    /// Creates a new product with an auto-generated ID.
     ///
     /// # Arguments
     ///
-    /// * `new_product` - Product data without ID
-    ///
-    /// # Returns
-    ///
-    /// The created product with assigned ID
+    /// * `new_product` - The product data without an ID
     ///
     /// # Panics
     ///
-    /// Panics if the mutex is poisoned (should not happen in normal operation)
+    /// Panics if the internal mutex lock is poisoned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cto_parallel_test::catalog::{ProductService, models::NewProduct};
+    /// use rust_decimal::Decimal;
+    ///
+    /// let service = ProductService::new();
+    /// let product = service.create(NewProduct {
+    ///     name: "Test Product".to_string(),
+    ///     description: "A test product".to_string(),
+    ///     price: Decimal::new(1999, 2),
+    ///     inventory_count: 10,
+    /// });
+    /// assert_eq!(product.id, 1);
+    /// assert_eq!(product.name, "Test Product");
+    /// ```
     #[must_use]
     pub fn create(&self, new_product: NewProduct) -> Product {
         let mut products = self.products.lock().expect("products mutex poisoned");
@@ -57,54 +75,118 @@ impl ProductService {
         product
     }
 
-    /// Retrieves all products in the catalog
-    ///
-    /// # Returns
-    ///
-    /// A cloned vector of all products (safe to use after lock is released)
+    /// Returns all products in the catalog.
     ///
     /// # Panics
     ///
-    /// Panics if the mutex is poisoned
+    /// Panics if the internal mutex lock is poisoned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cto_parallel_test::catalog::{ProductService, models::NewProduct};
+    /// use rust_decimal::Decimal;
+    ///
+    /// let service = ProductService::new();
+    /// service.create(NewProduct {
+    ///     name: "Product 1".to_string(),
+    ///     description: "First product".to_string(),
+    ///     price: Decimal::new(1000, 2),
+    ///     inventory_count: 5,
+    /// });
+    /// service.create(NewProduct {
+    ///     name: "Product 2".to_string(),
+    ///     description: "Second product".to_string(),
+    ///     price: Decimal::new(2000, 2),
+    ///     inventory_count: 10,
+    /// });
+    ///
+    /// let all = service.get_all();
+    /// assert_eq!(all.len(), 2);
+    /// ```
     #[must_use]
     pub fn get_all(&self) -> Vec<Product> {
         let products = self.products.lock().expect("products mutex poisoned");
         products.clone()
     }
 
-    /// Retrieves a product by ID
+    /// Finds a product by its ID.
     ///
     /// # Arguments
     ///
-    /// * `id` - Product ID to search for
+    /// * `id` - The product ID to search for
     ///
     /// # Returns
     ///
-    /// `Some(Product)` if found, `None` otherwise
+    /// * `Some(Product)` if found, `None` otherwise
     ///
     /// # Panics
     ///
-    /// Panics if the mutex is poisoned
+    /// Panics if the internal mutex lock is poisoned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cto_parallel_test::catalog::{ProductService, models::NewProduct};
+    /// use rust_decimal::Decimal;
+    ///
+    /// let service = ProductService::new();
+    /// let product = service.create(NewProduct {
+    ///     name: "Test Product".to_string(),
+    ///     description: "A test product".to_string(),
+    ///     price: Decimal::new(1999, 2),
+    ///     inventory_count: 10,
+    /// });
+    ///
+    /// let found = service.get_by_id(product.id);
+    /// assert!(found.is_some());
+    /// assert_eq!(found.unwrap().id, product.id);
+    ///
+    /// let not_found = service.get_by_id(9999);
+    /// assert!(not_found.is_none());
+    /// ```
     #[must_use]
     pub fn get_by_id(&self, id: i32) -> Option<Product> {
         let products = self.products.lock().expect("products mutex poisoned");
         products.iter().find(|p| p.id == id).cloned()
     }
 
-    /// Updates the inventory count for a product
+    /// Updates the inventory count for a product.
     ///
     /// # Arguments
     ///
-    /// * `id` - Product ID to update
-    /// * `new_count` - New inventory count
+    /// * `id` - The product ID to update
+    /// * `new_count` - The new inventory count
     ///
     /// # Returns
     ///
-    /// `Some(Product)` with updated inventory if found, `None` if product doesn't exist
+    /// * `Some(Product)` with updated inventory if found, `None` otherwise
     ///
     /// # Panics
     ///
-    /// Panics if the mutex is poisoned
+    /// Panics if the internal mutex lock is poisoned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cto_parallel_test::catalog::{ProductService, models::NewProduct};
+    /// use rust_decimal::Decimal;
+    ///
+    /// let service = ProductService::new();
+    /// let product = service.create(NewProduct {
+    ///     name: "Test Product".to_string(),
+    ///     description: "A test product".to_string(),
+    ///     price: Decimal::new(1999, 2),
+    ///     inventory_count: 10,
+    /// });
+    ///
+    /// let updated = service.update_inventory(product.id, 5);
+    /// assert!(updated.is_some());
+    /// assert_eq!(updated.unwrap().inventory_count, 5);
+    ///
+    /// let retrieved = service.get_by_id(product.id);
+    /// assert_eq!(retrieved.unwrap().inventory_count, 5);
+    /// ```
     #[must_use]
     pub fn update_inventory(&self, id: i32, new_count: i32) -> Option<Product> {
         let mut products = self.products.lock().expect("products mutex poisoned");
@@ -117,22 +199,82 @@ impl ProductService {
         }
     }
 
-    /// Filters products based on multiple criteria
+    /// Filters products based on the provided criteria.
     ///
-    /// All filter criteria are combined with AND logic.
-    /// None values are treated as "no filter" for that criterion.
+    /// All filter criteria are combined with AND logic. Fields set to `None` are ignored.
     ///
     /// # Arguments
     ///
-    /// * `filter` - Filter criteria
+    /// * `filter` - The filter criteria to apply
     ///
-    /// # Returns
+    /// # Filter Fields
     ///
-    /// Vector of products matching all filter criteria
+    /// * `name_contains` - Case-insensitive substring match on product name
+    /// * `min_price` - Products with price >= `min_price`
+    /// * `max_price` - Products with price <= `max_price`
+    /// * `in_stock` - If true, products with `inventory_count` > 0; if false, products with `inventory_count` == 0
     ///
     /// # Panics
     ///
-    /// Panics if the mutex is poisoned
+    /// Panics if the internal mutex lock is poisoned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cto_parallel_test::catalog::{ProductService, models::{NewProduct, ProductFilter}};
+    /// use rust_decimal::Decimal;
+    ///
+    /// let service = ProductService::new();
+    /// let _ = service.create(NewProduct {
+    ///     name: "Apple".to_string(),
+    ///     description: "Fresh apple".to_string(),
+    ///     price: Decimal::new(150, 2),
+    ///     inventory_count: 10,
+    /// });
+    /// let _ = service.create(NewProduct {
+    ///     name: "Banana".to_string(),
+    ///     description: "Ripe banana".to_string(),
+    ///     price: Decimal::new(75, 2),
+    ///     inventory_count: 0,
+    /// });
+    /// let _ = service.create(NewProduct {
+    ///     name: "Orange".to_string(),
+    ///     description: "Juicy orange".to_string(),
+    ///     price: Decimal::new(200, 2),
+    ///     inventory_count: 5,
+    /// });
+    ///
+    /// // Filter by name
+    /// let filtered = service.filter(&ProductFilter {
+    ///     name_contains: Some("app".to_string()),
+    ///     ..Default::default()
+    /// });
+    /// assert_eq!(filtered.len(), 1);
+    /// assert_eq!(filtered[0].name, "Apple");
+    ///
+    /// // Filter by price range
+    /// let filtered = service.filter(&ProductFilter {
+    ///     min_price: Some(Decimal::new(100, 2)),
+    ///     max_price: Some(Decimal::new(180, 2)),
+    ///     ..Default::default()
+    /// });
+    /// assert_eq!(filtered.len(), 1);
+    ///
+    /// // Filter by stock status
+    /// let filtered = service.filter(&ProductFilter {
+    ///     in_stock: Some(true),
+    ///     ..Default::default()
+    /// });
+    /// assert_eq!(filtered.len(), 2); // Apple and Orange
+    ///
+    /// // Combined filters
+    /// let filtered = service.filter(&ProductFilter {
+    ///     name_contains: Some("a".to_string()),
+    ///     in_stock: Some(true),
+    ///     ..Default::default()
+    /// });
+    /// assert_eq!(filtered.len(), 2); // Apple and Orange contain "a"
+    /// ```
     #[must_use]
     pub fn filter(&self, filter: &ProductFilter) -> Vec<Product> {
         let products = self.products.lock().expect("products mutex poisoned");
@@ -140,24 +282,24 @@ impl ProductService {
         products
             .iter()
             .filter(|p| {
-                // Name filter: case-insensitive substring match
-                let name_match = filter
-                    .name_contains
+                let name_match = filter.name_contains.as_ref().is_none_or(|name| {
+                    p.name.to_lowercase().contains(&name.to_lowercase())
+                });
+
+                let min_price_match = filter
+                    .min_price
                     .as_ref()
-                    .is_none_or(|name| p.name.to_lowercase().contains(&name.to_lowercase()));
+                    .is_none_or(|min| p.price >= *min);
 
-                // Minimum price filter (inclusive)
-                let min_price_match = filter.min_price.as_ref().is_none_or(|min| p.price >= *min);
+                let max_price_match = filter
+                    .max_price
+                    .as_ref()
+                    .is_none_or(|max| p.price <= *max);
 
-                // Maximum price filter (inclusive)
-                let max_price_match = filter.max_price.as_ref().is_none_or(|max| p.price <= *max);
-
-                // In-stock filter
                 let in_stock_match = filter
                     .in_stock
                     .is_none_or(|in_stock| (p.inventory_count > 0) == in_stock);
 
-                // Combine all filters with AND logic
                 name_match && min_price_match && max_price_match && in_stock_match
             })
             .cloned()

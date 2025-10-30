@@ -1,0 +1,1 @@
+/workspace/task-4/cto-parallel-test/target/release/libcto_parallel_test.rlib: /workspace/task-4/cto-parallel-test/src/catalog/mod.rs /workspace/task-4/cto-parallel-test/src/catalog/models.rs /workspace/task-4/cto-parallel-test/src/catalog/service.rs /workspace/task-4/cto-parallel-test/src/lib.rs
