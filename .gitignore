@@ -1,1 +1,11 @@
 /target
+
+# Node.js dependencies
+node_modules/
+
+# Build directories
+build/
+dist/
+
+# Cache directories
+.cache/
