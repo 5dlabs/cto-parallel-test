@@ -1,6 +1,10 @@
-// Database schema module
-mod schema;
+use actix_web::{App, HttpServer};
+use cto_parallel_test::api;
 
-fn main() {
-    // Application entry point - schema module is available for use
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    HttpServer::new(|| App::new().configure(api::routes::configure_routes))
+        .bind("127.0.0.1:8080")?
+        .run()
+        .await
 }
