@@ -1,5 +1,5 @@
 # Multi-stage build for Rust authentication library
-FROM rust:1.83-slim as builder
+FROM rust:1.83-slim AS builder
 
 WORKDIR /usr/src/app
 
@@ -9,7 +9,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy manifests
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
+# Copy Cargo.lock if it exists (for reproducible builds)
+COPY Cargo.lock* ./
 
 # Copy source code
 COPY src ./src
