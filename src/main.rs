@@ -1,8 +1,10 @@
 use actix_web::{App, HttpServer};
 
-mod api;
-mod auth;
-mod schema;
+pub mod api;
+pub mod auth;
+pub mod cart;
+pub mod catalog;
+pub mod schema;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
