@@ -2,7 +2,10 @@
 
 pub mod api;
 pub mod auth;
+pub mod cart;
 pub mod catalog;
 pub mod schema;
 
-pub use catalog::{Product, ProductService};
+pub use auth::{create_token, validate_token, User};
+pub use cart::{Cart, CartItem, CartService};
+pub use catalog::{NewProduct, Product, ProductFilter, ProductService};
