@@ -2,8 +2,11 @@
 /target/
 **/*.rs.bk
 
-# Cargo lock file (library crates should not commit this)
-Cargo.lock
+# Note: Cargo.lock is committed for security auditing purposes
+
+# Environment files
+.env
+.env.local
 
 # IDE files
 .vscode/
@@ -16,6 +19,7 @@ Cargo.lock
 .DS_Store
 Thumbs.db
 
-# Environment files
-.env
-.env.local
+# Hook files - never commit
+hooks/
+.hooks/
+**/hooks/

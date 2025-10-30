@@ -175,4 +175,20 @@ mod tests {
         // Should return false instead of panicking
         assert!(!user.verify_password("any_password"));
     }
+
+    #[test]
+    fn test_wrong_password_returns_false() {
+        let password = "correct_password";
+        let hashed = User::hash_password(password);
+        let user = User {
+            id: 1,
+            username: "testuser".to_string(),
+            email: "test@example.com".to_string(),
+            password_hash: hashed,
+        };
+
+        assert!(!user.verify_password("wrong_password"));
+        assert!(!user.verify_password(""));
+        assert!(!user.verify_password("correct_passwor")); // Missing one character
+    }
 }
