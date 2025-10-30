@@ -1,6 +1,7 @@
 use actix_web::{App, HttpServer};
 
 mod api;
+mod auth;
 mod schema;
 
 #[actix_web::main]
