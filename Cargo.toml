@@ -11,3 +11,5 @@ dotenvy = "0.15.7"
 [lib]
 name = "cto_parallel_test"
 path = "src/lib.rs"
+
+[dev-dependencies]
