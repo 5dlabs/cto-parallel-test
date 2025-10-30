@@ -1,6 +1,6 @@
 # Rust build artifacts
 /target/
-# Note: Cargo.lock is committed for security auditing purposes
+# Note: Cargo.lock is committed for security auditing purposes (cargo audit requires it)
 
 # Environment files
 .env
