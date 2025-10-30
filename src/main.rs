@@ -2,5 +2,5 @@
 mod schema;
 
 fn main() {
-    println!("Hello, world!");
+    // Application entry point - schema module is available for use
 }
