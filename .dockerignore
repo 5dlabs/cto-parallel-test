@@ -1,0 +1,44 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Build artifacts
+target/
+**/*.rs.bk
+*.pdb
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github/
+
+# Documentation
+*.md
+!README.md
+
+# Configuration files (not needed in build)
+.mcp.json
+client-config.json
+
+# Test files
+tests/
+
+# Development tools
+.env
+.env.local
+hooks/
+.hooks/
+
+# Rust specific
+Cargo.lock.bak
+**/*.orig
