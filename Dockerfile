@@ -3,9 +3,9 @@ FROM rust:1.90-slim AS builder
 
 WORKDIR /usr/src/app
 
-# Install system dependencies
+# Install system dependencies (including PostgreSQL for Diesel)
 RUN apt-get update && \
-    apt-get install -y pkg-config libssl-dev && \
+    apt-get install -y pkg-config libssl-dev libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy manifests
@@ -26,9 +26,9 @@ FROM debian:bookworm-slim
 
 WORKDIR /app
 
-# Install runtime dependencies
+# Install runtime dependencies (including PostgreSQL client library for Diesel)
 RUN apt-get update && \
-    apt-get install -y ca-certificates && \
+    apt-get install -y ca-certificates libpq5 && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy the built library from builder
