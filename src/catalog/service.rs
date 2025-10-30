@@ -86,9 +86,10 @@ impl ProductService {
             .iter()
             .filter(|p| {
                 // Name filter: case-insensitive substring match
-                let name_match = filter.name_contains.as_ref().is_none_or(|name| {
-                    p.name.to_lowercase().contains(&name.to_lowercase())
-                });
+                let name_match = filter
+                    .name_contains
+                    .as_ref()
+                    .is_none_or(|name| p.name.to_lowercase().contains(&name.to_lowercase()));
 
                 // Min price filter: price >= minimum
                 let min_price_match = filter.min_price.as_ref().is_none_or(|min| p.price >= *min);

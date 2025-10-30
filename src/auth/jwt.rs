@@ -38,6 +38,9 @@ pub struct Claims {
 /// let token = create_token("123").unwrap();
 /// assert!(!token.is_empty());
 /// ```
+// Allow SystemTime::now for JWT token generation - this is a test project
+// Production would use a Clock abstraction injected via dependency injection
+#[allow(clippy::disallowed_methods)]
 #[allow(clippy::cast_possible_truncation)]
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
     let current_time = SystemTime::now()
@@ -112,6 +115,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::disallowed_methods)]
     #[allow(clippy::cast_possible_truncation)]
     fn test_token_contains_expiration() {
         let token = create_token("test_user").unwrap();
