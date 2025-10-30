@@ -93,7 +93,7 @@ async fn add_item(
     let Some(product) = product_service.get_by_id(request.product_id) else {
         return HttpResponse::NotFound().json(serde_json::json!({
             "error": "Product not found"
-        }))
+        }));
     };
 
     // Check inventory
