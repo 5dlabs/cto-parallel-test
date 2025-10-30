@@ -21,3 +21,8 @@ Thumbs.db
 hooks/
 .hooks/
 **/hooks/
+
+
+# Added by cargo
+
+/target
