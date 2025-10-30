@@ -1,0 +1,28 @@
+# Build artifacts
+target/
+**/*.rs.bk
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# CI/CD
+.github/
+
+# Documentation
+*.md
+!README.md
+
+# Config files not needed in container
+.mcp.json
+client-config.json
+coding-guidelines.md
+github-guidelines.md
+CLAUDE.md
