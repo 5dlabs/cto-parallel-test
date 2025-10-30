@@ -21,3 +21,11 @@ Thumbs.db
 hooks/
 .hooks/
 **/hooks/
+
+# Node.js / React
+node_modules/
+build/
+.env
+.env.local
+.env.production
+package-lock.json
