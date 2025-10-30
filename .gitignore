@@ -1,6 +1,6 @@
 # Rust build artifacts
 /target/
-Cargo.lock
+# Note: Cargo.lock is committed for security auditing purposes
 
 # Environment files
 .env
@@ -21,3 +21,8 @@ Thumbs.db
 hooks/
 .hooks/
 **/hooks/
+
+
+# Added by cargo
+
+/target
