@@ -24,7 +24,8 @@ async fn health_check() -> HttpResponse {
 /// Placeholder for user routes - Task 3 will implement
 fn user_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
-        web::resource("").route(web::get().to(|| async { HttpResponse::NotImplemented().finish() })),
+        web::resource("")
+            .route(web::get().to(|| async { HttpResponse::NotImplemented().finish() })),
     );
 }
 
