@@ -1,10 +1,9 @@
 # Rust build artifacts
 /target/
-Cargo.lock
+**/*.rs.bk
 
-# Environment files
-.env
-.env.local
+# Cargo lock file (library crates should not commit this)
+Cargo.lock
 
 # IDE files
 .vscode/
@@ -17,7 +16,6 @@ Cargo.lock
 .DS_Store
 Thumbs.db
 
-# Hook files - never commit
-hooks/
-.hooks/
-**/hooks/
+# Environment files
+.env
+.env.local

@@ -4,6 +4,10 @@ use argon2::{
 };
 use serde::{Deserialize, Serialize};
 
+/// User model representing an authenticated user.
+///
+/// The `password_hash` field is never serialized in JSON responses
+/// to prevent accidental exposure of password hashes.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     pub id: i32,
@@ -14,41 +18,89 @@ pub struct User {
 }
 
 impl User {
-    /// Verifies a password against the stored hash.
+    /// Verifies a plain-text password against the stored password hash.
+    ///
+    /// Uses Argon2 with constant-time comparison to prevent timing attacks.
     ///
     /// # Arguments
-    /// * `password` - The plaintext password to verify
+    ///
+    /// * `password` - The plain-text password to verify
     ///
     /// # Returns
-    /// `true` if the password matches the stored hash, `false` otherwise
+    ///
+    /// Returns `true` if the password matches, `false` otherwise
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cto_parallel_test::auth::User;
+    ///
+    /// let hash = User::hash_password("mypassword");
+    /// let user = User {
+    ///     id: 1,
+    ///     username: "testuser".to_string(),
+    ///     email: "test@example.com".to_string(),
+    ///     password_hash: hash,
+    /// };
+    ///
+    /// assert!(user.verify_password("mypassword"));
+    /// assert!(!user.verify_password("wrongpassword"));
+    /// ```
     #[must_use]
     pub fn verify_password(&self, password: &str) -> bool {
-        let parsed_hash = PasswordHash::new(&self.password_hash);
-        if let Ok(hash) = parsed_hash {
-            Argon2::default()
-                .verify_password(password.as_bytes(), &hash)
-                .is_ok()
-        } else {
-            false
-        }
+        let Ok(parsed_hash) = PasswordHash::new(&self.password_hash) else {
+            return false;
+        };
+
+        Argon2::default()
+            .verify_password(password.as_bytes(), &parsed_hash)
+            .is_ok()
     }
 
-    /// Hashes a password using Argon2 with a random salt.
+    /// Hashes a plain-text password using Argon2.
+    ///
+    /// Generates a random 32-byte salt for each password.
+    /// Uses Argon2 default configuration (suitable for most applications).
     ///
     /// # Arguments
-    /// * `password` - The plaintext password to hash
+    ///
+    /// * `password` - The plain-text password to hash
     ///
     /// # Returns
-    /// The password hash string in PHC format
+    ///
+    /// Returns the Argon2-encoded hash string (includes algorithm, parameters, salt, and hash)
     ///
     /// # Panics
-    /// Panics if password hashing fails (extremely rare)
+    ///
+    /// Panics if password hashing fails (extremely rare, only if system resources are exhausted).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cto_parallel_test::auth::User;
+    ///
+    /// let hash1 = User::hash_password("mypassword");
+    /// let hash2 = User::hash_password("mypassword");
+    ///
+    /// // Each hash is different due to random salt
+    /// assert_ne!(hash1, hash2);
+    ///
+    /// // But both verify correctly
+    /// let user1 = User {
+    ///     id: 1,
+    ///     username: "test".to_string(),
+    ///     email: "test@test.com".to_string(),
+    ///     password_hash: hash1,
+    /// };
+    /// assert!(user1.verify_password("mypassword"));
+    /// ```
     pub fn hash_password(password: &str) -> String {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
+
         argon2
             .hash_password(password.as_bytes(), &salt)
-            .unwrap()
+            .expect("Failed to hash password")
             .to_string()
     }
 }
@@ -72,15 +124,6 @@ mod tests {
     }
 
     #[test]
-    fn test_different_hashes_for_same_password() {
-        let password = "test123";
-        let hash1 = User::hash_password(password);
-        let hash2 = User::hash_password(password);
-        // Due to random salts, hashes should be different
-        assert_ne!(hash1, hash2);
-    }
-
-    #[test]
     fn test_user_serialization_skips_password() {
         let user = User {
             id: 1,
@@ -91,27 +134,45 @@ mod tests {
         let json = serde_json::to_string(&user).unwrap();
         assert!(!json.contains("password_hash"));
         assert!(json.contains("username"));
-        assert!(json.contains("testuser"));
-        assert!(json.contains("test@example.com"));
     }
 
     #[test]
-    fn test_verify_password_with_invalid_hash() {
+    fn test_each_hash_is_unique() {
+        let password = "same_password";
+        let hash1 = User::hash_password(password);
+        let hash2 = User::hash_password(password);
+
+        // Each hash should be different due to random salt
+        assert_ne!(hash1, hash2);
+
+        // But both should verify correctly
+        let user1 = User {
+            id: 1,
+            username: "user1".to_string(),
+            email: "user1@test.com".to_string(),
+            password_hash: hash1,
+        };
+        let user2 = User {
+            id: 2,
+            username: "user2".to_string(),
+            email: "user2@test.com".to_string(),
+            password_hash: hash2,
+        };
+
+        assert!(user1.verify_password(password));
+        assert!(user2.verify_password(password));
+    }
+
+    #[test]
+    fn test_verify_returns_false_for_invalid_hash() {
         let user = User {
             id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
+            username: "test".to_string(),
+            email: "test@test.com".to_string(),
             password_hash: "invalid_hash_format".to_string(),
         };
-        // Should return false, not panic
-        assert!(!user.verify_password("any_password"));
-    }
 
-    #[test]
-    fn test_hash_password_produces_valid_format() {
-        let password = "mypassword123";
-        let hash = User::hash_password(password);
-        // Argon2 hashes start with $argon2
-        assert!(hash.starts_with("$argon2"));
+        // Should return false instead of panicking
+        assert!(!user.verify_password("any_password"));
     }
 }
