@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
 
       - name: Run ESLint
         working-directory: ./frontend
@@ -51,7 +51,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
 
       - name: Run tests
         working-directory: ./frontend
@@ -72,7 +72,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
 
       - name: Build production bundle
         working-directory: ./frontend
