@@ -39,6 +39,7 @@ pub struct Claims {
 /// assert!(!token.is_empty());
 /// ```
 #[allow(clippy::cast_possible_truncation)]
+#[allow(clippy::disallowed_methods)] // JWT tokens require real system time for expiration timestamps
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
     let current_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -113,6 +114,7 @@ mod tests {
 
     #[test]
     #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::disallowed_methods)] // Test needs system time to verify expiration logic
     fn test_token_contains_expiration() {
         let token = create_token("test_user").unwrap();
         let claims = validate_token(&token).unwrap();
