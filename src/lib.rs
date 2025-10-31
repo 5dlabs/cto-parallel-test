@@ -3,6 +3,7 @@
 //! This library provides database schema definitions and API routes for a test e-commerce application.
 
 pub mod api;
+pub mod catalog;
 pub mod schema;
 
 #[cfg(test)]
