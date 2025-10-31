@@ -7,3 +7,11 @@ pub mod catalog;
 
 // Re-export key types for convenience
 pub use catalog::{Product, ProductService};
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
+}

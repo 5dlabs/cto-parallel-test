@@ -681,4 +681,42 @@ mod tests {
         assert_eq!(service1.get_all().len(), 2);
         assert_eq!(service2.get_all().len(), 2);
     }
+
+    #[test]
+    fn test_thread_safety() {
+        use std::thread;
+
+        let service = Arc::new(ProductService::new());
+
+        // Spawn multiple threads creating products concurrently
+        let mut handles = vec![];
+
+        for i in 0_i32..10 {
+            let service_clone = Arc::clone(&service);
+            let handle = thread::spawn(move || {
+                service_clone.create(NewProduct {
+                    name: format!("Product {i}"),
+                    description: format!("Description {i}"),
+                    price: Decimal::new(1000 + i64::from(i) * 100, 2),
+                    inventory_count: i,
+                })
+            });
+            handles.push(handle);
+        }
+
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        // Verify all products were created
+        let all_products = service.get_all();
+        assert_eq!(all_products.len(), 10);
+
+        // Verify IDs are unique
+        let mut ids: Vec<i32> = all_products.iter().map(|p| p.id).collect();
+        ids.sort_unstable();
+        let unique_ids: Vec<i32> = (1..=10).collect();
+        assert_eq!(ids, unique_ids);
+    }
 }
