@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
+import { CssBaseline, Box, Container } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -22,26 +23,30 @@ const theme = createTheme({
   },
 });
 
-const App = () => (
-  <ThemeProvider theme={theme}>
-    <CssBaseline />
-    <Router>
-      <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <Header />
-        <Box component="main" sx={{ flex: 1, py: 4 }}>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/products" element={<ProductList />} />
-            <Route path="/products/:id" element={<ProductDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Routes>
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Box display="flex" minHeight="100vh" flexDirection="column">
+          <Header />
+          <Box component="main" flexGrow={1} py={4}>
+            <Container maxWidth="lg">
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/products" element={<ProductList />} />
+                <Route path="/products/:id" element={<ProductDetail />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+              </Routes>
+            </Container>
+          </Box>
+          <Footer />
         </Box>
-        <Footer />
-      </Box>
-    </Router>
-  </ThemeProvider>
-);
+      </Router>
+    </ThemeProvider>
+  );
+}
 
 export default App;

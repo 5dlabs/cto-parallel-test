@@ -1,19 +1,21 @@
 import React from 'react';
-import { Container, Typography, Paper, Stack } from '@mui/material';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
 
-const Cart = () => (
-  <Container maxWidth="md">
-    <Stack spacing={3}>
-      <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+function Cart() {
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Typography variant="h4" component="h2" fontWeight={600}>
         Shopping Cart
       </Typography>
-      <Paper elevation={2} sx={{ p: 3 }}>
+      <Paper sx={{ p: 3 }} elevation={1}>
         <Typography variant="body1" color="text.secondary">
-          Your cart is currently empty. Add items to see them listed here.
+          Your cart is currently empty. Start adding products to see them here.
         </Typography>
       </Paper>
-    </Stack>
-  </Container>
-);
+    </Box>
+  );
+}
 
 export default Cart;

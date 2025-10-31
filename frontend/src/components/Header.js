@@ -1,65 +1,60 @@
 import React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  IconButton,
-  Badge,
-  Box,
-  Link,
-} from '@mui/material';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Badge from '@mui/material/Badge';
+import Box from '@mui/material/Box';
+import Link from '@mui/material/Link';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
-const Header = () => {
-  const isAuthenticated = false;
-  const cartItemCount = 0;
+function Header() {
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const navigate = useNavigate();
+
+  const handleAuthClick = () => {
+    setIsAuthenticated((prev) => !prev);
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  };
 
   return (
-    <AppBar position="static" color="primary" enableColorOnDark>
-      <Toolbar sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+    <AppBar position="static" color="primary">
+      <Toolbar sx={{ display: 'flex', gap: 2 }}>
         <Typography
           variant="h6"
           component={RouterLink}
           to="/"
-          sx={{ color: 'inherit', textDecoration: 'none', fontWeight: 600 }}
+          sx={{ flexGrow: 1, color: 'inherit', textDecoration: 'none' }}
         >
-          E-Shop
+          ShopSmart
         </Typography>
-        <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Link
             component={RouterLink}
             to="/products"
-            color="inherit"
             underline="none"
-            sx={{ fontWeight: 500, ml: 3 }}
+            color="inherit"
+            variant="button"
+            sx={{ fontWeight: 500 }}
           >
             Products
           </Link>
+          <IconButton component={RouterLink} to="/cart" color="inherit" aria-label="Cart">
+            <Badge badgeContent={0} color="secondary">
+              <ShoppingCartIcon />
+            </Badge>
+          </IconButton>
+          <Button color="inherit" onClick={handleAuthClick}>
+            {isAuthenticated ? 'Logout' : 'Login'}
+          </Button>
         </Box>
-        <IconButton
-          size="large"
-          edge="end"
-          color="inherit"
-          component={RouterLink}
-          to="/cart"
-          aria-label="shopping cart"
-        >
-          <Badge badgeContent={cartItemCount} color="secondary" overlap="circular">
-            <ShoppingCartIcon />
-          </Badge>
-        </IconButton>
-        <Button
-          color="inherit"
-          component={RouterLink}
-          to={isAuthenticated ? '/logout' : '/login'}
-        >
-          {isAuthenticated ? 'Logout' : 'Login'}
-        </Button>
       </Toolbar>
     </AppBar>
   );
-};
+}
 
 export default Header;

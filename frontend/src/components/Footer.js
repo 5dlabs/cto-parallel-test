@@ -1,18 +1,20 @@
 import React from 'react';
-import { Box, Container, Typography } from '@mui/material';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
 
-const Footer = () => {
-  const year = new Date().getFullYear();
+function Footer() {
+  const currentYear = new Date().getFullYear();
 
   return (
-    <Box component="footer" sx={{ bgcolor: 'grey.900', color: 'common.white', py: 3 }}>
-      <Container maxWidth="lg" sx={{ textAlign: 'center' }}>
-        <Typography variant="body2">
-          &copy; {year} E-Shop. All rights reserved.
+    <Box component="footer" sx={{ bgcolor: 'primary.main', py: 3, color: 'primary.contrastText' }}>
+      <Container maxWidth="lg">
+        <Typography variant="body2" align="center">
+          © {currentYear} ShopSmart. All rights reserved.
         </Typography>
       </Container>
     </Box>
   );
-};
+}
 
 export default Footer;

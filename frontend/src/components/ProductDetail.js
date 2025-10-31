@@ -1,25 +1,25 @@
 import React from 'react';
-import { useParams, Link as RouterLink } from 'react-router-dom';
-import { Container, Typography, Button, Stack } from '@mui/material';
+import { useParams } from 'react-router-dom';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 
-const ProductDetail = () => {
+function ProductDetail() {
   const { id } = useParams();
 
   return (
-    <Container maxWidth="md">
-      <Stack spacing={3}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-          Product Detail - ID: {id}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Product information will appear here once connected to the backend.
-        </Typography>
-        <Button variant="contained" component={RouterLink} to="/products">
-          Back to Products
-        </Button>
-      </Stack>
-    </Container>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Typography variant="h4" component="h2" fontWeight={600}>
+        Product Detail - ID: {id}
+      </Typography>
+      <Typography variant="body1" color="text.secondary">
+        Detailed product information will appear here once connected to the backend service.
+      </Typography>
+      <Button variant="contained" color="primary" disabled>
+        Add to Cart
+      </Button>
+    </Box>
   );
-};
+}
 
 export default ProductDetail;

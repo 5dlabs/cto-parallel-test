@@ -1,21 +1,29 @@
 import React from 'react';
-import { Container, Typography, TextField, Button, Stack, Paper } from '@mui/material';
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
 
-const Login = () => (
-  <Container maxWidth="sm">
-    <Paper elevation={3} sx={{ p: 4 }}>
-      <Stack component="form" spacing={3} noValidate>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 600, textAlign: 'center' }}>
-          Login
-        </Typography>
+function Login() {
+  const handleSubmit = (event) => {
+    event.preventDefault();
+  };
+
+  return (
+    <Paper elevation={1} sx={{ p: { xs: 3, md: 5 }, maxWidth: 480, mx: 'auto' }}>
+      <Typography variant="h4" component="h2" fontWeight={600} gutterBottom>
+        Login
+      </Typography>
+      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <TextField label="Email" type="email" required fullWidth autoComplete="email" />
         <TextField label="Password" type="password" required fullWidth autoComplete="current-password" />
-        <Button type="submit" variant="contained" color="primary" size="large">
+        <Button type="submit" variant="contained" color="primary">
           Sign In
         </Button>
-      </Stack>
+      </Box>
     </Paper>
-  </Container>
-);
+  );
+}
 
 export default Login;

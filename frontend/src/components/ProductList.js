@@ -1,73 +1,65 @@
 import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import {
-  Container,
-  Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
-  Typography,
-  Button,
-  Stack,
-} from '@mui/material';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import CardMedia from '@mui/material/CardMedia';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
 
 const products = [
   {
     id: 1,
     name: 'Wireless Headphones',
     price: '$199.99',
-    description: 'Experience superior sound quality with noise cancellation and long battery life.',
-    image: 'https://via.placeholder.com/400x250?text=Headphones',
+    description: 'Experience immersive sound with noise cancellation and 24-hour battery life.',
+    image: 'https://via.placeholder.com/300x200?text=Headphones',
   },
   {
     id: 2,
     name: 'Smart Watch',
-    price: '$149.99',
-    description: 'Track your fitness, stay connected, and enjoy customizable watch faces.',
-    image: 'https://via.placeholder.com/400x250?text=Smart+Watch',
+    price: '$249.99',
+    description: 'Track fitness, receive notifications, and stay connected on the go.',
+    image: 'https://via.placeholder.com/300x200?text=Smart+Watch',
   },
   {
     id: 3,
-    name: '4K Monitor',
-    price: '$399.99',
-    description: 'Vibrant colors and ultra-high definition display for work and entertainment.',
-    image: 'https://via.placeholder.com/400x250?text=4K+Monitor',
+    name: 'Portable Speaker',
+    price: '$129.99',
+    description: 'Compact design with powerful sound and waterproof durability.',
+    image: 'https://via.placeholder.com/300x200?text=Speaker',
   },
 ];
 
-const ProductList = () => (
-  <Container maxWidth="lg">
-    <Stack spacing={4}>
-      <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+function ProductList() {
+  return (
+    <Box sx={{ flexGrow: 1 }}>
+      <Typography variant="h4" component="h2" gutterBottom fontWeight={600}>
         Featured Products
       </Typography>
       <Grid container spacing={4}>
         {products.map((product) => (
-          <Grid item xs={12} sm={6} md={4} key={product.id}>
-            <Card elevation={4} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <Grid item key={product.id} xs={12} sm={6} md={4}>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <CardMedia component="img" height="200" image={product.image} alt={product.name} />
               <CardContent sx={{ flexGrow: 1 }}>
                 <Typography gutterBottom variant="h6" component="div">
                   {product.name}
                 </Typography>
-                <Typography variant="subtitle1" color="secondary" sx={{ fontWeight: 600 }}>
+                <Typography variant="subtitle1" color="primary" fontWeight={600}>
                   {product.price}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                <Typography variant="body2" color="text.secondary" mt={1}>
                   {product.description}
                 </Typography>
               </CardContent>
-              <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  component={RouterLink}
-                  to={`/products/${product.id}`}
-                >
+              <CardActions sx={{ justifyContent: 'space-between' }}>
+                <Button component={RouterLink} to={`/products/${product.id}`} size="small">
                   View Details
                 </Button>
-                <Button size="small" variant="contained" color="secondary">
+                <Button variant="contained" color="primary" size="small">
                   Add to Cart
                 </Button>
               </CardActions>
@@ -75,8 +67,8 @@ const ProductList = () => (
           </Grid>
         ))}
       </Grid>
-    </Stack>
-  </Container>
-);
+    </Box>
+  );
+}
 
 export default ProductList;
