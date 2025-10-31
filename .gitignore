@@ -1,23 +1,28 @@
-# Rust build artifacts
+# Rust
 /target/
-# Note: Cargo.lock is committed for security auditing purposes
+**/*.rs.bk
+*.pdb
 
-# Environment files
-.env
-.env.local
-
-# IDE files
-.vscode/
+# IDE
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
 
-# OS files
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
 .DS_Store
 Thumbs.db
 
-# Hook files - never commit
+# Diesel
+diesel.toml
+
+# Hooks
 hooks/
 .hooks/
 **/hooks/

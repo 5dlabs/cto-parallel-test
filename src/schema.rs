@@ -1,18 +1,14 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    cart_items (id) {
+    users (id) {
         id -> Int4,
-        cart_id -> Int4,
-        product_id -> Int4,
-        quantity -> Int4,
-    }
-}
-
-diesel::table! {
-    carts (id) {
-        id -> Int4,
-        user_id -> Int4,
+        #[max_length = 255]
+        username -> Varchar,
+        #[max_length = 255]
+        email -> Varchar,
+        #[max_length = 255]
+        password_hash -> Varchar,
         created_at -> Timestamp,
     }
 }
@@ -29,15 +25,19 @@ diesel::table! {
 }
 
 diesel::table! {
-    users (id) {
+    carts (id) {
         id -> Int4,
-        #[max_length = 255]
-        username -> Varchar,
-        #[max_length = 255]
-        email -> Varchar,
-        #[max_length = 255]
-        password_hash -> Varchar,
+        user_id -> Int4,
         created_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    cart_items (id) {
+        id -> Int4,
+        cart_id -> Int4,
+        product_id -> Int4,
+        quantity -> Int4,
     }
 }
 
