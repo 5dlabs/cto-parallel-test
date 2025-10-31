@@ -291,21 +291,16 @@ impl ProductService {
             .iter()
             .filter(|p| {
                 // Name filter: case-insensitive substring match
-                let name_match = filter.name_contains.as_ref().is_none_or(|name| {
-                    p.name.to_lowercase().contains(&name.to_lowercase())
-                });
+                let name_match = filter
+                    .name_contains
+                    .as_ref()
+                    .is_none_or(|name| p.name.to_lowercase().contains(&name.to_lowercase()));
 
                 // Min price filter: inclusive (>=)
-                let min_price_match = filter
-                    .min_price
-                    .as_ref()
-                    .is_none_or(|min| p.price >= *min);
+                let min_price_match = filter.min_price.as_ref().is_none_or(|min| p.price >= *min);
 
                 // Max price filter: inclusive (<=)
-                let max_price_match = filter
-                    .max_price
-                    .as_ref()
-                    .is_none_or(|max| p.price <= *max);
+                let max_price_match = filter.max_price.as_ref().is_none_or(|max| p.price <= *max);
 
                 // Stock status filter
                 let in_stock_match = filter
