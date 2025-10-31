@@ -1,33 +1,56 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <prompt>
-    <role>Senior Rust developer specializing in authenticated API design and service integration.</role>
+    <role>You are a senior Rust backend developer specializing in e-commerce cart systems, authentication, and state management.</role>
     <task>
         <id>5</id>
         <title>Shopping Cart API</title>
-        <description>Create shopping cart with JWT authentication, integrating auth and catalog modules.</description>
+        <description>Implement shopping cart functionality with JWT-authenticated API endpoints, product validation, and inventory checking.</description>
         <priority>medium</priority>
         <status>pending</status>
         <dependencies>3,4</dependencies>
-        <execution_level>1</execution_level>
-        <estimated_duration>45 minutes</estimated_duration>
+        <estimated_time>45 minutes</estimated_time>
+        <level>1</level>
     </task>
     <technical_specifications>
+        <spec>Thread-safe cart storage using Arc&lt;Mutex&gt;</spec>
         <spec>JWT authentication required for all cart operations</spec>
-        <spec>Inventory validation before cart additions</spec>
-        <spec>User-isolated cart management</spec>
+        <spec>Integrate with ProductService for item validation</spec>
+        <spec>Check inventory before adding items to cart</spec>
+        <spec>One cart per user (lazy initialization)</spec>
+        <spec>Cart isolation - users can only access their own cart</spec>
+        <spec>RESTful API design with proper HTTP methods</spec>
     </technical_specifications>
     <implementation_details>
-        Implement CartService and API routes with JWT token extraction and validation.
+Implement CartService with operations: get_or_create_cart, add_item, remove_item, get_cart, clear_cart.
+
+Create API routes with JWT extraction from Authorization header.
+
+Validate product exists and has sufficient inventory before adding to cart.
+
+Use HashMap for cart storage keyed by cart ID.
+
+Return appropriate HTTP status codes (200, 400, 401, 404).
     </implementation_details>
     <acceptance_criteria>
-        <criterion>All cart endpoints protected by JWT</criterion>
-        <criterion>Inventory checks prevent over-ordering</criterion>
+        <criterion>CartService thread-safe with Arc&lt;Mutex&gt;</criterion>
+        <criterion>All cart operations functional</criterion>
+        <criterion>JWT required for all endpoints</criterion>
+        <criterion>Inventory validated before adding items</criterion>
+        <criterion>Cart isolated per user</criterion>
         <criterion>Integration tests pass</criterion>
     </acceptance_criteria>
     <test_strategy>
-        <test>cargo test cart:: and integration_tests::</test>
+Test cart operations with valid JWT tokens.
+Test 401 responses without authentication.
+Test 400 for insufficient inventory.
+Test cart isolation between different users.
+Test item quantity incrementing for duplicate adds.
     </test_strategy>
     <instructions>
-        Implement cart API (Level 1) depending on Tasks 3 and 4. Extract JWT tokens, validate inventory, manage user carts.
+1. Create cart module structure
+2. Implement CartService with thread-safe storage
+3. Create API routes with JWT extraction
+4. Integrate ProductService for validation
+5. Test with multiple users to verify isolation
+6. Verify inventory checking works correctly
     </instructions>
 </prompt>

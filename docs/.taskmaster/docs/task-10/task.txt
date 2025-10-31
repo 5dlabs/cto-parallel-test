@@ -1,15 +1,10 @@
 # Task 10: Final Integration & Deployment Verification
 
 ## Description
-End-to-end system validation and deployment readiness verification.
+End-to-end system validation and deployment readiness verification
 
 ## Implementation Details
-1. Verify all PRs merged
-2. Run all tests
-3. Build for production
-4. Smoke test complete system
-5. Validate deployment readiness
-6. Create final integration report
+Final integration validation - see .taskmaster/docs/task-10/
 
 ## Test Strategy
-Complete test suite + manual end-to-end validation + deployment dry-run.
+Complete system integration tests, deployment validation, smoke tests

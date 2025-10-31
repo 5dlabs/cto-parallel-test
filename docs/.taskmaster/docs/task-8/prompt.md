@@ -1,19 +1,47 @@
 # Autonomous Agent Prompt: Integration - Level 0
 
-## Role
-QA engineer validating integration of parallel tasks.
+## Mission
+Validate that all Level 0 parallel tasks (1, 3, 4, 6) integrate without conflicts.
 
-## Task
-Verify Tasks 1, 3, 4, 6 integrate correctly after parallel execution.
+## Validation Steps
 
-## Steps
-1. Confirm all Level 0 task PRs merged
-2. Pull main branch
-3. Run cargo test and npm test
-4. Verify builds
-5. Document findings in integration-report-level-0.md
+1. **Check for file conflicts**
+```bash
+git status
+# Look for merge conflicts or duplicate files
+```
+
+2. **Build backend**
+```bash
+cargo check
+cargo build
+```
+
+3. **Run backend tests**
+```bash
+cargo test
+```
+
+4. **Test database setup**
+```bash
+diesel migration run
+diesel migration redo
+```
+
+5. **Build frontend**
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+6. **Verify module integration**
+Check that all modules can import each other without circular dependencies.
 
 ## Success Criteria
-✅ All tests pass
-✅ Builds succeed
-✅ Report created
+- All commands above succeed
+- No conflicts or errors
+- Tests pass
+- Both backend and frontend build
+
+Report any integration issues found.

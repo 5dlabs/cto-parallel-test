@@ -1,195 +1,194 @@
-# Acceptance Criteria: Task 2 - API Endpoints
+# Acceptance Criteria: API Endpoints Setup
 
-## Completion Criteria
+## Core Requirements
 
-### 1. Dependencies Configuration
-- [ ] Cargo.toml includes actix-web version 4.3.1
-- [ ] Cargo.toml includes actix-rt version 2.8
-- [ ] Cargo.toml includes serde with derive features
-- [ ] Cargo.toml includes serde_json
-- [ ] Cargo.toml includes env_logger and log
-- [ ] cargo build completes without dependency errors
+### Dependencies
+- [ ] `actix-web = "4.3.1"` added to Cargo.toml
+- [ ] `serde` with derive features added
+- [ ] `serde_json` added
+- [ ] `env_logger` and `log` added
+- [ ] `cargo check` passes without errors
 
-### 2. API Module Structure
-- [ ] Directory `src/api/` exists
-- [ ] File `src/api/mod.rs` exists and exports routes and errors
-- [ ] File `src/api/routes.rs` exists with route configuration
-- [ ] File `src/api/errors.rs` exists with error types
-- [ ] All API modules are public
+### File Structure
+- [ ] `src/api/mod.rs` exists and exports routes and errors
+- [ ] `src/api/routes.rs` exists with route configuration
+- [ ] `src/api/errors.rs` exists with ApiError enum
+- [ ] `src/main.rs` updated with HTTP server setup
 
-### 3. Route Configuration
-- [ ] `configure_routes` function implemented in routes.rs
-- [ ] Routes scoped under `/api` prefix
-- [ ] Health check route registered at `/api/health`
-- [ ] User routes scope created at `/api/users`
-- [ ] Product routes scope created at `/api/products`
-- [ ] Cart routes scope created at `/api/cart`
-- [ ] Placeholder route configurations implemented for users, products, cart
-- [ ] `not_implemented` handler returns 501 status code
+### Route Configuration
+- [ ] `configure_routes()` function defined in routes.rs
+- [ ] `/api` scope created as root for all endpoints
+- [ ] `/api/health` route implemented and functional
+- [ ] `/api/auth` scope configured with placeholder routes
+- [ ] `/api/users` scope configured
+- [ ] `/api/products` scope configured
+- [ ] `/api/cart` scope configured
 
-### 4. Health Check Endpoint
-- [ ] Health check endpoint responds to GET requests
-- [ ] Returns HTTP 200 OK status
-- [ ] Returns JSON with "status" field set to "ok"
-- [ ] Returns JSON with "service" field
-- [ ] Returns JSON with "version" field
-- [ ] Content-Type header is application/json
+### Health Check Endpoint
+- [ ] Returns HTTP 200 OK
+- [ ] Returns JSON response with `"status": "ok"`
+- [ ] Includes version information
+- [ ] Responds to GET requests
 
-### 5. Error Handling
-- [ ] `ErrorResponse` struct defined with error, message, status fields
-- [ ] `ApiError` enum defined with NotFound, BadRequest, InternalError, Unauthorized variants
-- [ ] `Display` trait implemented for ApiError
-- [ ] `ResponseError` trait implemented for ApiError
+### Placeholder Routes
+- [ ] All unimplemented routes return HTTP 501 Not Implemented
+- [ ] Placeholder responses include JSON error format
+- [ ] Error message indicates future implementation
+- [ ] Auth routes: `/auth/register` (POST), `/auth/login` (POST)
+- [ ] Product routes: `/products` (GET), `/products/{id}` (GET)
+- [ ] Cart routes: `/cart` (GET), `/cart/add` (POST), `/cart/remove/{id}` (DELETE), `/cart/clear` (POST)
+
+### Error Handling
+- [ ] `ApiError` enum defined with variants: NotFound, BadRequest, InternalError, Unauthorized
+- [ ] `ApiError` implements `Display` trait
+- [ ] `ApiError` implements `ResponseError` trait
 - [ ] Error responses return appropriate HTTP status codes
-- [ ] Error responses return JSON format
+- [ ] Error responses return JSON with consistent format: `{"error": "type", "message": "details"}`
 
-### 6. Main Application Setup
-- [ ] src/main.rs updated with actix_web imports
-- [ ] dotenv().ok() called to load environment variables
-- [ ] env_logger initialized
-- [ ] HttpServer created with App configuration
-- [ ] Logger middleware added to App
-- [ ] configure_routes called in App setup
+### HTTP Server
 - [ ] Server binds to 127.0.0.1:8080
-- [ ] Startup messages printed to console
-- [ ] Main function is async with #[actix_web::main]
+- [ ] Server starts without errors
+- [ ] `#[actix_web::main]` macro used in main.rs
+- [ ] Logger middleware configured
+- [ ] Routes registered with App configuration
 
-### 7. Module Integration
-- [ ] src/main.rs imports api module
-- [ ] src/main.rs imports config, models, schema modules from Task 1
-- [ ] No circular dependencies exist
-- [ ] All module paths resolve correctly
+### Logging
+- [ ] `env_logger` initialized
+- [ ] Logger middleware wraps the App
+- [ ] Request logs printed to console
+- [ ] Log level configurable via RUST_LOG environment variable
 
-### 8. Logging
-- [ ] Logger middleware configured in App
-- [ ] Request logs appear in console when endpoints accessed
-- [ ] Log format includes timestamp, method, path, status, duration
-- [ ] Startup messages include server URL and health check URL
+## Functional Tests
 
-### 9. Server Functionality
-- [ ] Server starts without panics or errors
-- [ ] Server binds to specified address and port
-- [ ] Server handles concurrent requests
-- [ ] Server can be stopped with Ctrl+C
+### Manual Testing
+```bash
+# Start server
+cargo run
+# Expected: Server starts, prints "Starting API server on http://127.0.0.1:8080"
 
-### 10. Endpoint Testing
-- [ ] Health check endpoint accessible via curl/browser
-- [ ] Health check returns expected JSON structure
-- [ ] Placeholder user routes return 501 Not Implemented
-- [ ] Placeholder product routes return 501 Not Implemented
-- [ ] Placeholder cart routes return 501 Not Implemented
-- [ ] Invalid routes return 404 Not Found
+# Test health check
+curl http://localhost:8080/api/health
+# Expected: {"status":"ok","version":"0.1.0"}
+
+# Test placeholder endpoint
+curl http://localhost:8080/api/products
+# Expected: 501 Not Implemented with JSON error
+
+# Test 404
+curl http://localhost:8080/api/nonexistent
+# Expected: 404 Not Found
+```
+
+### Automated Testing
+- [ ] Integration test file created: `tests/api_routes_test.rs`
+- [ ] Test for health check endpoint passes
+- [ ] Test for placeholder endpoints returns 501
+- [ ] Test for 404 handling (invalid routes)
+- [ ] `cargo test` runs all tests successfully
+
+## Code Quality
+
+### Structure
+- [ ] Module organization follows Rust conventions
+- [ ] Public API clearly defined via mod.rs exports
+- [ ] Route handlers use async/await properly
+- [ ] No compiler warnings
+
+### Error Handling
+- [ ] Errors use Result types where appropriate
+- [ ] `.unwrap()` avoided in production code
+- [ ] Error messages are descriptive
+
+### Documentation
+- [ ] Route structure documented (comments or README)
+- [ ] Error types documented
+- [ ] Startup message indicates server address
+
+## Integration Points
+
+### Task 1 Integration
+- [ ] Imports `schema` module successfully
+- [ ] Imports `models` module successfully
+- [ ] Imports `config` module successfully
+- [ ] No compilation errors related to Task 1 dependencies
+
+### Future Task Compatibility
+- [ ] Route scopes align with Task 3 (auth), Task 4 (products), Task 5 (cart)
+- [ ] Placeholder routes match expected future implementations
+- [ ] Error handling ready for business logic integration
+
+## Non-Functional Requirements
+
+### Performance
+- [ ] Server starts in under 5 seconds
+- [ ] Health check responds in under 100ms
+- [ ] No memory leaks (basic check with running server)
+
+### Security
+- [ ] Error messages don't expose sensitive information
+- [ ] Server binds to localhost (not 0.0.0.0) for development
+- [ ] Ready for CORS middleware addition (Task 6 integration)
+
+### Maintainability
+- [ ] Clear separation of concerns (routes, errors, main)
+- [ ] Consistent code style
+- [ ] Easy to add new routes
+- [ ] Error handling patterns established
 
 ## Validation Commands
 
 ```bash
-# 1. Build and check
-cargo build
+# Compilation check
 cargo check
-cargo clippy
 
-# 2. Start server
+# Build project
+cargo build
+
+# Run tests
+cargo test
+
+# Start server
 cargo run
-# Expected output:
-# 🚀 Starting E-Commerce API Server
-# 📡 Server will listen on http://127.0.0.1:8080
-# 🏥 Health check available at http://127.0.0.1:8080/api/health
 
-# 3. Test health check (in new terminal)
-curl http://localhost:8080/api/health
-# Expected: {"status":"ok","service":"e-commerce-api","version":"0.1.0"}
+# Health check (in separate terminal)
+curl -i http://localhost:8080/api/health
 
-# 4. Test placeholder endpoints
-curl http://localhost:8080/api/users
-# Expected: 501 status with error message
+# Test placeholder
+curl -i http://localhost:8080/api/products
 
-curl http://localhost:8080/api/products
-# Expected: 501 status with error message
+# Test 404
+curl -i http://localhost:8080/api/invalid
 
-curl http://localhost:8080/api/cart
-# Expected: 501 status with error message
-
-# 5. Test invalid route
-curl http://localhost:8080/api/invalid
-# Expected: 404 Not Found
-
-# 6. Verify logging
-# Check server console for request logs
-# Should see: "GET /api/health HTTP/1.1" 200 ...
-
-# 7. Performance check
-ab -n 100 -c 10 http://localhost:8080/api/health
-# Server should handle concurrent requests
-
-# 8. JSON validation
-curl -i http://localhost:8080/api/health | grep "Content-Type"
-# Expected: Content-Type: application/json
+# Check logs
+RUST_LOG=debug cargo run
 ```
 
-## Success Indicators
+## Success Checklist
 
-### Must Have (Blocking)
-1. Server starts successfully on port 8080
-2. Health check endpoint returns 200 OK with correct JSON
-3. Placeholder routes return 501 Not Implemented
-4. Logging middleware active and writing logs
-5. No compilation errors or warnings
-6. All route scopes properly configured
+### Must Have
+- [x] Server starts successfully
+- [x] Health check returns 200 OK
+- [x] All placeholder routes return 501
+- [x] Error handling implemented
+- [x] Tests pass
+- [x] No compilation errors/warnings
 
-### Should Have (Important)
-1. Error handling follows standardized format
-2. Startup messages are clear and informative
-3. Server handles graceful shutdown
-4. Concurrent requests handled correctly
+### Should Have
+- [x] Logging configured
+- [x] Consistent error format
+- [x] Integration tests
+- [x] Clear route structure
 
-### Nice to Have (Optional)
-1. Detailed API documentation comments
-2. Request validation middleware
-3. CORS configuration for frontend integration
-4. Rate limiting middleware
-
-## Rejection Criteria
-
-Task will be considered incomplete if:
-- ❌ Server fails to start
-- ❌ Health check endpoint doesn't respond
-- ❌ Health check returns incorrect JSON structure
-- ❌ Placeholder routes return wrong status codes
-- ❌ Compilation errors exist
-- ❌ Missing required middleware
-- ❌ Routes not properly scoped under /api
+### Nice to Have
+- [ ] API documentation (OpenAPI/Swagger) - Future enhancement
+- [ ] Request validation middleware - Added in later tasks
+- [ ] Rate limiting - Production feature
 
 ## Definition of Done
-
-Task is complete when:
-1. ✅ All "Must Have" criteria met
-2. ✅ All validation commands execute successfully
-3. ✅ Server tested with curl/Postman
-4. ✅ Logging confirmed working
-5. ✅ Code reviewed for best practices
-6. ✅ Ready for Tasks 5 and 7 to build on this foundation
-
-## Integration Points
-
-### With Task 1 (Database Schema)
-- [ ] Imports schema module without errors
-- [ ] Imports models module without errors
-- [ ] Imports config module without errors
-- [ ] Database connection not required yet (deferred to Task 5)
-
-### For Task 3 (User Authentication)
-- [ ] `/api/users` scope ready for route implementation
-- [ ] Error handling types available for auth errors
-
-### For Task 4 (Product Catalog)
-- [ ] `/api/products` scope ready for route implementation
-- [ ] Error handling types available for product errors
-
-### For Task 5 (Shopping Cart)
-- [ ] `/api/cart` scope ready for route implementation
-- [ ] Server configuration supports cart endpoints
-
-### For Task 7 (Integration Tests)
-- [ ] Health check endpoint testable
-- [ ] Server can be initialized in test context
-- [ ] Routes accessible from test client
+- All "Must Have" criteria met
+- `cargo check`, `cargo build`, and `cargo test` succeed
+- Server runs without errors for 5+ minutes
+- Health check accessible via curl
+- Ready for Task 3, 4, 5 integration
+- Code reviewed (or self-reviewed if solo)
+- Committed to version control

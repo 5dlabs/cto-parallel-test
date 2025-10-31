@@ -1,22 +1,46 @@
-# Acceptance Criteria: Task 5 - Shopping Cart API
+# Acceptance Criteria: Shopping Cart API
 
-## Must Have
-- [ ] src/cart/ with mod.rs, service.rs created
-- [ ] src/api/cart_routes.rs with all endpoints
-- [ ] CartService implements get_or_create_cart, add_item, remove_item, get_cart, clear_cart
-- [ ] All endpoints extract JWT from Authorization header
-- [ ] Inventory validation before adding items
+## Core Requirements
+- [ ] `src/cart/mod.rs` exports CartService
+- [ ] `src/cart/service.rs` implements all cart operations
+- [ ] `src/api/cart_routes.rs` implements all API endpoints
+- [ ] All endpoints require JWT authentication
 - [ ] Returns 401 for missing/invalid tokens
-- [ ] cargo check passes
-- [ ] Integration tests pass
+- [ ] Inventory validated before adding items
+- [ ] Cart isolated per user (user A can't access user B's cart)
 
-## Validation
+## API Endpoints
+- [ ] `GET /api/cart` - Get user's cart
+- [ ] `POST /api/cart/add` - Add item (with inventory check)
+- [ ] `DELETE /api/cart/remove/{id}` - Remove item
+- [ ] `POST /api/cart/clear` - Clear cart
+
+## Testing
 ```bash
-cargo test cart::
-cargo test integration_tests::test_full_user_flow
+# With valid JWT
+TOKEN="valid_jwt_here"
+
+# Get cart
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/cart
+
+# Add item
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"product_id":1,"quantity":2}' \
+  http://localhost:8080/api/cart/add
+
+# Remove item
+curl -X DELETE -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8080/api/cart/remove/1
+
+# Clear cart
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8080/api/cart/clear
 ```
 
-## Definition of Done
-✅ Cart API fully functional with auth
-✅ Integrates with Task 3 and 4 modules
-✅ Ready for Task 7 testing
+## Validation
+- [ ] `cargo test` passes
+- [ ] Cart operations work with valid JWT
+- [ ] Returns 401 without JWT
+- [ ] Returns 400 for insufficient inventory
+- [ ] Returns 404 for invalid product_id

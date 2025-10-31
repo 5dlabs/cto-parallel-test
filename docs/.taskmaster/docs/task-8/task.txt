@@ -1,16 +1,10 @@
 # Task 8: Integration - Level 0
 
 ## Description
-Validate that Tasks 1, 3, 4, and 6 (Level 0) integrate correctly after parallel execution.
+Validate that tasks 1, 3, 4, and 6 integrate correctly before proceeding to next level
 
 ## Implementation Details
-1. Verify all Level 0 task PRs merged
-2. Pull main: git pull origin main
-3. Run cargo test
-4. Run cd frontend && npm test
-5. Verify builds succeed
-6. Check for conflicts
-7. Create integration-report-level-0.md
+Integration validation for execution level 0 - see .taskmaster/docs/task-8/
 
 ## Test Strategy
-Run all tests and builds. Document findings.
+Run full test suite with integrated code, verify no conflicts, validate build succeeds

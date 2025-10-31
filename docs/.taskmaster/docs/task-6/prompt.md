@@ -1,24 +1,32 @@
 # Autonomous Agent Prompt: Frontend Components
 
-## Role
-Senior React developer specializing in Material-UI and responsive design.
+## Mission
+Create a complete React frontend with Material-UI for an e-commerce application.
 
-## Task
-Create React frontend structure with all core components.
+## Steps
+1. Create `frontend/package.json` with all dependencies
+2. Create `App.js` with routing and theme
+3. Build Header and Footer components
+4. Implement all page components
+5. Test that app runs without errors
 
-## Deliverables
-1. frontend/package.json
-2. frontend/src/App.js with routing
-3. Components: Header, Footer, HomePage, ProductList, ProductDetail, Cart, Login, Register
+## Key Components
 
-## Success Criteria
-✅ npm install succeeds
-✅ npm start runs without errors
-✅ All routes accessible
-✅ Responsive design
-✅ Material-UI themed
+**Header**: Navigation bar with cart badge
+**Footer**: Simple footer
+**HomePage**: Landing page
+**ProductList**: Product grid with cards
+**ProductDetail**: Single product view
+**Cart**: Shopping cart
+**Login/Register**: Auth forms
 
-## Testing
+## Success Validation
 ```bash
-cd frontend && npm install && npm start
+cd frontend
+npm install
+npm start
+# Navigate to http://localhost:3000
+# Test all routes
 ```
+
+All routes should be accessible and render without errors.

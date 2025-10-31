@@ -1,50 +1,108 @@
 # Task 10: Final Integration & Deployment Verification
 
 ## Overview
-End-to-end system validation and deployment readiness verification for all 9 tasks.
+End-to-end system validation and deployment readiness check for the complete e-commerce application.
 
-## All Tasks Being Validated
-- Task 1: Database Schema
-- Task 2: API Endpoints
-- Task 3: User Authentication
-- Task 4: Product Catalog
-- Task 5: Shopping Cart
-- Task 6: Frontend Components
-- Task 7: Integration Tests
-- Task 8: Level 0 Integration
-- Task 9: Level 1 Integration
+## Context
+**Final integration task** depending on ALL previous tasks. Validates the entire system works together for production deployment.
 
-## Final Validation Steps
-1. Verify ALL task PRs merged to main
-2. Pull complete codebase: `git pull origin main`
-3. Run complete test suite: `cargo test && cd frontend && npm test`
-4. Run integration tests: `cargo test --test integration_tests`
-5. Build for production: `cargo build --release && cd frontend && npm run build`
-6. Smoke test full system:
-   - Start backend: `cargo run --release`
-   - Start frontend: `cd frontend && npm start`
-   - Test complete user flow: register → login → browse → add to cart → checkout
-7. Verify deployment readiness:
-   - Environment variables documented
-   - Dependencies listed
-   - Deployment instructions clear
-   - Performance benchmarks acceptable
+## Objectives
+1. Run complete system integration tests
+2. Verify end-to-end user flows
+3. Validate deployment readiness
+4. Execute smoke tests
+5. Performance and load testing
+6. Security validation
+7. Documentation completeness check
+
+## Dependencies
+ALL tasks (1-9)
+
+## Validation Plan
+
+### Step 1: Full System Build
+```bash
+cargo build --release
+cd frontend && npm run build
+```
+
+### Step 2: Database Setup
+```bash
+diesel setup
+diesel migration run
+# Seed test data if needed
+```
+
+### Step 3: Start Services
+```bash
+# Start backend
+cargo run --release &
+
+# Serve frontend (or configure proxy)
+cd frontend && serve -s build
+```
+
+### Step 4: End-to-End Testing
+Test complete user flows:
+- User registration
+- Login
+- Browse products
+- Add to cart
+- Checkout (if implemented)
+
+### Step 5: Integration Test Suite
+```bash
+cargo test
+cargo test --release
+cd frontend && npm test
+```
+
+### Step 6: Smoke Tests
+Quick validation of critical paths:
+- Health check endpoint
+- Database connectivity
+- Authentication flow
+- Cart operations
+
+### Step 7: Performance Testing
+```bash
+# Load test health endpoint
+hey -n 10000 -c 100 http://localhost:8080/api/health
+
+# Test cart operations under load
+```
+
+### Step 8: Security Validation
+- JWT token validation
+- Password hashing verified
+- SQL injection prevention (Diesel ORM)
+- CORS configured (if needed)
+- No sensitive data in logs
+
+### Step 9: Documentation Check
+- [ ] README.md complete
+- [ ] API documentation
+- [ ] Setup instructions
+- [ ] Environment variables documented
+- [ ] Architecture diagram available
 
 ## Success Criteria
-✅ All 9 tasks integrated
-✅ All tests pass (unit + integration)
-✅ Production builds succeed
-✅ End-to-end user flow works
-✅ Frontend connects to backend
-✅ Authentication functional
-✅ Cart operations complete
-✅ Deployment documentation complete
-✅ Final integration report created
+- [ ] Full system builds in release mode
+- [ ] All tests pass
+- [ ] End-to-end flows work
+- [ ] Performance meets requirements
+- [ ] Security validations pass
+- [ ] Documentation complete
+- [ ] Ready for deployment
 
-## Deliverables
-- integration-report-final.md
-- deployment-readiness-checklist.md
-- Known issues and limitations documented
-
-## Estimated Effort
-60-90 minutes
+## Deployment Checklist
+- [ ] Environment variables configured
+- [ ] Database migrations run
+- [ ] Frontend built for production
+- [ ] Backend compiled in release mode
+- [ ] Logging configured
+- [ ] Error handling verified
+- [ ] Health check endpoint accessible
+- [ ] API responds correctly
+- [ ] Frontend serves correctly
+- [ ] JWT secret configured (not test value)

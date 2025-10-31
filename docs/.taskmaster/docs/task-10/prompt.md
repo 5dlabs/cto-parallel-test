@@ -1,23 +1,56 @@
 # Autonomous Agent Prompt: Final Integration & Deployment Verification
 
-## Role
-Senior QA engineer and deployment specialist.
+## Mission
+Perform comprehensive end-to-end validation of the complete system and verify deployment readiness.
 
-## Task
-Complete end-to-end system validation and deployment readiness verification.
+## Validation Steps
 
-## Steps
-1. Confirm all task PRs merged
-2. Pull main branch
-3. Run all tests (cargo test && cd frontend && npm test)
-4. Build for production
-5. Smoke test complete system
-6. Verify deployment readiness
-7. Create final integration report and deployment checklist
+### 1. Build Everything
+```bash
+cargo build --release
+cd frontend && npm run build
+```
+
+### 2. Database Setup
+```bash
+diesel migration run
+```
+
+### 3. Start System
+```bash
+cargo run --release &
+```
+
+### 4. Run All Tests
+```bash
+cargo test --release
+cd frontend && npm test
+```
+
+### 5. Manual E2E Testing
+1. Open http://localhost:3000
+2. Navigate through all pages
+3. Test user registration/login
+4. Add products to cart
+5. Verify cart operations
+
+### 6. Smoke Tests
+```bash
+curl http://localhost:8080/api/health
+# Test other critical endpoints
+```
+
+### 7. Performance Check
+```bash
+hey -n 1000 http://localhost:8080/api/health
+```
 
 ## Success Criteria
-✅ All tests pass
-✅ Production builds succeed
-✅ End-to-end flow validated
-✅ Deployment ready
-✅ Documentation complete
+- All builds succeed
+- All tests pass
+- E2E flows work
+- Performance acceptable
+- No errors in logs
+- System ready for deployment
+
+Create a deployment readiness report with any issues found.

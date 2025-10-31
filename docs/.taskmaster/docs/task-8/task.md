@@ -1,29 +1,71 @@
-# Task 8: Integration Validation - Level 0
+# Task 8: Integration - Level 0
 
 ## Overview
-Integration validation for Level 0 tasks (1, 3, 4, 6) that ran in parallel.
+Validate that all Level 0 tasks (1, 3, 4, 6) integrate correctly without conflicts before proceeding to Level 1.
+
+## Context
+**Integration validation task** ensuring parallel Level 0 tasks work together. Tests database schema, authentication, catalog, and frontend compatibility.
+
+## Objectives
+1. Verify no file conflicts between Level 0 tasks
+2. Validate full project builds successfully
+3. Run all tests to ensure components integrate
+4. Check module dependencies are resolved
+5. Verify no duplicate or conflicting code
 
 ## Tasks Being Integrated
-- **Task 1**: Database Schema Setup
-- **Task 3**: User Authentication Module
-- **Task 4**: Product Catalog Module
-- **Task 6**: Frontend Components
+- **Task 1:** Database Schema Setup
+- **Task 3:** User Authentication Module
+- **Task 4:** Product Catalog Module
+- **Task 6:** Frontend Components
 
-## Validation Steps
-1. Verify all Level 0 task PRs merged to main
-2. Pull integrated code: `git pull origin main`
-3. Run backend tests: `cargo test`
-4. Run frontend tests: `cd frontend && npm test`
-5. Verify build: `cargo build && cd frontend && npm run build`
-6. Check for conflicts in Cargo.toml, shared modules, dependencies
+## Validation Plan
+
+### Step 1: Build Verification
+```bash
+cargo check
+cargo build
+cargo build --release
+```
+
+### Step 2: Test Suite Execution
+```bash
+cargo test
+cargo test --lib
+cargo test --bins
+```
+
+### Step 3: Module Integration Check
+Verify:
+- All modules can be imported
+- No circular dependencies
+- Schema accessible from all modules
+- No naming conflicts
+
+### Step 4: Database Integration
+```bash
+diesel migration run
+# Verify schema matches models
+```
+
+### Step 5: Frontend Build
+```bash
+cd frontend
+npm install
+npm run build
+```
 
 ## Success Criteria
-✅ All Level 0 PRs merged
-✅ cargo test passes
-✅ npm test passes
-✅ Builds succeed
-✅ No integration conflicts
-✅ Integration report created
+- [ ] `cargo check` passes without errors
+- [ ] `cargo build` succeeds
+- [ ] `cargo test` passes all tests
+- [ ] No file conflicts
+- [ ] All modules integrate cleanly
+- [ ] Database migrations run successfully
+- [ ] Frontend builds without errors
 
-## Estimated Effort
-30-45 minutes
+## Files to Check
+- Cargo.toml (no dependency conflicts)
+- src/main.rs (all modules declared)
+- src/schema.rs (generated correctly)
+- All module imports resolve

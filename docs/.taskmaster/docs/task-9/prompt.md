@@ -1,19 +1,42 @@
 # Autonomous Agent Prompt: Integration - Level 1
 
-## Role
-QA engineer validating Level 1 integration.
+## Mission
+Validate that Level 1 tasks (2, 5) integrate correctly with Level 0 components and each other.
 
-## Task
-Verify Tasks 2 and 5 integrate correctly.
+## Validation Steps
 
-## Steps
-1. Confirm Level 1 PRs (2, 5) merged
-2. Pull main
-3. Run cargo test
-4. Test API with curl
-5. Document in integration-report-level-1.md
+1. **Start server**
+```bash
+cargo run &
+sleep 5  # Wait for startup
+```
+
+2. **Test API endpoints**
+```bash
+curl http://localhost:8080/api/health
+# Should return {"status":"ok"}
+```
+
+3. **Test cart with authentication**
+```bash
+# Create JWT token (use test utilities)
+# Test cart endpoints with valid/invalid tokens
+```
+
+4. **Run integration tests**
+```bash
+cargo test --test integration_tests
+cargo test --test api_tests
+```
+
+5. **Verify service integration**
+Check that CartService correctly uses ProductService for validation.
 
 ## Success Criteria
-✅ Tests pass
-✅ API functional
-✅ Report created
+- Server starts without errors
+- All endpoints respond correctly
+- Cart requires authentication
+- Integration tests pass
+- No route conflicts
+
+Report any integration issues.
