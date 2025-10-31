@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install dependencies (use npm install as package-lock may be out of sync)
-RUN npm install --omit=dev
+# Install all dependencies including devDependencies (react-scripts needed for build)
+RUN npm install
 
 # Copy source code
 COPY public/ ./public/
