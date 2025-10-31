@@ -1,7 +1,8 @@
-# Rust
-/# Rust build artifacts
+# Rust build artifacts
 target/
 Cargo.lock
+**/*.rs.bk
+*.pdb
 
 # Hook files - never commit
 hooks/
@@ -22,34 +23,12 @@ Thumbs.db
 # Environment files
 .env
 .env.local
+.env.*.local
 
 # Test coverage
 tarpaulin-report.html
 cobertura.xml
 lcov.info
-**/*.rs.bk
-*.pdb
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# Environment
-.env
-.env.local
-.env.*.local
-
-# OS
-.DS_Store
-Thumbs.db
 
 # Diesel
 diesel.toml
-
-# Hooks
-hooks/
-.hooks/
-**/hooks/
