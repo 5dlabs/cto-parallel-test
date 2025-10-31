@@ -31,6 +31,9 @@ jobs:
 
   test-rust:
     runs-on: ubuntu-22.04
+    env:
+      # Set a dummy DATABASE_URL for tests (database not actually required for Task 2 tests)
+      DATABASE_URL: postgres://user:pass@localhost/test_db
     steps:
       - uses: actions/checkout@v4
 
