@@ -13,6 +13,19 @@ Cargo.lock
 *.swo
 *~
 
+# Environment
+.env
+.env.local
+.env.*.local
+
 # OS
 .DS_Store
 Thumbs.db
+
+# Diesel
+diesel.toml
+
+# Hooks
+hooks/
+.hooks/
+**/hooks/
