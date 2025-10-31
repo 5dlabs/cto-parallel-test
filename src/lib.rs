@@ -1,3 +1,12 @@
+/// Authentication module with JWT token handling
+pub mod auth;
+
+/// API module with HTTP endpoints
+pub mod api;
+
+/// Shopping cart module with user isolation and inventory validation
+pub mod cart;
+
 /// Product catalog module with CRUD operations, inventory management, and filtering
 pub mod catalog;
 
@@ -11,6 +20,8 @@ pub mod models;
 pub mod schema;
 
 // Re-export main types for convenience
+pub use auth::{create_token, validate_token, Claims};
+pub use cart::CartService;
 pub use catalog::{NewProduct, Product, ProductFilter, ProductService};
 pub use config::{establish_connection_pool, DbConnection, Pool};
 pub use models::{Cart, CartItem, NewCart, NewCartItem, NewUser, User};
