@@ -29,11 +29,9 @@ async fn test_full_user_flow() {
         inventory_count: 10,
     });
 
-
     // Step 2: Create JWT token for test user (ID: "1")
     let user_id = "1";
     let token = create_token(user_id).expect("Failed to create test token");
-
 
     // Step 3: Add product to cart
     let add_to_cart_req = test::TestRequest::post()
@@ -58,7 +56,6 @@ async fn test_full_user_flow() {
     let _cart_after_add: Value =
         serde_json::from_slice(&add_body).expect("Failed to parse cart response");
 
-
     // Step 4: Get cart and verify product was added
     let get_cart_req = test::TestRequest::get()
         .uri("/api/cart")
@@ -76,7 +73,6 @@ async fn test_full_user_flow() {
 
     let get_body = test::read_body(get_resp).await;
     let cart: Value = serde_json::from_slice(&get_body).expect("Failed to parse cart");
-
 
     // Verify cart contents
     assert_eq!(
