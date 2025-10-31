@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+
+# CI/CD
+.github
+.gitlab-ci.yml
+azure-pipelines.yml
+
+# Documentation
+*.md
+docs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Rust build artifacts
+target/
+**/*.rs.bk
+*.pdb
+
+# Environment files
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Hooks
+hooks/
+.hooks/
+
+# Test files
+tests/fixtures/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
