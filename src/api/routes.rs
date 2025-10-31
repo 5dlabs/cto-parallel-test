@@ -1,8 +1,5 @@
 use actix_web::{web, HttpResponse};
 
-// Import schema module to validate Task 1 dependency
-use crate::schema;
-
 /// Configure all application routes
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -33,10 +30,4 @@ fn product_routes(cfg: &mut web::ServiceConfig) {
         web::resource("")
             .route(web::get().to(|| async { HttpResponse::NotImplemented().finish() })),
     );
-}
-
-// Ensure schema module is used (validates Task 1 dependency)
-#[allow(dead_code)]
-fn validate_schema_import() {
-    let _ = schema::users::table;
 }
