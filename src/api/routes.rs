@@ -19,14 +19,16 @@ async fn health_check() -> HttpResponse {
 /// Placeholder for user routes - will be implemented by Task 3
 fn user_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
-        web::resource("").route(web::get().to(|| async { HttpResponse::NotImplemented().finish() })),
+        web::resource("")
+            .route(web::get().to(|| async { HttpResponse::NotImplemented().finish() })),
     );
 }
 
 /// Placeholder for product routes - will be implemented by Task 4
 fn product_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
-        web::resource("").route(web::get().to(|| async { HttpResponse::NotImplemented().finish() })),
+        web::resource("")
+            .route(web::get().to(|| async { HttpResponse::NotImplemented().finish() })),
     );
 }
 
