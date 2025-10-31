@@ -1,7 +1,5 @@
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
-    Argon2,
-};
+use argon2::{self, Config};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -23,13 +21,7 @@ impl User {
     /// * `bool` - True if the password matches, false otherwise
     #[must_use]
     pub fn verify_password(&self, password: &str) -> bool {
-        let Ok(parsed_hash) = PasswordHash::new(&self.password_hash) else {
-            return false;
-        };
-
-        Argon2::default()
-            .verify_password(password.as_bytes(), &parsed_hash)
-            .is_ok()
+        argon2::verify_encoded(&self.password_hash, password.as_bytes()).unwrap_or(false)
     }
 
     /// Hashes a password using Argon2
@@ -45,13 +37,9 @@ impl User {
     /// Panics if password hashing fails (should not happen with valid inputs)
     #[must_use]
     pub fn hash_password(password: &str) -> String {
-        let salt = SaltString::generate(&mut OsRng);
-        let argon2 = Argon2::default();
-
-        argon2
-            .hash_password(password.as_bytes(), &salt)
-            .unwrap()
-            .to_string()
+        let salt: [u8; 32] = rand::thread_rng().gen();
+        let config = Config::default();
+        argon2::hash_encoded(password.as_bytes(), &salt, &config).unwrap()
     }
 }
 

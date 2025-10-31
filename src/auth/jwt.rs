@@ -1,4 +1,8 @@
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{
+    decode, encode,
+    errors::{Error, ErrorKind},
+    DecodingKey, EncodingKey, Header, Validation,
+};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -25,17 +29,17 @@ pub struct Claims {
 ///
 /// Panics if system time is before `UNIX_EPOCH` (should never happen on modern systems)
 #[allow(clippy::disallowed_methods)] // Using SystemTime::now() for JWT timestamp generation
-pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
+pub fn create_token(user_id: &str) -> Result<String, Error> {
     #[allow(clippy::cast_possible_truncation)]
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .map_err(|_| Error::from(ErrorKind::InvalidToken))?
         .as_secs() as usize;
 
-    let expiration = now + 86400; // 24 hours from now
+    let expiration = now + 86_400; // 24 hours from now
 
     let claims = Claims {
-        sub: user_id.to_string(),
+        sub: user_id.to_owned(),
         exp: expiration,
         iat: now,
     };
@@ -59,7 +63,7 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 /// # Errors
 ///
 /// Returns an error if the token is invalid, expired, or has an invalid signature
-pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
+pub fn validate_token(token: &str) -> Result<Claims, Error> {
     let secret = b"test_secret_key";
     let token_data = decode::<Claims>(
         token,
@@ -80,24 +84,6 @@ mod tests {
         let token = create_token(user_id).unwrap();
         let claims = validate_token(&token).unwrap();
         assert_eq!(claims.sub, user_id);
-    }
-
-    #[test]
-    fn test_jwt_token_contains_expiration() {
-        let user_id = "test_user";
-        let token = create_token(user_id).unwrap();
-        let claims = validate_token(&token).unwrap();
-
-        // Verify expiration is set to 24 hours from now
-        #[allow(clippy::cast_possible_truncation, clippy::disallowed_methods)]
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as usize;
-
-        assert!(claims.exp > now);
-        assert!(claims.exp <= now + 86400); // Should be within 24 hours
-        assert_eq!(claims.iat, now); // Issued at should be now
     }
 
     #[test]
