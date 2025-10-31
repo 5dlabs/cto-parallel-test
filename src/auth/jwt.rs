@@ -1,5 +1,7 @@
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
+use std::env;
+use std::sync::OnceLock;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -8,7 +10,51 @@ pub struct Claims {
     pub iat: usize,
 }
 
-const SECRET: &[u8] = b"test_secret_key";
+// Lazily resolved JWT secret to avoid hardcoding secrets in the binary.
+// The secret must be provided via the `JWT_SECRET` environment variable.
+// In tests, we allow a fallback test value to keep examples simple.
+static SECRET_BYTES: OnceLock<Vec<u8>> = OnceLock::new();
+
+fn load_secret() -> Option<Vec<u8>> {
+    if let Ok(s) = env::var("JWT_SECRET") {
+        // Enforce a minimum length for HS256 secrets (>= 32 bytes recommended)
+        let bytes = s.into_bytes();
+        if bytes.len() >= 32 {
+            return Some(bytes);
+        }
+        // If too short, refuse to use it
+        return None;
+    }
+    None
+}
+
+fn get_secret() -> Result<&'static [u8], jsonwebtoken::errors::Error> {
+    let bytes = SECRET_BYTES.get_or_init(|| {
+        // Try env first
+        if let Some(b) = load_secret() {
+            return b;
+        }
+        // Last expression depends on build profile
+        // Test-only fallback to keep unit tests hermetic without leaking secrets
+        #[cfg(test)]
+        {
+            b"this_is_a_test_secret_key_with_sufficient_length".to_vec()
+        }
+        // In non-test builds, we do not allow an empty or hardcoded default
+        #[cfg(not(test))]
+        {
+            Vec::new()
+        }
+    });
+
+    if bytes.is_empty() {
+        // Map to a jsonwebtoken error kind to keep API stable
+        return Err(jsonwebtoken::errors::Error::from(
+            jsonwebtoken::errors::ErrorKind::InvalidKeyFormat,
+        ));
+    }
+    Ok(bytes.as_slice())
+}
 
 #[allow(clippy::disallowed_methods)]
 fn current_timestamp() -> usize {
@@ -38,10 +84,11 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
         iat,
     };
 
+    let secret = get_secret()?;
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(SECRET),
+        &EncodingKey::from_secret(secret),
     )
 }
 
@@ -50,9 +97,10 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 /// # Errors
 /// Returns a `jsonwebtoken::errors::Error` if decoding or validation fails.
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
+    let secret = get_secret()?;
     let token_data = decode::<Claims>(
         token,
-        &DecodingKey::from_secret(SECRET),
+        &DecodingKey::from_secret(secret),
         &Validation::default(),
     )?;
     Ok(token_data.claims)
@@ -64,6 +112,16 @@ mod tests {
 
     #[test]
     fn token_round_trip() {
+        // Ensure a test secret is set and sufficiently long
+        // Setting env vars may be unsafe in some contexts; restrict to tests
+        #[allow(unsafe_code)]
+        unsafe {
+            std::env::set_var(
+            "JWT_SECRET",
+            "test_secret_key_value_that_is_plenty_long_for_hs256",
+            );
+        }
+
         let token = create_token("user-123").expect("token");
         let claims = validate_token(&token).expect("claims");
         assert_eq!(claims.sub, "user-123");
