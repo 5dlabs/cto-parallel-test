@@ -1,3 +1,6 @@
+/// API module for HTTP endpoints and error handling
+pub mod api;
+
 /// Product catalog module with CRUD operations, inventory management, and filtering
 pub mod catalog;
 
