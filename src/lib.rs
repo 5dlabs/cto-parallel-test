@@ -1,3 +1,6 @@
+/// REST API endpoints and handlers
+pub mod api;
+
 /// Product catalog module with CRUD operations, inventory management, and filtering
 pub mod catalog;
 
@@ -11,6 +14,7 @@ pub mod models;
 pub mod schema;
 
 // Re-export main types for convenience
+pub use api::{configure_routes, ApiError, ErrorResponse};
 pub use catalog::{NewProduct, Product, ProductFilter, ProductService};
 pub use config::{establish_connection_pool, DbConnection, Pool};
 pub use models::{Cart, CartItem, NewCart, NewCartItem, NewUser, User};
