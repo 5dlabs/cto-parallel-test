@@ -14,16 +14,28 @@ pub struct User {
 }
 
 impl User {
-    /// Hashes a password using Argon2 with a random salt.
+    /// Hashes a plain text password using Argon2 with random salt.
     ///
     /// # Arguments
+    ///
     /// * `password` - The plain text password to hash
     ///
     /// # Returns
-    /// * `String` - The encoded hash string that includes the salt
+    ///
+    /// The hashed password as a string
     ///
     /// # Panics
-    /// Panics if password hashing fails (extremely unlikely with valid inputs).
+    ///
+    /// Panics if password hashing fails due to internal Argon2 errors.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cto_parallel_test::auth::User;
+    ///
+    /// let hash = User::hash_password("my_secure_password");
+    /// assert!(!hash.is_empty());
+    /// ```
     pub fn hash_password(password: &str) -> String {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
@@ -34,20 +46,40 @@ impl User {
             .to_string()
     }
 
-    /// Verifies a password against the stored hash.
+    /// Verifies a plain text password against the stored hash.
     ///
     /// # Arguments
+    ///
     /// * `password` - The plain text password to verify
     ///
     /// # Returns
-    /// * `bool` - True if the password matches, false otherwise
+    ///
+    /// `true` if the password matches the hash, `false` otherwise.
+    /// Also returns `false` if the stored hash is malformed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cto_parallel_test::auth::User;
+    ///
+    /// let password = "my_secure_password";
+    /// let hash = User::hash_password(password);
+    /// let user = User {
+    ///     id: 1,
+    ///     username: "testuser".to_string(),
+    ///     email: "test@example.com".to_string(),
+    ///     password_hash: hash,
+    /// };
+    ///
+    /// assert!(user.verify_password(password));
+    /// assert!(!user.verify_password("wrong_password"));
+    /// ```
     #[must_use]
     pub fn verify_password(&self, password: &str) -> bool {
         let parsed_hash = PasswordHash::new(&self.password_hash);
         if let Ok(hash) = parsed_hash {
-            Argon2::default()
-                .verify_password(password.as_bytes(), &hash)
-                .is_ok()
+            let argon2 = Argon2::default();
+            argon2.verify_password(password.as_bytes(), &hash).is_ok()
         } else {
             false
         }
@@ -73,6 +105,16 @@ mod tests {
     }
 
     #[test]
+    fn test_different_hashes_for_same_password() {
+        let password = "test123";
+        let hash1 = User::hash_password(password);
+        let hash2 = User::hash_password(password);
+
+        // Different salts should produce different hashes
+        assert_ne!(hash1, hash2);
+    }
+
+    #[test]
     fn test_user_serialization_skips_password() {
         let user = User {
             id: 1,
@@ -86,29 +128,15 @@ mod tests {
     }
 
     #[test]
-    fn test_password_hashing_generates_different_salts() {
-        let password = "same_password";
-        let hash1 = User::hash_password(password);
-        let hash2 = User::hash_password(password);
-
-        // Even with the same password, hashes should differ due to random salt
-        assert_ne!(hash1, hash2);
-    }
-
-    #[test]
-    fn test_password_verification_with_wrong_password() {
-        let correct_password = "correct_password";
-        let wrong_password = "wrong_password";
-        let hashed = User::hash_password(correct_password);
-
+    fn test_verify_password_with_invalid_hash() {
         let user = User {
             id: 1,
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
-            password_hash: hashed,
+            password_hash: "invalid_hash".to_string(),
         };
 
-        assert!(user.verify_password(correct_password));
-        assert!(!user.verify_password(wrong_password));
+        // Should return false for invalid hash format
+        assert!(!user.verify_password("anypassword"));
     }
 }
