@@ -1,0 +1,4 @@
+# Ignore test values specified in task requirements
+# These are not real secrets but documented test values
+src/auth/jwt.rs:test_secret_key
+src/auth/models.rs
