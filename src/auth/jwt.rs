@@ -23,6 +23,10 @@ fn current_timestamp() -> usize {
     usize::try_from(now.as_secs()).unwrap_or(usize::MAX)
 }
 
+/// Create a signed JWT for a given user ID.
+///
+/// # Errors
+/// Returns a `jsonwebtoken::errors::Error` if token encoding fails.
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
     let iat = current_timestamp();
     // 24 hours expressed in seconds
@@ -41,6 +45,10 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
     )
 }
 
+/// Validate a JWT and return its claims if valid.
+///
+/// # Errors
+/// Returns a `jsonwebtoken::errors::Error` if decoding or validation fails.
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let token_data = decode::<Claims>(
         token,
