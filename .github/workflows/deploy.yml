@@ -30,8 +30,6 @@ jobs:
         env:
           # Use sccache for compiler-level caching (pre-installed on k8s-runner)
           RUSTC_WRAPPER: sccache
-          # Build to persistent cache directory for multi-run speed
-          CARGO_TARGET_DIR: $HOME/cache/target
           # Optimize for speed
           CARGO_INCREMENTAL: 0
           CARGO_NET_GIT_FETCH_WITH_CLI: true
@@ -42,16 +40,15 @@ jobs:
           echo "📊 Initial sccache stats:"
           sccache --show-stats
 
-          # Build with persistent cache directory
-          mkdir -p $HOME/cache/target
+          # Build release binary
           cargo build --release --bin ecommerce_catalog
 
           # Show cache hit rates
           echo "📊 Final sccache stats:"
           sccache --show-stats
 
-          # Copy from cache dir to workspace
-          cp $HOME/cache/target/release/ecommerce_catalog ./ecommerce_catalog
+          # Copy from target to workspace for Docker build
+          cp target/release/ecommerce_catalog ./ecommerce_catalog
 
       - uses: docker/setup-buildx-action@v3
         with:
