@@ -174,8 +174,8 @@
     },
     "blaze": {
       "githubApp": "5DLabs-Blaze",
-      "cli": "codex",
-      "model": "gpt-5-codex",
+      "cli": "factory",
+      "model": "claude-sonnet-4-5-20250929",
       "modelRotation": {
         "enabled": true,
         "models": [
