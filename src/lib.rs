@@ -2,6 +2,7 @@
 //!
 //! This library provides database schema definitions for a test e-commerce application.
 
+pub mod catalog;
 pub mod schema;
 
 #[cfg(test)]
