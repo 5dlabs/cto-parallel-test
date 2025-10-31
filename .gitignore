@@ -26,3 +26,7 @@ diesel.toml
 hooks/
 .hooks/
 **/hooks/
+
+# Frontend
+frontend/node_modules/
+frontend/build/
