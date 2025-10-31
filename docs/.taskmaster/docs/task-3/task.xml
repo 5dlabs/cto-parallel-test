@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prompt>
+    <role>You are a senior Rust security engineer specializing in authentication systems, JWT tokens, and cryptographic password hashing.</role>
+    <task>
+        <id>3</id>
+        <title>User Authentication Module</title>
+        <description>Create user authentication and JWT handling with secure password hashing using Argon2.</description>
+        <priority>high</priority>
+        <status>pending</status>
+        <dependencies></dependencies>
+        <execution_level>0</execution_level>
+        <parallel_execution>true</parallel_execution>
+        <estimated_duration>45 minutes</estimated_duration>
+    </task>
+    <technical_specifications>
+        <spec>Use jsonwebtoken 8.3.0 for JWT handling</spec>
+        <spec>Use Argon2 0.5.0 for password hashing</spec>
+        <spec>JWT tokens expire after 24 hours</spec>
+        <spec>Include sub (user ID), exp, iat claims</spec>
+        <spec>Generate random 32-byte salt for each password</spec>
+        <spec>Never serialize password_hash field</spec>
+    </technical_specifications>
+    <implementation_details>
+        Create src/auth/mod.rs, jwt.rs, models.rs with JWT token creation/validation and secure password hashing.
+    </implementation_details>
+    <acceptance_criteria>
+        <criterion>JWT tokens created and validated successfully</criterion>
+        <criterion>Passwords hashed with Argon2 and random salt</criterion>
+        <criterion>Password verification works correctly</criterion>
+        <criterion>Unit tests pass for JWT and password functions</criterion>
+    </acceptance_criteria>
+    <test_strategy>
+        <test>cargo test auth:: to run all auth tests</test>
+        <test>Verify token expiration after 24 hours</test>
+        <test>Verify password hashing produces different hashes for same password</test>
+    </test_strategy>
+    <instructions>
+        Implement authentication module independently (Level 0). Create JWT functions with 24-hour expiration, Argon2 password hashing with random salts, and User model with verification methods. Task 5 depends on this module.
+    </instructions>
+</prompt>

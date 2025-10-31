@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prompt>
+    <role>Senior Rust developer specializing in authenticated API design and service integration.</role>
+    <task>
+        <id>5</id>
+        <title>Shopping Cart API</title>
+        <description>Create shopping cart with JWT authentication, integrating auth and catalog modules.</description>
+        <priority>medium</priority>
+        <status>pending</status>
+        <dependencies>3,4</dependencies>
+        <execution_level>1</execution_level>
+        <estimated_duration>45 minutes</estimated_duration>
+    </task>
+    <technical_specifications>
+        <spec>JWT authentication required for all cart operations</spec>
+        <spec>Inventory validation before cart additions</spec>
+        <spec>User-isolated cart management</spec>
+    </technical_specifications>
+    <implementation_details>
+        Implement CartService and API routes with JWT token extraction and validation.
+    </implementation_details>
+    <acceptance_criteria>
+        <criterion>All cart endpoints protected by JWT</criterion>
+        <criterion>Inventory checks prevent over-ordering</criterion>
+        <criterion>Integration tests pass</criterion>
+    </acceptance_criteria>
+    <test_strategy>
+        <test>cargo test cart:: and integration_tests::</test>
+    </test_strategy>
+    <instructions>
+        Implement cart API (Level 1) depending on Tasks 3 and 4. Extract JWT tokens, validate inventory, manage user carts.
+    </instructions>
+</prompt>
