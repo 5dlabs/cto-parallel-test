@@ -1,12 +1,12 @@
 use actix_web::{web, HttpResponse};
 
-// Import schema to validate Task 1 dependency
-// This ensures Task 1 (Database Schema) is available before Task 2 completes
-#[allow(unused_imports)]
-use crate::schema;
-
 /// Configure all API routes
+///
+/// Note: This module depends on `crate::schema` being available (Task 1 dependency).
+/// Future tasks will integrate database operations using these schema definitions.
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
+    // Compile-time assertion that schema module exists (Task 1 dependency)
+    let _ = core::any::type_name::<crate::schema::users::table>();
     cfg.service(
         web::scope("/api")
             .service(health_check)
