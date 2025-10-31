@@ -57,3 +57,15 @@ pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error
     )?;
     Ok(token_data.claims)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn token_round_trip() {
+        let token = create_token("user-123").expect("token");
+        let claims = validate_token(&token).expect("claims");
+        assert_eq!(claims.sub, "user-123");
+    }
+}

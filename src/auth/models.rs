@@ -36,3 +36,38 @@ impl User {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn password_hash_and_verify() {
+        let password = "s3cr3t";
+        let hash = User::hash_password(password);
+        assert!(!hash.is_empty());
+
+        let user = User {
+            id: 1,
+            username: "alice".into(),
+            email: "a@example.com".into(),
+            password_hash: hash,
+        };
+
+        assert!(user.verify_password(password));
+        assert!(!user.verify_password("not-it"));
+    }
+
+    #[test]
+    fn user_serialization_skips_password() {
+        let user = User {
+            id: 1,
+            username: "bob".into(),
+            email: "b@example.com".into(),
+            password_hash: "hash".into(),
+        };
+        let json = serde_json::to_string(&user).expect("json");
+        assert!(!json.contains("password_hash"));
+        assert!(json.contains("username"));
+    }
+}
