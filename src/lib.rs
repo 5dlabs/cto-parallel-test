@@ -1,7 +1,6 @@
-// E-commerce API Library
-//
-// This library provides the database schema and core data models
-// for a test e-commerce API built with Diesel ORM.
+//! CTO Parallel Test - E-commerce API
+//!
+//! This library provides database schema definitions for a test e-commerce application.
 
 pub mod schema;
 
