@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::sync::OnceLock;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String,
     pub exp: usize,
@@ -117,8 +117,8 @@ mod tests {
         #[allow(unsafe_code)]
         unsafe {
             std::env::set_var(
-            "JWT_SECRET",
-            "test_secret_key_value_that_is_plenty_long_for_hs256",
+                "JWT_SECRET",
+                "test_secret_key_value_that_is_plenty_long_for_hs256",
             );
         }
 

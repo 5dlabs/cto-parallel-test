@@ -1,5 +1,5 @@
 use argon2::{PasswordHasher, PasswordVerifier};
-use rand::RngCore;
+use rand::{RngCore, rngs::OsRng};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -26,7 +26,8 @@ impl User {
     #[must_use]
     pub fn hash_password(password: &str) -> String {
         let mut salt = [0u8; 32];
-        rand::thread_rng().fill_bytes(&mut salt);
+        // Use OS RNG for cryptographically secure salt generation
+        OsRng.fill_bytes(&mut salt);
         let Ok(salt_str) = argon2::password_hash::SaltString::encode_b64(&salt) else {
             return String::new();
         };
