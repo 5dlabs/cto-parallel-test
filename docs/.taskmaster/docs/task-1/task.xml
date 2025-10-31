@@ -1,0 +1,301 @@
+<prompt>
+    <role>You are a senior Rust backend engineer specializing in database design, ORM configuration, and PostgreSQL integration with Diesel.</role>
+
+    <task>
+        <id>1</id>
+        <title>Database Schema Setup</title>
+        <description>Create comprehensive database schema files and configuration for the Rust e-commerce API project using Diesel ORM 2.1.0 and PostgreSQL. Implement connection pooling, migrations, and model structs for four core entities: users, products, carts, and cart_items.</description>
+        <priority>high</priority>
+        <status>pending</status>
+        <dependencies></dependencies>
+        <execution_level>0</execution_level>
+        <estimated_time>30 minutes</estimated_time>
+    </task>
+
+    <technical_specifications>
+        <spec>Use Diesel ORM 2.1.0 with PostgreSQL backend and r2d2 connection pooling</spec>
+        <spec>Implement four database tables: users, products, carts, cart_items with proper foreign key relationships</spec>
+        <spec>Create reversible migrations using Diesel CLI migration system</spec>
+        <spec>Implement Queryable and Insertable model structs with serde support</spec>
+        <spec>Configure r2d2 connection pool with proper error handling</spec>
+        <spec>Use proper PostgreSQL data types: SERIAL for IDs, VARCHAR for strings, NUMERIC for currency, TIMESTAMP for dates</spec>
+        <spec>Establish foreign key constraints: carts.user_id -> users.id, cart_items.cart_id -> carts.id, cart_items.product_id -> products.id</spec>
+        <spec>Add UNIQUE constraints on users.username and users.email</spec>
+    </technical_specifications>
+
+    <implementation_details>
+## File Structure
+Create the following files:
+- `src/config/db.rs` - Database connection pool configuration
+- `src/schema.rs` - Diesel schema definitions with table! macros
+- `src/models.rs` - ORM model structs (User, Product, Cart, CartItem and their New* variants)
+- `migrations/TIMESTAMP_create_users/up.sql` and `down.sql`
+- `migrations/TIMESTAMP_create_products/up.sql` and `down.sql`
+- `migrations/TIMESTAMP_create_carts/up.sql` and `down.sql`
+- `migrations/TIMESTAMP_create_cart_items/up.sql` and `down.sql`
+- `.env.example` - Database connection string template
+
+## Cargo.toml Dependencies
+Add these exact versions:
+```toml
+diesel = { version = "2.1.0", features = ["postgres", "r2d2", "chrono"] }
+r2d2 = "0.8.10"
+dotenv = "0.15.0"
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+```
+
+## Database Configuration (src/config/db.rs)
+```rust
+use diesel::pg::PgConnection;
+use diesel::r2d2::{self, ConnectionManager};
+use dotenv::dotenv;
+use std::env;
+
+pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
+pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
+
+pub fn establish_connection_pool() -> Pool {
+    dotenv().ok();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let manager = ConnectionManager::<PgConnection>::new(database_url);
+    r2d2::Pool::builder().build(manager).expect("Failed to create pool")
+}
+```
+
+## Schema Relationships
+- users (1) -> (N) carts: One user can have multiple carts
+- carts (1) -> (N) cart_items: One cart contains multiple items
+- products (1) <- (N) cart_items: One product can be in multiple carts
+
+## Migration SQL Templates
+
+### Users Table (up.sql)
+```sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR NOT NULL UNIQUE,
+  email VARCHAR NOT NULL UNIQUE,
+  password_hash VARCHAR NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Products Table (up.sql)
+```sql
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR NOT NULL,
+  description TEXT,
+  price NUMERIC NOT NULL,
+  inventory_count INTEGER NOT NULL
+);
+```
+
+### Carts Table (up.sql)
+```sql
+CREATE TABLE carts (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Cart Items Table (up.sql)
+```sql
+CREATE TABLE cart_items (
+  id SERIAL PRIMARY KEY,
+  cart_id INTEGER NOT NULL REFERENCES carts(id),
+  product_id INTEGER NOT NULL REFERENCES products(id),
+  quantity INTEGER NOT NULL
+);
+```
+
+## Model Struct Requirements
+Each entity needs two structs:
+1. Queryable struct (for reading from DB): derives Queryable, Identifiable, Serialize, Deserialize
+2. Insertable struct (for writing to DB): derives Insertable, Deserialize
+
+Example for User:
+```rust
+#[derive(Queryable, Identifiable, Serialize, Deserialize)]
+#[table_name = "users"]
+pub struct User {
+    pub id: i32,
+    pub username: String,
+    pub email: String,
+    pub password_hash: String,
+    pub created_at: NaiveDateTime,
+}
+
+#[derive(Insertable, Deserialize)]
+#[table_name = "users"]
+pub struct NewUser {
+    pub username: String,
+    pub email: String,
+    pub password_hash: String,
+}
+```
+
+## Implementation Steps
+1. Install Diesel CLI: `cargo install diesel_cli --no-default-features --features postgres`
+2. Run `diesel setup` to initialize
+3. Create migrations: `diesel migration generate create_TABLENAME` for each table
+4. Implement up.sql and down.sql for each migration
+5. Create src/config/db.rs with connection pool logic
+6. Create src/schema.rs (will be auto-generated after running migrations)
+7. Create src/models.rs with all model structs
+8. Update src/lib.rs or src/main.rs to export modules: `pub mod config; pub mod models; pub mod schema;`
+9. Run `diesel migration run` to apply migrations
+10. Verify with `cargo check`
+    </implementation_details>
+
+    <acceptance_criteria>
+        <criterion>All required files created: src/config/db.rs, src/schema.rs, src/models.rs, 4 migration directories with up/down SQL files, .env.example</criterion>
+        <criterion>Cargo.toml contains all specified database dependencies with correct versions and features</criterion>
+        <criterion>Project compiles without errors: cargo check exits with success code</criterion>
+        <criterion>All four tables defined in src/schema.rs with correct columns and data types</criterion>
+        <criterion>joinable! macros properly connect related tables (cart_items to carts, cart_items to products, carts to users)</criterion>
+        <criterion>All model structs implement required traits (Queryable, Insertable, Serialize, Deserialize, Identifiable, Associations)</criterion>
+        <criterion>Migration up.sql files create tables with proper foreign key constraints and UNIQUE constraints</criterion>
+        <criterion>Migration down.sql files properly drop tables in reverse dependency order</criterion>
+        <criterion>diesel migration run executes successfully and creates all tables</criterion>
+        <criterion>diesel migration redo completes without errors (tests rollback and reapply)</criterion>
+        <criterion>Database connection pool can be established using establish_connection_pool() function</criterion>
+        <criterion>Foreign key relationships correctly enforce referential integrity</criterion>
+        <criterion>No compilation warnings related to database code (unused imports, missing traits, etc.)</criterion>
+        <criterion>Module exports properly configured in main.rs or lib.rs</criterion>
+    </acceptance_criteria>
+
+    <test_strategy>
+## Compilation Tests
+1. Run `cargo check` - must complete without errors
+2. Run `cargo build` - must compile successfully
+3. Check for warnings: `cargo clippy`
+
+## Database Migration Tests
+1. Test initial migration: `diesel migration run`
+   - Verify all four tables created: `psql $DATABASE_URL -c "\dt"`
+   - Expected tables: users, products, carts, cart_items
+
+2. Test migration rollback: `diesel migration redo`
+   - Verifies down.sql works correctly
+   - Verifies up.sql can reapply
+
+3. Test complete reset: `diesel database reset`
+   - Drops and recreates database
+   - Reapplies all migrations from scratch
+
+## Schema Validation Tests
+1. Verify foreign keys exist:
+   ```bash
+   psql $DATABASE_URL -c "SELECT conname FROM pg_constraint WHERE contype = 'f';"
+   ```
+   Expected: cart_items_cart_id_fkey, cart_items_product_id_fkey, carts_user_id_fkey
+
+2. Verify unique constraints:
+   ```bash
+   psql $DATABASE_URL -c "SELECT conname FROM pg_constraint WHERE contype = 'u';"
+   ```
+   Expected: users_username_key, users_email_key
+
+## Model Tests
+Create unit tests in src/models.rs:
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_user_creation() {
+        let user = NewUser {
+            username: "testuser".to_string(),
+            email: "test@example.com".to_string(),
+            password_hash: "hashed".to_string(),
+        };
+        assert_eq!(user.username, "testuser");
+    }
+
+    #[test]
+    fn test_user_serialization() {
+        let user = User {
+            id: 1,
+            username: "test".to_string(),
+            email: "test@example.com".to_string(),
+            password_hash: "hashed".to_string(),
+            created_at: chrono::NaiveDateTime::from_timestamp(0, 0),
+        };
+        let json = serde_json::to_string(&user).unwrap();
+        assert!(json.contains("test@example.com"));
+    }
+}
+```
+
+## Connection Pool Tests
+Test connection establishment:
+```rust
+#[test]
+fn test_connection_pool() {
+    dotenv::dotenv().ok();
+    let pool = establish_connection_pool();
+    let conn = pool.get();
+    assert!(conn.is_ok());
+}
+```
+
+## Integration Readiness Tests
+Verify downstream dependencies can import:
+```rust
+// In another module
+use crate::schema::users;
+use crate::models::{User, NewUser};
+```
+    </test_strategy>
+
+    <instructions>
+Think step-by-step and follow Diesel ORM best practices:
+
+1. **Setup Phase**:
+   - Update Cargo.toml with exact dependency versions specified
+   - Install Diesel CLI if not present
+   - Initialize Diesel with `diesel setup`
+
+2. **Migration Phase**:
+   - Create four separate migrations (one per table)
+   - Implement up.sql files with CREATE TABLE statements
+   - Implement down.sql files with DROP TABLE statements
+   - Ensure foreign key constraints are properly defined
+   - Apply migrations with `diesel migration run`
+
+3. **Configuration Phase**:
+   - Create src/config/ directory
+   - Implement db.rs with connection pool logic
+   - Include proper error handling and dotenv support
+
+4. **Schema Phase**:
+   - Verify src/schema.rs was auto-generated by Diesel
+   - Add joinable! macros for relationships
+   - Add allow_tables_to_appear_in_same_query! macro
+
+5. **Models Phase**:
+   - Create src/models.rs
+   - Implement Queryable structs for each table
+   - Implement Insertable structs (New* variants)
+   - Add proper trait derives and attributes
+   - Use correct types: i32 for IDs, String for VARCHAR, NaiveDateTime for TIMESTAMP
+
+6. **Module Export Phase**:
+   - Update src/lib.rs or src/main.rs
+   - Add `pub mod config;`, `pub mod models;`, `pub mod schema;`
+
+7. **Validation Phase**:
+   - Run `cargo check` to verify compilation
+   - Run `diesel migration redo` to test rollback
+   - Verify all acceptance criteria are met
+
+**Error Handling**: If migrations fail, check SQL syntax. If compilation fails, verify all necessary imports are included (use diesel::prelude::*, chrono::NaiveDateTime, serde).
+
+**Best Practices**: Follow Rust naming conventions, use proper visibility modifiers (pub), include comprehensive error messages, ensure migrations are idempotent.
+    </instructions>
+</prompt>

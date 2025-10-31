@@ -1,0 +1,273 @@
+<prompt>
+    <role>You are a senior Rust backend engineer specializing in Actix-web REST API development and HTTP server configuration.</role>
+
+    <task>
+        <id>2</id>
+        <title>API Endpoints</title>
+        <description>Implement REST API routing infrastructure using Actix-web 4.3.1, establishing HTTP server on port 8080 with health check endpoint and placeholder routes for users and products.</description>
+        <priority>medium</priority>
+        <status>pending</status>
+        <dependencies>1</dependencies>
+        <execution_level>1</execution_level>
+        <estimated_time>50 minutes</estimated_time>
+    </task>
+
+    <technical_specifications>
+        <spec>Use Actix-web 4.3.1 web framework with async/await handlers</spec>
+        <spec>Configure HTTP server to bind on 127.0.0.1:8080</spec>
+        <spec>Implement scoped routes under /api prefix: /api/health, /api/users, /api/products</spec>
+        <spec>Create health check endpoint returning JSON: {"status":"ok","message":"API is running"}</spec>
+        <spec>Implement placeholder routes for users and products returning HTTP 501 Not Implemented</spec>
+        <spec>Add logger middleware for request/response logging</spec>
+        <spec>Create error handling module with ApiError enum implementing ResponseError trait</spec>
+        <spec>Use proper HTTP status codes: 200 for success, 501 for not implemented, 4xx/5xx for errors</spec>
+    </technical_specifications>
+
+    <implementation_details>
+## File Structure
+Create these files:
+- `src/api/mod.rs` - Module exports
+- `src/api/routes.rs` - Route configuration and handlers
+- `src/api/errors.rs` - Error handling types
+- `src/main.rs` - Application entry point (update)
+
+## Cargo.toml Dependencies
+Add:
+```toml
+actix-web = "4.3.1"
+actix-rt = "2.8"
+env_logger = "0.10"
+```
+
+## src/api/mod.rs
+```rust
+pub mod routes;
+pub mod errors;
+```
+
+## src/api/routes.rs
+```rust
+use actix_web::{web, HttpResponse};
+use serde_json::json;
+
+pub fn configure_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        web::scope("/api")
+            .service(health_check)
+            .service(web::scope("/users").configure(user_routes))
+            .service(web::scope("/products").configure(product_routes))
+    );
+}
+
+#[actix_web::get("/health")]
+async fn health_check() -> HttpResponse {
+    HttpResponse::Ok().json(json!({
+        "status": "ok",
+        "message": "API is running"
+    }))
+}
+
+fn user_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        web::resource("")
+            .route(web::get().to(|| async {
+                HttpResponse::NotImplemented().finish()
+            }))
+    );
+}
+
+fn product_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        web::resource("")
+            .route(web::get().to(|| async {
+                HttpResponse::NotImplemented().finish()
+            }))
+    );
+}
+```
+
+## src/api/errors.rs
+```rust
+use actix_web::{error::ResponseError, HttpResponse};
+use serde_json::json;
+use std::fmt;
+
+#[derive(Debug)]
+pub enum ApiError {
+    NotFound(String),
+    BadRequest(String),
+    InternalServerError(String),
+}
+
+impl fmt::Display for ApiError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ApiError::NotFound(msg) => write!(f, "Not Found: {}", msg),
+            ApiError::BadRequest(msg) => write!(f, "Bad Request: {}", msg),
+            ApiError::InternalServerError(msg) => write!(f, "Internal Server Error: {}", msg),
+        }
+    }
+}
+
+impl ResponseError for ApiError {
+    fn error_response(&self) -> HttpResponse {
+        match self {
+            ApiError::NotFound(msg) => {
+                HttpResponse::NotFound().json(json!({"error": "not_found", "message": msg}))
+            }
+            ApiError::BadRequest(msg) => {
+                HttpResponse::BadRequest().json(json!({"error": "bad_request", "message": msg}))
+            }
+            ApiError::InternalServerError(msg) => {
+                HttpResponse::InternalServerError().json(json!({"error": "internal_server_error", "message": msg}))
+            }
+        }
+    }
+}
+```
+
+## src/main.rs
+```rust
+use actix_web::{App, HttpServer, middleware};
+
+mod api;
+mod schema;
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+
+    println!("🚀 Starting API server on http://127.0.0.1:8080");
+
+    HttpServer::new(|| {
+        App::new()
+            .wrap(middleware::Logger::default())
+            .configure(api::routes::configure_routes)
+    })
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
+}
+```
+
+## Implementation Steps
+1. Update Cargo.toml with actix-web dependencies
+2. Create src/api/ directory
+3. Create mod.rs with module exports
+4. Implement routes.rs with all handlers
+5. Create errors.rs with error types
+6. Update main.rs with HttpServer configuration
+7. Test with `cargo run` and curl commands
+    </implementation_details>
+
+    <acceptance_criteria>
+        <criterion>Server starts on 127.0.0.1:8080 without errors</criterion>
+        <criterion>GET /api/health returns HTTP 200 with JSON: {"status":"ok","message":"API is running"}</criterion>
+        <criterion>GET /api/users returns HTTP 501 Not Implemented (placeholder)</criterion>
+        <criterion>GET /api/products returns HTTP 501 Not Implemented (placeholder)</criterion>
+        <criterion>Logger middleware outputs request information to console</criterion>
+        <criterion>All route handlers use async/await pattern</criterion>
+        <criterion>ApiError enum implements Display and ResponseError traits</criterion>
+        <criterion>Error responses return proper JSON format with error field</criterion>
+        <criterion>Project compiles with cargo check and cargo build</criterion>
+        <criterion>No runtime panics on server startup</criterion>
+        <criterion>Routes properly scoped under /api prefix</criterion>
+        <criterion>Module structure allows future route additions</criterion>
+    </acceptance_criteria>
+
+    <test_strategy>
+## Manual Testing
+```bash
+# Start server
+cargo run
+
+# Test health check
+curl http://localhost:8080/api/health
+# Expected: {"status":"ok","message":"API is running"}
+
+# Test placeholder routes
+curl -v http://localhost:8080/api/users
+# Expected: HTTP 501
+
+curl -v http://localhost:8080/api/products
+# Expected: HTTP 501
+```
+
+## Unit Testing
+Add to src/api/routes.rs:
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{test, App, http::StatusCode};
+
+    #[actix_web::test]
+    async fn test_health_check() {
+        let app = test::init_service(
+            App::new().configure(configure_routes)
+        ).await;
+
+        let req = test::TestRequest::get()
+            .uri("/api/health")
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let body = test::read_body(resp).await;
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["status"], "ok");
+    }
+
+    #[actix_web::test]
+    async fn test_user_routes_placeholder() {
+        let app = test::init_service(
+            App::new().configure(configure_routes)
+        ).await;
+
+        let req = test::TestRequest::get()
+            .uri("/api/users")
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+        assert_eq!(resp.status(), StatusCode::NOT_IMPLEMENTED);
+    }
+}
+```
+
+## Integration Testing
+Verify server responds to concurrent requests properly.
+    </test_strategy>
+
+    <instructions>
+Follow these steps systematically:
+
+1. **Dependency Setup**: Update Cargo.toml with actix-web 4.3.1, actix-rt, env_logger
+
+2. **Module Structure**: Create src/api/ directory with mod.rs, routes.rs, errors.rs
+
+3. **Route Implementation**:
+   - Implement configure_routes() function with /api scope
+   - Create health_check handler with async fn and JSON response
+   - Add user_routes() and product_routes() placeholder functions
+   - All handlers must be async
+
+4. **Error Handling**: Create ApiError enum with proper trait implementations
+
+5. **Server Configuration**:
+   - Update main.rs with #[actix_web::main] macro
+   - Create HttpServer with App factory
+   - Add Logger middleware
+   - Bind to 127.0.0.1:8080
+
+6. **Testing**:
+   - Run cargo check to verify compilation
+   - Start server with cargo run
+   - Test endpoints with curl
+   - Verify logger outputs requests
+
+7. **Validation**: Ensure all acceptance criteria met
+
+Use proper error handling, async/await patterns, and follow Actix-web best practices.
+    </instructions>
+</prompt>
