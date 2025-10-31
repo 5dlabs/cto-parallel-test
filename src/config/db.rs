@@ -6,11 +6,12 @@ use std::env;
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
-/// Establishes a connection pool to the `PostgreSQL` database
+/// Establishes a connection pool to the `PostgreSQL` database.
 ///
 /// # Panics
 ///
-/// Panics if the `DATABASE_URL` environment variable is not set or if the connection pool cannot be created
+/// Panics if the `DATABASE_URL` environment variable is not set or if the connection pool
+/// cannot be created.
 #[must_use]
 pub fn establish_connection_pool() -> Pool {
     dotenv().ok();
