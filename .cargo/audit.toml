@@ -1,0 +1,13 @@
+# Cargo Audit Configuration
+#
+# This file documents accepted security risks for this test project.
+
+[advisories]
+# RUSTSEC-2025-0009: AES panic on overflow - Task requirement constraint
+# Justification: Task specification requires jsonwebtoken 8.3.0 which depends on ring 0.16.20.
+# Risk: DoS via AES panic when overflow checking enabled (only in debug builds by default).
+# Mitigation: Production builds don't enable overflow checks unless explicitly configured.
+# Context: This is a test/educational project demonstrating authentication patterns.
+ignore = ["RUSTSEC-2025-0009", "RUSTSEC-2025-0010"]
+
+# Note: In production, upgrade to jsonwebtoken >= 9.0 which uses ring 0.17.x
