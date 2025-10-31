@@ -317,10 +317,10 @@ impl ProductService {
                     .is_none_or(|name| p.name.to_lowercase().contains(&name.to_lowercase()));
 
                 // Min price filter: price >= min_price
-                let min_price_match = filter.min_price.as_ref().is_none_or(|min| p.price >= *min);
+                let min_price_match = filter.min_price.is_none_or(|min| p.price >= min);
 
                 // Max price filter: price <= max_price
-                let max_price_match = filter.max_price.as_ref().is_none_or(|max| p.price <= *max);
+                let max_price_match = filter.max_price.is_none_or(|max| p.price <= max);
 
                 // In stock filter: (inventory > 0) == in_stock
                 let in_stock_match = filter
