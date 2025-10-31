@@ -53,3 +53,8 @@ diesel.toml
 hooks/
 .hooks/
 **/hooks/
+
+
+# Added by cargo
+
+/target
