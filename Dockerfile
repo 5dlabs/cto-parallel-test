@@ -1,5 +1,7 @@
-# Multi-stage Docker build for Rust application
-# Stage 1: Build
+# Multi-stage Docker build for Rust library
+# This Dockerfile is designed for testing and CI/CD purposes
+# Note: This is a library crate without a binary target
+
 FROM rust:1.82-slim as builder
 
 WORKDIR /app
@@ -17,22 +19,23 @@ COPY clippy.toml ./
 # Copy source code
 COPY src ./src
 
-# Build release binary
-RUN cargo build --release --locked
+# Build and test the library
+RUN cargo build --release --locked && \
+    cargo test --release --locked
 
-# Stage 2: Runtime
-FROM debian:bookworm-slim
+# Stage 2: Test runtime environment
+FROM rust:1.82-slim
 
 WORKDIR /app
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    libssl3 \
+    pkg-config \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy binary from builder
-COPY --from=builder /app/target/release/cto-parallel-test* ./
+# Copy the entire project for testing
+COPY --from=builder /app ./
 
 # Set non-root user
 RUN useradd -m -u 1000 appuser && \
@@ -40,9 +43,5 @@ RUN useradd -m -u 1000 appuser && \
 
 USER appuser
 
-# Health check (adjust based on your application)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD [ "true" ]
-
-# Default command (adjust based on your binary name)
-CMD ["./cto-parallel-test"]
+# Default command: run tests
+CMD ["cargo", "test", "--release"]
