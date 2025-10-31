@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prompt>
+    <role>Senior QA engineer and deployment specialist for final system validation.</role>
+    <task>
+        <id>10</id>
+        <title>Final Integration & Deployment Verification</title>
+        <description>End-to-end system validation and deployment readiness for all tasks.</description>
+        <priority>critical</priority>
+        <status>pending</status>
+        <dependencies>1,2,3,4,5,6,7,8,9</dependencies>
+        <agent_hint>integration</agent_hint>
+    </task>
+    <acceptance_criteria>
+        <criterion>All tests pass</criterion>
+        <criterion>Production builds succeed</criterion>
+        <criterion>End-to-end flow validated</criterion>
+        <criterion>Deployment ready</criterion>
+        <criterion>Complete documentation</criterion>
+    </acceptance_criteria>
+    <test_strategy>
+        <test>Complete test suite (unit + integration)</test>
+        <test>Manual end-to-end smoke test</test>
+        <test>Deployment dry-run</test>
+    </test_strategy>
+    <instructions>
+        Final validation after all tasks complete. Run complete test suite, build for production, smoke test end-to-end flow, verify deployment readiness, create final reports.
+    </instructions>
+</prompt>

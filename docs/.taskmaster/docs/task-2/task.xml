@@ -1,248 +1,201 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <prompt>
-    <role>You are a senior Rust backend developer specializing in web services with Actix-web framework.</role>
+    <role>You are a senior Rust backend developer specializing in Actix-web framework, REST API design, and microservices architecture.</role>
 
     <task>
         <id>2</id>
         <title>API Endpoints</title>
-        <description>Create REST API endpoints for core operations of the application using Actix-web. Set up the HTTP server, implement modular routing structure, create a health check endpoint, and define placeholder route configurations for users and products that will be implemented by subsequent tasks.</description>
-        <priority>high</priority>
+        <description>Create REST API endpoints structure for core operations of the e-commerce application using Actix-web. Establish HTTP server, route configuration, health check endpoint, and error handling foundation.</description>
+        <priority>medium</priority>
         <status>pending</status>
         <dependencies>1</dependencies>
-        <level>1</level>
-        <estimated_time>50 minutes</estimated_time>
+        <execution_level>1</execution_level>
+        <parallel_execution>true</parallel_execution>
+        <estimated_duration>50 minutes</estimated_duration>
     </task>
 
     <technical_specifications>
-        <spec>Use Actix-web 4.3.1 as the web framework</spec>
-        <spec>Implement async HTTP server bound to 127.0.0.1:8080</spec>
-        <spec>Use Serde 1.0 with derive feature for serialization</spec>
-        <spec>Use serde_json 1.0 for JSON responses</spec>
-        <spec>Create modular routing with /api base scope</spec>
-        <spec>Implement health check endpoint at /api/health</spec>
-        <spec>Create nested scopes for /users and /products</spec>
-        <spec>Use ServiceConfig pattern for route configuration</spec>
-        <spec>Import schema module from Task 1 to validate dependency</spec>
+        <spec>Use Actix-web version 4.3.1 as the web framework</spec>
+        <spec>Implement scoped routing with all routes under /api prefix</spec>
+        <spec>Create health check endpoint at GET /api/health</spec>
+        <spec>Set up placeholder route scopes for /users, /products, /cart</spec>
+        <spec>Bind HTTP server to 127.0.0.1:8080</spec>
+        <spec>Implement Logger middleware for request/response monitoring</spec>
+        <spec>Create standardized error handling with ApiError enum and ErrorResponse struct</spec>
+        <spec>Use async handlers with actix_web::main runtime</spec>
+        <spec>Return JSON responses for all endpoints</spec>
+        <spec>Placeholder endpoints return 501 Not Implemented status</spec>
     </technical_specifications>
 
     <implementation_details>
-        <overview>This task establishes the HTTP server and routing infrastructure. It is a Level 1 task that depends on Task 1 (Database Schema) and provides the foundation for authentication, catalog, and cart modules.</overview>
+        <section name="Dependencies">
+            Add to Cargo.toml:
+            - actix-web = "4.3.1"
+            - actix-rt = "2.8"
+            - serde = { version = "1.0", features = ["derive"] }
+            - serde_json = "1.0"
+            - env_logger = "0.10"
+            - log = "0.4"
+        </section>
 
-        <step number="1">
-            <action>Update Cargo.toml with web framework dependencies</action>
-            <details>
-                Add to [dependencies] section (Task 1 added database deps):
-                - actix-web = "4.3.1"
-                - serde = { version = "1.0", features = ["derive"] }
-                - serde_json = "1.0"
+        <section name="API Module Structure">
+            Create src/api/ directory with:
+            1. mod.rs - Export routes and errors modules
+            2. routes.rs - Route configuration and handlers
+            3. errors.rs - Error types and standardized responses
 
-                Ensure no conflicts with existing dependencies from Task 1.
-            </details>
-        </step>
+            src/api/mod.rs:
+            ```rust
+            pub mod routes;
+            pub mod errors;
 
-        <step number="2">
-            <action>Create src/api/mod.rs</action>
-            <details>
-                Simple module export file:
-                pub mod routes;
+            pub use self::routes::configure_routes;
+            pub use self::errors::{ApiError, ErrorResponse};
+            ```
+        </section>
 
-                This establishes the API module namespace.
-            </details>
-        </step>
+        <section name="Route Configuration">
+            src/api/routes.rs:
+            - configure_routes(cfg: &amp;mut web::ServiceConfig) - Main entry point
+            - Create web::scope("/api") with health check and resource scopes
+            - health_check() async handler returning 200 OK with JSON
+            - user_routes(cfg) - Placeholder scope for /api/users
+            - product_routes(cfg) - Placeholder scope for /api/products
+            - cart_routes(cfg) - Placeholder scope for /api/cart
+            - not_implemented() async handler returning 501 status
 
-        <step number="3">
-            <action>Create src/api/routes.rs with routing logic</action>
-            <details>
-                Import required types:
-                - use actix_web::{web, HttpResponse, Scope};
-                - use crate::schema;
+            Health check response:
+            ```json
+            {
+                "status": "ok",
+                "service": "e-commerce-api",
+                "version": "0.1.0"
+            }
+            ```
+        </section>
 
-                Implement configure_routes function:
-                - Accept &amp;mut web::ServiceConfig parameter
-                - Create /api scope
-                - Register health_check handler
-                - Add nested /users scope with user_routes configuration
-                - Add nested /products scope with product_routes configuration
+        <section name="Error Handling">
+            src/api/errors.rs:
+            1. Define ErrorResponse struct:
+               - error: String (error type)
+               - message: String (detailed message)
+               - status: u16 (HTTP status code)
 
-                Implement health_check handler:
-                - Use #[actix_web::get("/health")] attribute
-                - Return HttpResponse::Ok().json(serde_json::json!({"status": "ok"}))
+            2. Define ApiError enum:
+               - NotFound(String) - 404
+               - BadRequest(String) - 400
+               - InternalError(String) - 500
+               - Unauthorized(String) - 401
 
-                Implement user_routes placeholder:
-                - Accept &amp;mut web::ServiceConfig parameter
-                - Register empty resource returning NotImplemented
+            3. Implement Display trait for ApiError
+            4. Implement ResponseError trait to convert to HTTP responses
+        </section>
 
-                Implement product_routes placeholder:
-                - Accept &amp;mut web::ServiceConfig parameter
-                - Register empty resource returning NotImplemented
-            </details>
-        </step>
+        <section name="Main Application">
+            src/main.rs:
+            1. Import actix_web components, middleware
+            2. Call dotenv().ok() to load environment variables
+            3. Initialize env_logger for request logging
+            4. Print startup messages with server URL and health check URL
+            5. Create HttpServer with App::new()
+            6. Add Logger middleware with .wrap(middleware::Logger::default())
+            7. Configure routes with .configure(api::routes::configure_routes)
+            8. Bind to 127.0.0.1:8080
+            9. Run server with .run().await
 
-        <step number="4">
-            <action>Create src/main.rs application entry point</action>
-            <details>
-                Import required types:
-                - use actix_web::{App, HttpServer};
+            Mark main as #[actix_web::main] async
+        </section>
 
-                Declare modules:
-                - mod api;
-                - mod schema;
+        <section name="Module Integration">
+            Ensure src/main.rs imports:
+            - mod api;
+            - mod config; (from Task 1)
+            - mod models; (from Task 1)
+            - mod schema; (from Task 1)
 
-                Implement main function:
-                - Use #[actix_web::main] attribute
-                - Signature: async fn main() -&gt; std::io::Result&lt;()&gt;
-                - Print startup message
-                - Create HttpServer with app factory
-                - App factory: App::new().configure(api::routes::configure_routes)
-                - Bind to "127.0.0.1:8080"
-                - Call .run().await
-            </details>
-        </step>
-
-        <step number="5">
-            <action>Verify compilation and dependencies</action>
-            <details>
-                Run cargo check to verify compilation
-                Run cargo tree to verify dependencies
-                Ensure schema import resolves (Task 1 complete)
-                Verify no dependency conflicts
-            </details>
-        </step>
-
-        <step number="6">
-            <action>Test server startup and endpoints</action>
-            <details>
-                Run cargo run to start server
-                Test health endpoint: curl http://localhost:8080/api/health
-                Verify JSON response: {"status":"ok"}
-                Test placeholder routes return 501 Not Implemented
-                Verify server binds successfully to port 8080
-            </details>
-        </step>
+            This establishes dependency on Task 1 without requiring database connection yet.
+        </section>
     </implementation_details>
 
     <acceptance_criteria>
-        <criterion>Files src/api/mod.rs and src/api/routes.rs exist with correct implementations</criterion>
-        <criterion>File src/main.rs exists with server startup logic</criterion>
-        <criterion>Cargo.toml includes actix-web, serde, and serde_json dependencies</criterion>
-        <criterion>Server compiles without errors (cargo check passes)</criterion>
-        <criterion>Server starts and binds to 127.0.0.1:8080</criterion>
-        <criterion>Health check endpoint /api/health returns HTTP 200 with JSON {"status":"ok"}</criterion>
-        <criterion>User placeholder at /api/users returns HTTP 501 Not Implemented</criterion>
-        <criterion>Product placeholder at /api/products returns HTTP 501 Not Implemented</criterion>
-        <criterion>Schema module from Task 1 imports successfully</criterion>
-        <criterion>No dependency conflicts with Task 1's database dependencies</criterion>
-        <criterion>Routes use modular ServiceConfig pattern for extensibility</criterion>
+        <criterion>All Actix-web dependencies added to Cargo.toml and resolve successfully</criterion>
+        <criterion>cargo build completes without errors</criterion>
+        <criterion>cargo check passes with zero warnings</criterion>
+        <criterion>src/api/ directory created with mod.rs, routes.rs, errors.rs</criterion>
+        <criterion>configure_routes function implemented with /api scope</criterion>
+        <criterion>Health check endpoint at GET /api/health returns 200 OK</criterion>
+        <criterion>Health response includes status, service, and version fields as JSON</criterion>
+        <criterion>Placeholder scopes created for /users, /products, /cart</criterion>
+        <criterion>Placeholder routes return 501 Not Implemented status</criterion>
+        <criterion>ApiError enum defined with all variants</criterion>
+        <criterion>ErrorResponse struct serializes to JSON correctly</criterion>
+        <criterion>Logger middleware configured and outputs request logs</criterion>
+        <criterion>Server binds to 127.0.0.1:8080 successfully</criterion>
+        <criterion>Server starts without panics or errors</criterion>
+        <criterion>Startup messages displayed in console</criterion>
+        <criterion>curl http://localhost:8080/api/health succeeds</criterion>
     </acceptance_criteria>
 
     <test_strategy>
-        <validation>
-            Manual validation steps:
-
-            1. Verify file existence:
-               - ls -la src/api/mod.rs
-               - ls -la src/api/routes.rs
-               - ls -la src/main.rs
-
-            2. Check compilation:
-               - cargo check
-               - cargo build
-
-            3. Validate dependencies:
-               - cargo tree | grep actix-web
-               - cargo tree | grep serde
-
-            4. Start server:
-               - cargo run &amp;
-               - sleep 2
-
-            5. Test health endpoint:
-               - curl -i http://localhost:8080/api/health
-               - Expected: HTTP 200, JSON body {"status":"ok"}
-
-            6. Test placeholder routes:
-               - curl -i http://localhost:8080/api/users
-               - Expected: HTTP 501 Not Implemented
-               - curl -i http://localhost:8080/api/products
-               - Expected: HTTP 501 Not Implemented
-
-            7. Stop server:
-               - pkill -f "cargo run"
-        </validation>
-
-        <integration_testing>
-            This task enables:
-            - Task 3 to implement user authentication routes
-            - Task 4 to implement product catalog routes
-            - Task 5 to add shopping cart routes
-            - Task 7 to test all API endpoints
-
-            Depends on:
-            - Task 1 for schema module import
-        </integration_testing>
-
-        <automated_test>
-            Create test script to verify:
-            - Server builds successfully
-            - Server starts and binds to port
-            - Health endpoint returns correct response
-            - Placeholder routes return 501 status
-            - Server shuts down cleanly
-        </automated_test>
+        <test>Run cargo build to verify dependencies and compilation</test>
+        <test>Run cargo check to ensure no warnings</test>
+        <test>Run cargo clippy for linting feedback</test>
+        <test>Start server with cargo run and verify startup messages</test>
+        <test>Test health endpoint: curl http://localhost:8080/api/health</test>
+        <test>Verify health response JSON structure and status code</test>
+        <test>Test placeholder endpoints return 501: curl http://localhost:8080/api/users</test>
+        <test>Verify request logs appear in server console</test>
+        <test>Test invalid route returns 404: curl http://localhost:8080/api/invalid</test>
+        <test>Use curl -i to verify Content-Type: application/json headers</test>
+        <test>Test concurrent requests with ab or similar tool</test>
+        <test>Verify server handles graceful shutdown with Ctrl+C</test>
     </test_strategy>
 
     <instructions>
-        Think step-by-step and follow the implementation plan exactly.
+        You are implementing the API foundation layer for an e-commerce application. This task depends on Task 1 (Database Schema Setup) being complete. Think step-by-step:
 
-        1. Update Cargo.toml first with web framework dependencies
-        2. Create the API module structure (mod.rs and routes.rs)
-        3. Implement routing with proper scope nesting
-        4. Create health check handler with JSON response
-        5. Add placeholder routes for users and products
-        6. Set up main.rs with server configuration
-        7. Verify compilation with schema import from Task 1
-        8. Test server startup and endpoint responses
+        1. Update Cargo.toml with Actix-web 4.3.1 and related dependencies
+        2. Create src/api/ directory structure
+        3. Implement errors.rs with ApiError enum and ErrorResponse struct
+        4. Implement Display and ResponseError traits for error handling
+        5. Create routes.rs with configure_routes as main entry point
+        6. Implement health_check handler returning JSON with status, service, version
+        7. Create placeholder route configuration functions for users, products, cart
+        8. Implement not_implemented handler returning 501 status
+        9. Update src/main.rs to create HttpServer with App
+        10. Add Logger middleware for request monitoring
+        11. Configure routes in App using configure_routes
+        12. Add startup log messages
+        13. Bind server to 127.0.0.1:8080
+        14. Test server startup with cargo run
+        15. Verify health endpoint with curl
+        16. Verify placeholder routes return 501
+        17. Check request logs appear in console
 
-        Use standard Actix-web patterns and async/await syntax.
-        Include proper imports and error handling.
-        Ensure placeholder routes are clearly marked for future implementation.
+        Follow Rust and Actix-web best practices:
+        - Use async fn for all handlers
+        - Return HttpResponse for endpoint handlers
+        - Use web::Json for automatic serialization
+        - Implement proper error handling
+        - Add descriptive log messages
+        - Follow RESTful routing conventions
+        - Keep route configuration modular
 
-        Remember: You depend on Task 1 (Database Schema) completing first.
-        Your schema import validates this dependency.
-        Keep implementations simple - this is a test project.
+        Key architectural points:
+        - All routes under /api prefix for API versioning
+        - Scoped routing for logical grouping
+        - Placeholder pattern allows parallel development
+        - Error handling centralized for consistency
+        - Logging middleware for observability
 
-        Task 3, 4, and 5 will extend your routing structure.
-        Task 7 will test your endpoints.
+        This task blocks Task 7 (Integration Tests) and enables Tasks 3, 4, 5 to implement their specific routes.
 
-        This is a Level 1 task - you can start after Task 1 completes.
+        Upon completion, confirm:
+        - Server starts and binds to port 8080
+        - Health check tested and working
+        - Placeholder routes return correct status
+        - Logging active and visible
+        - No compilation warnings
+        - Ready for route implementation in subsequent tasks
     </instructions>
-
-    <context>
-        <project>
-            <name>Parallel Task Execution Test</name>
-            <repository>https://github.com/5dlabs/cto-parallel-test</repository>
-            <purpose>Testing parallel task orchestration, dependency management, and conflict detection</purpose>
-        </project>
-
-        <architecture>
-            <component>Web Server Layer</component>
-            <technology>Rust + Actix-web</technology>
-            <pattern>Modular routing with scope-based organization</pattern>
-            <integration>Connects to database layer (Task 1) and enables feature modules (Tasks 3-5)</integration>
-        </architecture>
-
-        <execution_context>
-            <level>1</level>
-            <depends_on>Task 1 (Database Schema)</depends_on>
-            <enables>Tasks 3, 4, 5, 7</enables>
-            <parallel_with>Task 5 (Shopping Cart) at Level 1</parallel_with>
-        </execution_context>
-
-        <constraints>
-            <constraint>Must successfully import schema module from Task 1</constraint>
-            <constraint>Cargo.toml also modified by Task 1 - ensure no conflicts</constraint>
-            <constraint>Port 8080 must be available for testing</constraint>
-            <constraint>Keep implementations simple for testing purposes</constraint>
-        </constraints>
-    </context>
 </prompt>

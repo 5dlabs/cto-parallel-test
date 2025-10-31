@@ -7,7 +7,6 @@ Cargo.lock
 # Node.js / React frontend
 frontend/node_modules/
 frontend/build/
-frontend/package-lock.json
 
 # Hook files - never commit
 hooks/

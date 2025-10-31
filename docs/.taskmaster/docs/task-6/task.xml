@@ -1,75 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <prompt>
-    <role>You are a senior React frontend developer specializing in component-based architecture and Material-UI.</role>
-
+    <role>Senior React frontend developer specializing in Material-UI and component architecture.</role>
     <task>
         <id>6</id>
         <title>Frontend Components</title>
-        <description>Create basic frontend structure and components using React, React Router, and Material-UI. Set up routing, layout components (Header, Footer), and placeholder pages for all routes. This establishes the UI foundation for the e-commerce application.</description>
+        <description>Create React frontend with Material-UI components and routing.</description>
         <priority>medium</priority>
         <status>pending</status>
         <dependencies></dependencies>
-        <level>0</level>
-        <estimated_time>35 minutes</estimated_time>
+        <execution_level>0</execution_level>
+        <estimated_duration>35 minutes</estimated_duration>
+        <agent_hint>frontend</agent_hint>
     </task>
-
     <technical_specifications>
-        <spec>Use React 18.2.0 with functional components and hooks</spec>
-        <spec>Use React Router DOM 6.14.2 for client-side routing</spec>
-        <spec>Use Material-UI 5.14.0 for component library</spec>
-        <spec>Use Axios 1.4.0 for future API integration</spec>
-        <spec>Create responsive layout with Header and Footer</spec>
-        <spec>Implement 6 routes: home, products, product detail, cart, login, register</spec>
-        <spec>Use placeholder data (no backend integration yet)</spec>
-        <spec>Apply consistent Material-UI theme</spec>
+        <spec>React 18.2 with React Router 6.14.2</spec>
+        <spec>Material-UI 5.14.0 for components</spec>
+        <spec>Responsive grid layouts</spec>
+        <spec>Axios for API integration</spec>
     </technical_specifications>
-
     <implementation_details>
-        <overview>Create React application with routing and Material-UI components. Level 0 task that runs independently.</overview>
-        <step number="1">
-            <action>Create package.json with all dependencies and scripts</action>
-        </step>
-        <step number="2">
-            <action>Create App.js with Router, ThemeProvider, and route definitions</action>
-        </step>
-        <step number="3">
-            <action>Create Header and Footer layout components</action>
-        </step>
-        <step number="4">
-            <action>Create HomePage, ProductList, and other page components</action>
-        </step>
-        <step number="5">
-            <action>Test application startup and navigation</action>
-        </step>
+        Create frontend/ directory with package.json, App.js, and component files for all pages.
     </implementation_details>
-
     <acceptance_criteria>
-        <criterion>All 10 required files created in frontend directory</criterion>
-        <criterion>npm install completes successfully</criterion>
-        <criterion>npm start launches development server</criterion>
-        <criterion>All routes accessible and render correctly</criterion>
-        <criterion>Navigation works between all pages</criterion>
-        <criterion>Material-UI theme applied consistently</criterion>
-        <criterion>Responsive layout works on different screen sizes</criterion>
+        <criterion>All components render correctly</criterion>
+        <criterion>Routing functional</criterion>
+        <criterion>Responsive design</criterion>
     </acceptance_criteria>
-
     <test_strategy>
-        <validation>Install dependencies, start server, test all routes, verify navigation, check responsive design.</validation>
+        <test>npm start and manual testing</test>
     </test_strategy>
-
     <instructions>
-        Create React app structure with routing and Material-UI. Use placeholder data. Focus on component structure and navigation. Test all routes work.
+        Create React frontend (Level 0) independently. Build component structure with routing and Material-UI styling.
     </instructions>
-
-    <context>
-        <project>
-            <name>Parallel Task Execution Test</name>
-            <repository>https://github.com/5dlabs/cto-parallel-test</repository>
-        </project>
-        <execution_context>
-            <level>0</level>
-            <depends_on>None</depends_on>
-            <parallel_with>Tasks 1, 3, 4</parallel_with>
-        </execution_context>
-    </context>
 </prompt>
