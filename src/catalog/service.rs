@@ -2,9 +2,12 @@ use crate::catalog::models::{NewProduct, Product, ProductFilter};
 use std::sync::{Arc, Mutex};
 
 /// Thread-safe in-memory product service
+///
+/// Public API for product catalog management (Task 4).
+/// Methods are used in tests and will be consumed by Task 7 (integration tests).
 pub struct ProductService {
     products: Arc<Mutex<Vec<Product>>>,
-    next_id: Arc<Mutex<i32>>,
+    next_id: Arc<Mutex<i32>>,  // Used by create() method for ID generation
 }
 
 impl ProductService {
@@ -19,11 +22,14 @@ impl ProductService {
 
     /// Creates a new product and returns it with an assigned ID
     ///
+    /// Part of public API from Task 4, used in tests and available for future tasks.
+    ///
     /// # Panics
     ///
     /// Panics if the mutex is poisoned (another thread panicked while holding the lock).
     /// This is an unrecoverable error that should not occur in normal operation.
     #[must_use]
+    #[allow(dead_code)]  // Public API for future tasks (Task 7 integration tests)
     pub fn create(&self, new_product: NewProduct) -> Product {
         let mut products = self.products.lock().expect("Mutex poisoned");
         let mut next_id = self.next_id.lock().expect("Mutex poisoned");
@@ -44,11 +50,14 @@ impl ProductService {
 
     /// Returns all products in the catalog
     ///
+    /// Part of public API from Task 4, used in tests and available for future tasks.
+    ///
     /// # Panics
     ///
     /// Panics if the mutex is poisoned (another thread panicked while holding the lock).
     /// This is an unrecoverable error that should not occur in normal operation.
     #[must_use]
+    #[allow(dead_code)]  // Public API for future tasks (Task 7 integration tests)
     pub fn get_all(&self) -> Vec<Product> {
         let products = self.products.lock().expect("Mutex poisoned");
         products.clone()
@@ -68,11 +77,14 @@ impl ProductService {
 
     /// Updates the inventory count for a product and returns the updated product
     ///
+    /// Part of public API from Task 4, used in tests and available for future tasks.
+    ///
     /// # Panics
     ///
     /// Panics if the mutex is poisoned (another thread panicked while holding the lock).
     /// This is an unrecoverable error that should not occur in normal operation.
     #[must_use]
+    #[allow(dead_code)]  // Public API for future tasks (Task 7 integration tests)
     pub fn update_inventory(&self, id: i32, new_count: i32) -> Option<Product> {
         let mut products = self.products.lock().expect("Mutex poisoned");
         products.iter_mut().find(|p| p.id == id).map(|product| {
@@ -83,11 +95,14 @@ impl ProductService {
 
     /// Filters products based on multiple optional criteria (AND logic)
     ///
+    /// Part of public API from Task 4, used in tests and available for future tasks.
+    ///
     /// # Panics
     ///
     /// Panics if the mutex is poisoned (another thread panicked while holding the lock).
     /// This is an unrecoverable error that should not occur in normal operation.
     #[must_use]
+    #[allow(dead_code)]  // Public API for future tasks (Task 7 integration tests)
     pub fn filter(&self, filter: &ProductFilter) -> Vec<Product> {
         let products = self.products.lock().expect("Mutex poisoned");
 
