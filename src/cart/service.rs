@@ -133,7 +133,7 @@ impl CartService {
     ///
     /// Panics if the mutex lock is poisoned
     #[must_use]
-    #[allow(dead_code)]  // Used in tests, available for future API endpoints
+    #[allow(dead_code)] // Used in tests, available for future API endpoints
     pub fn get_cart(&self, user_id: i32) -> Option<Cart> {
         let carts = self.carts.lock().expect("Lock poisoned");
         carts.values().find(|c| c.user_id == user_id).cloned()
