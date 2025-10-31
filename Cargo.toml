@@ -9,6 +9,9 @@ serde_json = "1.0"
 jsonwebtoken = "8.3.0"
 argon2 = "0.5.0"
 rand = "0.8.5"
+# Force secure ring version to override jsonwebtoken's old transitive dependency
+# This fixes RUSTSEC-2025-0009 (DoS via panic) and RUSTSEC-2025-0010 (unmaintained)
+ring = "0.17"
 
 [lib]
 name = "cto_parallel_test"

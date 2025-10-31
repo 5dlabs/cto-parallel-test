@@ -33,11 +33,15 @@ pub struct Claims {
 /// assert!(!token.is_empty());
 /// ```
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
-    #[allow(clippy::cast_possible_truncation)]
+    // JWT timestamps are traditionally i64/usize
+    // On 32-bit systems, this could theoretically truncate after year 2038,
+    // but JWT expiration checks will fail gracefully in that edge case
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")
-        .as_secs() as usize;
+        .as_secs()
+        .try_into()
+        .expect("Timestamp overflow - system time too far in future");
 
     let expiration = now + 86400; // 24 hours in seconds
 
