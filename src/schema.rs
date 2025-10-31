@@ -3,8 +3,11 @@
 diesel::table! {
     users (id) {
         id -> Int4,
+        #[max_length = 255]
         username -> Varchar,
+        #[max_length = 255]
         email -> Varchar,
+        #[max_length = 255]
         password_hash -> Varchar,
         created_at -> Timestamp,
     }
@@ -13,8 +16,9 @@ diesel::table! {
 diesel::table! {
     products (id) {
         id -> Int4,
+        #[max_length = 255]
         name -> Varchar,
-        description -> Text,
+        description -> Nullable<Text>,
         price -> Numeric,
         inventory_count -> Int4,
     }
