@@ -1,6 +1,10 @@
-// Database schema module
-mod schema;
+// Make modules public for testing
+pub mod api;
+pub mod auth;
+pub mod cart;
+pub mod catalog;
+pub mod schema;
 
 fn main() {
-    // Application entry point - schema module is available for use
+    // Application entry point - modules available for use
 }
