@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prompt>
+    <role>Senior Rust service layer developer specializing in product catalog systems.</role>
+    <task>
+        <id>4</id>
+        <title>Product Catalog Module</title>
+        <description>Create product catalog with CRUD, inventory management, and filtering.</description>
+        <priority>medium</priority>
+        <status>pending</status>
+        <dependencies></dependencies>
+        <execution_level>0</execution_level>
+        <estimated_duration>40 minutes</estimated_duration>
+    </task>
+    <technical_specifications>
+        <spec>Use rust_decimal 1.30 for precise price handling</spec>
+        <spec>Thread-safe Arc Mutex Vec storage</spec>
+        <spec>Support filtering by name, price range, stock status</spec>
+    </technical_specifications>
+    <implementation_details>
+        Implement ProductService with in-memory storage, CRUD operations, and flexible filtering system.
+    </implementation_details>
+    <acceptance_criteria>
+        <criterion>Product CRUD operations work correctly</criterion>
+        <criterion>Filtering system supports multiple criteria</criterion>
+        <criterion>Thread-safe concurrent access</criterion>
+    </acceptance_criteria>
+    <test_strategy>
+        <test>cargo test catalog:: for unit tests</test>
+    </test_strategy>
+    <instructions>
+        Implement catalog module independently (Level 0). Create models and service with thread-safe operations. Task 5 depends on this module.
+    </instructions>
+</prompt>

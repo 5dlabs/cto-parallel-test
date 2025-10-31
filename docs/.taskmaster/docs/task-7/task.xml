@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prompt>
+    <role>Senior QA automation engineer specializing in Rust integration testing and API validation.</role>
+    <task>
+        <id>7</id>
+        <title>Integration Tests</title>
+        <description>Create comprehensive integration tests for end-to-end application validation.</description>
+        <priority>high</priority>
+        <status>pending</status>
+        <dependencies>2,5,6</dependencies>
+        <execution_level>2</execution_level>
+        <estimated_duration>60 minutes</estimated_duration>
+        <agent_hint>integration</agent_hint>
+    </task>
+    <technical_specifications>
+        <spec>Use actix_web test utilities</spec>
+        <spec>Mock JWT tokens for authenticated endpoints</spec>
+        <spec>Test full user flows from product to cart</spec>
+        <spec>Independent, repeatable test execution</spec>
+    </technical_specifications>
+    <implementation_details>
+        Create tests/ directory with integration_tests.rs, api_tests.rs, auth_tests.rs covering all major functionality.
+    </implementation_details>
+    <acceptance_criteria>
+        <criterion>All tests pass with cargo test</criterion>
+        <criterion>Health check, API, auth, and cart flows tested</criterion>
+        <criterion>Tests are independent and clean up after themselves</criterion>
+    </acceptance_criteria>
+    <test_strategy>
+        <test>cargo test for all tests</test>
+        <test>cargo test --test NAME for specific test files</test>
+    </test_strategy>
+    <instructions>
+        Implement integration tests (Level 2) after Tasks 2, 5, 6 complete. Verify end-to-end functionality with comprehensive test coverage.
+    </instructions>
+</prompt>
