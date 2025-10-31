@@ -10,7 +10,7 @@ dotenvy = "0.15.7"
 rust_decimal = { version = "1.30", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 actix-web = "4.3.1"
-jsonwebtoken = "8.3.0"
+jsonwebtoken = { version = "10.1.0", default-features = false, features = ["rust_crypto"] }
 argon2 = "0.5.0"
 serde_json = "1.0"
 rand_core = { version = "0.6", features = ["getrandom"] }
