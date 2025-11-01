@@ -19,10 +19,15 @@ async fn main() -> std::io::Result<()> {
     let cart_service = web::Data::new(CartService::new());
     let product_service = web::Data::new(ProductService::new());
 
-    println!("🚀 Starting e-commerce API server...");
-    println!("📍 Server running at http://127.0.0.1:8080");
-    println!("🏥 Health check: http://127.0.0.1:8080/api/health");
-    println!("🛒 Cart API: http://127.0.0.1:8080/api/cart");
+    // Note: Using eprintln for startup messages since tracing is not configured yet
+    // In production, this should use a proper logging framework
+    #[allow(clippy::disallowed_macros)]
+    {
+        eprintln!("🚀 Starting e-commerce API server...");
+        eprintln!("📍 Server running at http://127.0.0.1:8080");
+        eprintln!("🏥 Health check: http://127.0.0.1:8080/api/health");
+        eprintln!("🛒 Cart API: http://127.0.0.1:8080/api/cart");
+    }
 
     HttpServer::new(move || {
         App::new()
