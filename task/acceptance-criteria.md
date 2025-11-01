@@ -1,100 +1,194 @@
-# Acceptance Criteria: Product Catalog Module
+# Acceptance Criteria: API Endpoints Setup
 
-## Required Files Created
+## Core Requirements
 
-### 1. Dependencies
-- [ ] `rust_decimal = { version = "1.30", features = ["serde"] }` in Cargo.toml
-- [ ] serde and serde_json present
+### Dependencies
+- [ ] `actix-web = "4.3.1"` added to Cargo.toml
+- [ ] `serde` with derive features added
+- [ ] `serde_json` added
+- [ ] `env_logger` and `log` added
+- [ ] `cargo check` passes without errors
 
-### 2. Module Structure
-- [ ] `src/catalog/mod.rs` exists and exports models and service
-- [ ] `src/catalog/models.rs` exists
-- [ ] `src/catalog/service.rs` exists
+### File Structure
+- [ ] `src/api/mod.rs` exists and exports routes and errors
+- [ ] `src/api/routes.rs` exists with route configuration
+- [ ] `src/api/errors.rs` exists with ApiError enum
+- [ ] `src/main.rs` updated with HTTP server setup
 
-### 3. Product Models
-- [ ] `Product` struct with id, name, description, price (Decimal), inventory_count
-- [ ] `NewProduct` struct for creation (no ID)
-- [ ] `ProductFilter` struct with optional filters
-- [ ] All structs derive Debug, Serialize, Deserialize
-- [ ] Product derives Clone
+### Route Configuration
+- [ ] `configure_routes()` function defined in routes.rs
+- [ ] `/api` scope created as root for all endpoints
+- [ ] `/api/health` route implemented and functional
+- [ ] `/api/auth` scope configured with placeholder routes
+- [ ] `/api/users` scope configured
+- [ ] `/api/products` scope configured
+- [ ] `/api/cart` scope configured
 
-### 4. ProductService Implementation
-- [ ] Thread-safe storage with Arc<Mutex<Vec<Product>>>
-- [ ] Auto-incrementing ID management
-- [ ] `new()` method implemented
-- [ ] `create()` method implemented
-- [ ] `get_all()` method implemented
-- [ ] `get_by_id()` method implemented
-- [ ] `update_inventory()` method implemented
-- [ ] `filter()` method implemented
-- [ ] `delete()` method implemented (optional)
+### Health Check Endpoint
+- [ ] Returns HTTP 200 OK
+- [ ] Returns JSON response with `"status": "ok"`
+- [ ] Includes version information
+- [ ] Responds to GET requests
 
-## Functional Requirements
+### Placeholder Routes
+- [ ] All unimplemented routes return HTTP 501 Not Implemented
+- [ ] Placeholder responses include JSON error format
+- [ ] Error message indicates future implementation
+- [ ] Auth routes: `/auth/register` (POST), `/auth/login` (POST)
+- [ ] Product routes: `/products` (GET), `/products/{id}` (GET)
+- [ ] Cart routes: `/cart` (GET), `/cart/add` (POST), `/cart/remove/{id}` (DELETE), `/cart/clear` (POST)
 
-### Product Creation
-- [ ] Creates products with unique auto-incrementing IDs
-- [ ] IDs start at 1 and increment sequentially
-- [ ] Returns created product with assigned ID
-- [ ] Handles concurrent creation correctly
+### Error Handling
+- [ ] `ApiError` enum defined with variants: NotFound, BadRequest, InternalError, Unauthorized
+- [ ] `ApiError` implements `Display` trait
+- [ ] `ApiError` implements `ResponseError` trait
+- [ ] Error responses return appropriate HTTP status codes
+- [ ] Error responses return JSON with consistent format: `{"error": "type", "message": "details"}`
 
-### Product Retrieval
-- [ ] `get_all()` returns all products
-- [ ] `get_by_id()` returns Some(product) if found
-- [ ] `get_by_id()` returns None if not found
-- [ ] Clones products (doesn't expose internal state)
+### HTTP Server
+- [ ] Server binds to 127.0.0.1:8080
+- [ ] Server starts without errors
+- [ ] `#[actix_web::main]` macro used in main.rs
+- [ ] Logger middleware configured
+- [ ] Routes registered with App configuration
 
-### Inventory Management
-- [ ] Updates inventory count for existing products
-- [ ] Returns updated product
-- [ ] Returns None for non-existent products
-- [ ] Handles negative inventory counts
+### Logging
+- [ ] `env_logger` initialized
+- [ ] Logger middleware wraps the App
+- [ ] Request logs printed to console
+- [ ] Log level configurable via RUST_LOG environment variable
 
-### Product Filtering
-- [ ] Name filter is case-insensitive
-- [ ] Name filter uses substring matching
-- [ ] Min price filter works correctly
-- [ ] Max price filter works correctly
-- [ ] In stock filter returns only products with inventory > 0
-- [ ] Out of stock filter returns products with inventory = 0
-- [ ] Multiple filters work together (AND logic)
-- [ ] Empty filter returns all products
+## Functional Tests
 
-### Decimal Precision
-- [ ] Prices use rust_decimal::Decimal type
-- [ ] Decimal precision is maintained
-- [ ] Price comparisons work correctly
-- [ ] Serialization preserves decimal values
+### Manual Testing
+```bash
+# Start server
+cargo run
+# Expected: Server starts, prints "Starting API server on http://127.0.0.1:8080"
 
-### Thread Safety
-- [ ] Multiple threads can safely create products
-- [ ] Multiple threads can safely read products
-- [ ] No data races occur
-- [ ] Lock contention is minimized
+# Test health check
+curl http://localhost:8080/api/health
+# Expected: {"status":"ok","version":"0.1.0"}
 
-## Compilation and Tests
+# Test placeholder endpoint
+curl http://localhost:8080/api/products
+# Expected: 501 Not Implemented with JSON error
 
-### Build Requirements
-- [ ] `cargo check` passes
-- [ ] `cargo build` succeeds
-- [ ] `cargo clippy` has no warnings
-- [ ] `cargo fmt --check` passes
+# Test 404
+curl http://localhost:8080/api/nonexistent
+# Expected: 404 Not Found
+```
 
-### Test Coverage
-- [ ] Test product creation
-- [ ] Test ID auto-increment
-- [ ] Test get_all
-- [ ] Test get_by_id (found and not found)
-- [ ] Test update_inventory
-- [ ] Test filtering by name
-- [ ] Test filtering by price range
-- [ ] Test filtering by stock status
-- [ ] Test combined filters
-- [ ] Test concurrent access
-- [ ] Test decimal precision
+### Automated Testing
+- [ ] Integration test file created: `tests/api_routes_test.rs`
+- [ ] Test for health check endpoint passes
+- [ ] Test for placeholder endpoints returns 501
+- [ ] Test for 404 handling (invalid routes)
+- [ ] `cargo test` runs all tests successfully
+
+## Code Quality
+
+### Structure
+- [ ] Module organization follows Rust conventions
+- [ ] Public API clearly defined via mod.rs exports
+- [ ] Route handlers use async/await properly
+- [ ] No compiler warnings
+
+### Error Handling
+- [ ] Errors use Result types where appropriate
+- [ ] `.unwrap()` avoided in production code
+- [ ] Error messages are descriptive
+
+### Documentation
+- [ ] Route structure documented (comments or README)
+- [ ] Error types documented
+- [ ] Startup message indicates server address
+
+## Integration Points
+
+### Task 1 Integration
+- [ ] Imports `schema` module successfully
+- [ ] Imports `models` module successfully
+- [ ] Imports `config` module successfully
+- [ ] No compilation errors related to Task 1 dependencies
+
+### Future Task Compatibility
+- [ ] Route scopes align with Task 3 (auth), Task 4 (products), Task 5 (cart)
+- [ ] Placeholder routes match expected future implementations
+- [ ] Error handling ready for business logic integration
+
+## Non-Functional Requirements
+
+### Performance
+- [ ] Server starts in under 5 seconds
+- [ ] Health check responds in under 100ms
+- [ ] No memory leaks (basic check with running server)
+
+### Security
+- [ ] Error messages don't expose sensitive information
+- [ ] Server binds to localhost (not 0.0.0.0) for development
+- [ ] Ready for CORS middleware addition (Task 6 integration)
+
+### Maintainability
+- [ ] Clear separation of concerns (routes, errors, main)
+- [ ] Consistent code style
+- [ ] Easy to add new routes
+- [ ] Error handling patterns established
+
+## Validation Commands
+
+```bash
+# Compilation check
+cargo check
+
+# Build project
+cargo build
+
+# Run tests
+cargo test
+
+# Start server
+cargo run
+
+# Health check (in separate terminal)
+curl -i http://localhost:8080/api/health
+
+# Test placeholder
+curl -i http://localhost:8080/api/products
+
+# Test 404
+curl -i http://localhost:8080/api/invalid
+
+# Check logs
+RUST_LOG=debug cargo run
+```
+
+## Success Checklist
+
+### Must Have
+- [x] Server starts successfully
+- [x] Health check returns 200 OK
+- [x] All placeholder routes return 501
+- [x] Error handling implemented
+- [x] Tests pass
+- [x] No compilation errors/warnings
+
+### Should Have
+- [x] Logging configured
+- [x] Consistent error format
+- [x] Integration tests
+- [x] Clear route structure
+
+### Nice to Have
+- [ ] API documentation (OpenAPI/Swagger) - Future enhancement
+- [ ] Request validation middleware - Added in later tasks
+- [ ] Rate limiting - Production feature
 
 ## Definition of Done
-1. All files created and compile
-2. All functional requirements pass
-3. All tests pass
-4. Thread-safe concurrent access verified
-5. Ready for integration with Task 5 (Shopping Cart)
+- All "Must Have" criteria met
+- `cargo check`, `cargo build`, and `cargo test` succeed
+- Server runs without errors for 5+ minutes
+- Health check accessible via curl
+- Ready for Task 3, 4, 5 integration
+- Code reviewed (or self-reviewed if solo)
+- Committed to version control
