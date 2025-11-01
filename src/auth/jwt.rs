@@ -85,6 +85,7 @@ impl Clock for SystemClock {
 fn jwt_secret() -> Result<String, JwtError> {
     let secret = env::var("JWT_SECRET").map_err(|_| JwtError::MissingSecret)?;
     // Enforce minimum entropy: 32 raw bytes (256 bits) for HMAC-SHA256.
+    // Note: `String::len()` returns the byte length in Rust, which is appropriate here.
     if secret.len() < 32 {
         return Err(JwtError::WeakSecret);
     }

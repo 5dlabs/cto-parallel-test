@@ -1,0 +1,54 @@
+name: Security Scans
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  cargo-audit:
+    name: Cargo Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: |
+          cargo install cargo-audit@^0.20
+
+      - name: Generate Cargo.lock (if missing)
+        run: |
+          cargo generate-lockfile
+
+      - name: Run cargo audit
+        run: |
+          cargo audit
+
+  gitleaks:
+    name: Gitleaks (SARIF)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          # Scan working tree only with our local config and output SARIF
+          args: >-
+            detect --no-git -s .
+            -c .gitleaks.toml -v
+            --report-format sarif --report-path gitleaks.sarif
+
+      - name: Upload SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks.sarif
+
