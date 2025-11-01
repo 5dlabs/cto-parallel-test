@@ -1,6 +1,14 @@
 use crate::auth::jwt::{create_token, validate_token};
 use crate::auth::models::User;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use std::sync::{Mutex, OnceLock};
+
+// Global lock to prevent concurrent mutation of JWT-related env vars across tests.
+static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+fn env_lock() -> std::sync::MutexGuard<'static, ()> {
+    ENV_LOCK.get_or_init(|| Mutex::new(())).lock().expect("env lock")
+}
 
 fn ensure_secret() {
     // Generate a random, strong secret for tests to avoid hardcoded-secret scanners
@@ -42,6 +50,7 @@ fn test_password_hashing() {
 
 #[test]
 fn test_jwt_creation_and_validation() {
+    let _guard = env_lock();
     ensure_secret();
 
     let user_id = "123";
@@ -58,6 +67,7 @@ fn test_jwt_creation_and_validation() {
 
 #[test]
 fn test_invalid_token() {
+    let _guard = env_lock();
     ensure_secret();
 
     let invalid_token = "invalid.token.here";
