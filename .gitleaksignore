@@ -1,3 +1,4 @@
 # Ignore build artifacts
 target/
-
+# Ignore self-report file
+gitleaks.sarif

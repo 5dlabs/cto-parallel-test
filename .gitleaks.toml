@@ -1,0 +1,9 @@
+title = "cto-parallel-test gitleaks config"
+
+[allowlist]
+description = "Ignore build artifacts and generated reports"
+paths = [
+  "target/",
+  "gitleaks.sarif",
+]
+

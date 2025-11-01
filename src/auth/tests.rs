@@ -1,5 +1,6 @@
 use crate::auth::jwt::{create_token, validate_token};
 use crate::auth::models::User;
+use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
 fn ensure_secret() {
     // Use a fixed secret for tests to avoid flakiness.
@@ -10,9 +11,14 @@ fn ensure_secret() {
 
 #[test]
 fn test_password_hashing() {
-    let test_pw = "test_password_123";
-    let hash1 = User::hash_password(test_pw);
-    let hash2 = User::hash_password(test_pw);
+    // Generate a random, non-constant password to avoid secret scanning false positives
+    let test_pw: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(24)
+        .map(char::from)
+        .collect();
+    let hash1 = User::hash_password(&test_pw);
+    let hash2 = User::hash_password(&test_pw);
 
     // Hashes should be different (due to random salt)
     assert_ne!(hash1, hash2);
@@ -25,7 +31,7 @@ fn test_password_hashing() {
         password_hash: hash1,
     };
 
-    assert!(user1.verify_password(test_pw));
+    assert!(user1.verify_password(&test_pw));
     assert!(!user1.verify_password("wrong_password"));
 }
 
