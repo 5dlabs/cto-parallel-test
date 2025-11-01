@@ -1,6 +1,7 @@
 {
   "localServers": {},
   "remoteTools": [
+<<<<<<< HEAD
     "brave_search_brave_web_search",
     "context7_get-library-docs",
     "agent_docs_rust_query",
@@ -11,5 +12,10 @@
     "agent_docs_grok_query",
     "agent_docs_qwen_query",
     "agent_docs_openhands_query"
+=======
+    "memory_create_entities",
+    "memory_add_observations",
+    "brave_search_brave_web_search"
+>>>>>>> ba96a87cc (feat(auth): add secure JWT + Argon2 module)
   ]
 }
