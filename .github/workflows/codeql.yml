@@ -57,10 +57,14 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Verify gh and jq availability
+      - name: Ensure gh and jq availability
         run: |
           gh --version || true
-          jq --version || true
+          if ! command -v jq >/dev/null; then
+            sudo apt-get update -y
+            sudo apt-get install -y jq
+          fi
+          jq --version
 
       - name: Enforce zero MEDIUM/HIGH/CRITICAL Code Scanning alerts
         env:
