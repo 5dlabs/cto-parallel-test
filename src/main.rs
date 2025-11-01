@@ -1,3 +1,7 @@
+// Allow println/eprintln in main for simple database verification utility
+// This is a lightweight database setup check, not production logging
+#![allow(clippy::disallowed_macros)]
+
 use ecommerce_api::establish_connection_pool;
 
 fn main() {
