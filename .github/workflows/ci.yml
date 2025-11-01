@@ -1,0 +1,83 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main, feature/*, feat/*, fix/*]
+  pull_request:
+    branches: [main]
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint-rust:
+    name: Rust Linting
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      # 🚀 CRITICAL: Use Swatinem/rust-cache for intelligent dependency caching
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: . -> target
+          shared-key: rust-cache-ci
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy (pedantic)
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic
+
+  test-rust:
+    name: Rust Testing
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: . -> target
+          shared-key: rust-cache-ci
+
+      - name: Run tests
+        run: cargo test --workspace --all-features --all-targets
+
+      - name: Run doc tests
+        run: cargo test --doc --all-features
+
+  build-rust:
+    name: Rust Build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: . -> target
+          shared-key: rust-cache-ci
+
+      - name: Build library
+        run: cargo build --workspace --all-features --release
