@@ -54,8 +54,10 @@ if [[ -z "${PR}" ]]; then
   exit 2
 fi
 
-echo "[info] Querying open Code Scanning alerts for PR #${PR}..."
-resp=$(gh api "/repos/${REPO}/code-scanning/alerts?state=open&pr=${PR}" -H "Accept: application/vnd.github+json")
+echo "[info] Querying open Code Scanning alerts for PR #${PR} (all pages)..."
+# Fetch all pages (up to API limits) and merge arrays
+resp=$(gh api -H "Accept: application/vnd.github+json" --paginate \
+  "/repos/${REPO}/code-scanning/alerts?state=open&pr=${PR}&per_page=100" | jq -s 'add')
 
 count=$(jq 'length' <<<"$resp")
 if [[ "$count" -eq 0 ]]; then
@@ -81,4 +83,3 @@ fi
 
 echo "$(green "Only LOW/INFO alerts present." )"
 exit 0
-
