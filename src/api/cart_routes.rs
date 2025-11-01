@@ -131,9 +131,18 @@ pub fn configure_cart_routes(cfg: &mut web::ServiceConfig) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::auth::create_token;
     use crate::catalog::models::NewProduct;
     use actix_web::{test, web::Data, App};
     use rust_decimal_macros::dec;
+
+    /// Helper function to create a Bearer token for testing
+    fn bearer_token(user_id: i32) -> String {
+        format!(
+            "Bearer {}",
+            create_token(user_id).expect("Failed to create test token")
+        )
+    }
 
     #[actix_web::test]
     async fn test_get_cart_no_auth() {
@@ -163,7 +172,7 @@ mod tests {
 
         let req = test::TestRequest::get()
             .uri("/api/cart")
-            .insert_header(("Authorization", "Bearer user_1"))
+            .insert_header(("Authorization", bearer_token(1)))
             .to_request();
         let resp = test::call_service(&app, req).await;
 
@@ -217,7 +226,7 @@ mod tests {
 
         let req = test::TestRequest::post()
             .uri("/api/cart/add")
-            .insert_header(("Authorization", "Bearer user_1"))
+            .insert_header(("Authorization", bearer_token(1)))
             .set_json(&add_req)
             .to_request();
         let resp = test::call_service(&app, req).await;
@@ -253,7 +262,7 @@ mod tests {
 
         let req = test::TestRequest::post()
             .uri("/api/cart/add")
-            .insert_header(("Authorization", "Bearer user_1"))
+            .insert_header(("Authorization", bearer_token(1)))
             .set_json(&add_req)
             .to_request();
         let resp = test::call_service(&app, req).await;
@@ -289,7 +298,7 @@ mod tests {
 
         let req = test::TestRequest::post()
             .uri("/api/cart/add")
-            .insert_header(("Authorization", "Bearer user_1"))
+            .insert_header(("Authorization", bearer_token(1)))
             .set_json(&add_req)
             .to_request();
         let resp = test::call_service(&app, req).await;
@@ -369,7 +378,7 @@ mod tests {
 
         let req = test::TestRequest::post()
             .uri("/api/cart/add")
-            .insert_header(("Authorization", "Bearer user_1"))
+            .insert_header(("Authorization", bearer_token(1)))
             .set_json(&add_req)
             .to_request();
         let _ = test::call_service(&app, req).await;
@@ -382,7 +391,7 @@ mod tests {
 
         let req = test::TestRequest::post()
             .uri("/api/cart/add")
-            .insert_header(("Authorization", "Bearer user_2"))
+            .insert_header(("Authorization", bearer_token(2)))
             .set_json(&add_req)
             .to_request();
         let _ = test::call_service(&app, req).await;
@@ -390,7 +399,7 @@ mod tests {
         // Verify User 1's cart only has product 1
         let req = test::TestRequest::get()
             .uri("/api/cart")
-            .insert_header(("Authorization", "Bearer user_1"))
+            .insert_header(("Authorization", bearer_token(1)))
             .to_request();
         let resp = test::call_service(&app, req).await;
         assert_eq!(resp.status(), 200);
@@ -398,7 +407,7 @@ mod tests {
         // Verify User 2's cart only has product 2
         let req = test::TestRequest::get()
             .uri("/api/cart")
-            .insert_header(("Authorization", "Bearer user_2"))
+            .insert_header(("Authorization", bearer_token(2)))
             .to_request();
         let resp = test::call_service(&app, req).await;
         assert_eq!(resp.status(), 200);

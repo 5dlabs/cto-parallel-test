@@ -1,3 +1,3 @@
 pub mod jwt;
 
-pub use self::jwt::{validate_token, Claims};
+pub use self::jwt::{create_token, validate_token, Claims};
