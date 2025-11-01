@@ -1,0 +1,5 @@
+# Ignore test files with mock passwords and test credentials
+tests/auth_tests.rs:188
+tests/auth_tests.rs:197
+tests/auth_tests.rs:243
+tests/auth_tests.rs:*

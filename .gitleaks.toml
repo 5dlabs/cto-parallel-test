@@ -1,5 +1,6 @@
 [allowlist]
-description = "Allow test files"
+description = "Allow test files and documentation"
 paths = [
   '''tests/auth_tests\.rs''',
+  '''MANUAL-STEPS-REQUIRED\.md''',
 ]
