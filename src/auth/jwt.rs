@@ -178,4 +178,3 @@ pub fn validate_token(token: &str) -> Result<Claims, JwtError> {
     )?;
     Ok(token_data.claims)
 }
-

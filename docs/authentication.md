@@ -13,10 +13,11 @@ This module provides production-grade primitives for user authentication:
 
 ## Security Notes
 
-- No hardcoded secrets: tokens require `JWT_SECRET`.
+- No hardcoded secrets: tokens require `JWT_SECRET` (min 32 bytes).
 - Tokens include `sub`, `iat`, and `exp` claims and fail validation after expiration.
 - Password hashes never serialize (`#[serde(skip_serializing)]`).
 - Argon2 (v0.5) with unique random salt per password; verification uses constant-time checks.
+- Safe expiration math: internally guards against integer overflow when computing `exp`.
 
 ## Usage
 
@@ -44,4 +45,3 @@ Run the standard gates:
 - `cargo test --workspace --all-features`
 
 Unit tests set a deterministic `JWT_SECRET` for reliability.
-
