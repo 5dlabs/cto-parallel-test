@@ -1,6 +1,7 @@
 use crate::auth::jwt::{create_token, validate_token};
 use crate::auth::models::User;
-use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use rand::rngs::OsRng;
+use rand::RngCore;
 use std::sync::{Mutex, OnceLock};
 
 // Global lock to prevent concurrent mutation of JWT-related env vars across tests.
@@ -14,25 +15,31 @@ fn env_lock() -> std::sync::MutexGuard<'static, ()> {
 }
 
 fn ensure_secret() {
-    // Generate a random, strong secret for tests to avoid hardcoded-secret scanners
-    let secret: String = thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(48)
-        .map(char::from)
-        .collect();
+    // Generate a cryptographically-secure random secret for tests (48 bytes, hex-encoded)
+    let mut buf = [0u8; 48];
+    OsRng.fill_bytes(&mut buf);
+    let secret = hex_string(&buf);
     std::env::set_var("JWT_SECRET", secret);
     // Ensure default of 24 hours unless overridden by tests.
     std::env::remove_var("JWT_EXP_HOURS");
 }
 
+fn hex_string(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for &b in bytes {
+        out.push(HEX[(b >> 4) as usize] as char);
+        out.push(HEX[(b & 0x0f) as usize] as char);
+    }
+    out
+}
+
 #[test]
 fn test_password_hashing() {
-    // Generate a random, non-constant password to avoid secret scanning false positives
-    let test_pw: String = thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(24)
-        .map(char::from)
-        .collect();
+    // Generate a random, non-constant password using CSPRNG to satisfy scanners
+    let mut pw_bytes = [0u8; 24];
+    OsRng.fill_bytes(&mut pw_bytes);
+    let test_pw = hex_string(&pw_bytes);
     let hash1 = User::hash_password(&test_pw);
     let hash2 = User::hash_password(&test_pw);
 
