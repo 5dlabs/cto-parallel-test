@@ -1,6 +1,11 @@
-//! CTO Parallel Test E-commerce API
+//! E-commerce platform library
 //!
-//! This library provides authentication and e-commerce functionality
-//! including user management, product catalog, and shopping cart features.
+//! This library provides modules for building an e-commerce API with:
+//! - Product catalog management
+//! - Inventory tracking
+//! - Thread-safe operations
+//! - User authentication with JWT tokens
+//! - Secure password hashing with Argon2
 
 pub mod auth;
+pub mod catalog;
