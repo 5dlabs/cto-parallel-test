@@ -5,3 +5,4 @@ gitleaks.sarif
 **/*.swo
 Cargo.lock
 .env
+*.sarif

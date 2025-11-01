@@ -58,3 +58,20 @@ fn test_invalid_token() {
     let invalid_token = "invalid.token.here";
     assert!(validate_token(invalid_token).is_err());
 }
+
+#[test]
+fn test_user_serialization_excludes_password_hash() {
+    // Ensure serialization of User never exposes password_hash
+    let user = User {
+        id: 42,
+        username: "alice".to_string(),
+        email: "alice@example.com".to_string(),
+        password_hash: User::hash_password("S3cureP@ssw0rd!"),
+    };
+
+    let json = serde_json::to_string(&user).expect("serialize user");
+    assert!(json.contains("\"id\":"));
+    assert!(json.contains("\"username\":"));
+    assert!(json.contains("\"email\":"));
+    assert!(!json.contains("password_hash"));
+}
