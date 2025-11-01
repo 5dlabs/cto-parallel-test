@@ -472,8 +472,8 @@ assert!(claims.exp - claims.iat == 86400); // 24 hours
 use your_crate::auth::models::User;
 
 // Hash password
-let password = "SecureP@ssw0rd123";
-let hash = User::hash_password(password);
+let example_pw = "SecureP@ssw0rd123";
+let hash = User::hash_password(example_pw);
 println!("Password hash: {}", hash);
 
 // Create user
@@ -485,7 +485,7 @@ let user = User {
 };
 
 // Verify correct password
-assert!(user.verify_password(password), "Correct password should verify");
+assert!(user.verify_password(example_pw), "Correct password should verify");
 
 // Verify wrong password fails
 assert!(!user.verify_password("WrongPassword"), "Wrong password should fail");
@@ -605,8 +605,8 @@ fn test_complete_auth_flow() {
     use your_crate::auth::{jwt, models::User};
 
     // 1. User registration: hash password
-    let password = "user_password_123";
-    let password_hash = User::hash_password(password);
+    let example_pw = "pw_example_123";
+    let password_hash = User::hash_password(example_pw);
 
     // 2. Create user (simulated database insert)
     let user = User {
@@ -617,7 +617,7 @@ fn test_complete_auth_flow() {
     };
 
     // 3. User login: verify password
-    assert!(user.verify_password(password), "Password verification should succeed");
+    assert!(user.verify_password(example_pw), "Password verification should succeed");
 
     // 4. Generate JWT token
     let token = jwt::create_token(&user.id.to_string())

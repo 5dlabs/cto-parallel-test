@@ -341,8 +341,8 @@ assert_eq!(claims.sub, "user_123");
 ```rust
 use your_crate::auth::models::User;
 
-let password = "SecureP@ssw0rd";
-let hash = User::hash_password(password);
+let example_password = "SecureP@ssw0rd";
+let hash = User::hash_password(example_password);
 
 let user = User {
     id: 1,
@@ -351,7 +351,7 @@ let user = User {
     password_hash: hash,
 };
 
-assert!(user.verify_password(password));
+assert!(user.verify_password(example_password));
 assert!(!user.verify_password("WrongPassword"));
 ```
 

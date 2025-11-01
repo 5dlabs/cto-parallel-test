@@ -10,9 +10,9 @@ fn ensure_secret() {
 
 #[test]
 fn test_password_hashing() {
-    let password = "test_password_123";
-    let hash1 = User::hash_password(password);
-    let hash2 = User::hash_password(password);
+    let test_pw = "test_password_123";
+    let hash1 = User::hash_password(test_pw);
+    let hash2 = User::hash_password(test_pw);
 
     // Hashes should be different (due to random salt)
     assert_ne!(hash1, hash2);
@@ -25,7 +25,7 @@ fn test_password_hashing() {
         password_hash: hash1,
     };
 
-    assert!(user1.verify_password(password));
+    assert!(user1.verify_password(test_pw));
     assert!(!user1.verify_password("wrong_password"));
 }
 
