@@ -3,8 +3,13 @@ use crate::auth::models::User;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
 fn ensure_secret() {
-    // Use a fixed secret for tests to avoid flakiness.
-    std::env::set_var("JWT_SECRET", "test_secret_key_for_unit_tests_please_change");
+    // Generate a random, strong secret for tests to avoid hardcoded-secret scanners
+    let secret: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(48)
+        .map(char::from)
+        .collect();
+    std::env::set_var("JWT_SECRET", secret);
     // Ensure default of 24 hours unless overridden by tests.
     std::env::remove_var("JWT_EXP_HOURS");
 }
