@@ -87,11 +87,16 @@ fn test_invalid_token() {
 #[test]
 fn test_user_serialization_excludes_password_hash() {
     // Ensure serialization of User never exposes password_hash
+    // Use a randomly generated password to avoid hardcoded credentials in tests
+    let mut pw_bytes = [0u8; 24];
+    OsRng.fill_bytes(&mut pw_bytes);
+    let test_pw = hex_string(&pw_bytes);
+
     let user = User {
         id: 42,
         username: "alice".to_string(),
         email: "alice@example.com".to_string(),
-        password_hash: User::hash_password("S3cureP@ssw0rd!"),
+        password_hash: User::hash_password(&test_pw),
     };
 
     let json = serde_json::to_string(&user).expect("serialize user");

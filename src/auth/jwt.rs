@@ -101,7 +101,14 @@ fn expiration_hours() -> Result<u64, JwtError> {
 }
 
 /// Returns validation leeway (in seconds) to tolerate minor clock skew.
+<<<<<<< HEAD
 /// Configured via `JWT_LEEWAY_SECS` with default 60 and max 300.
+=======
+///
+/// The value can be configured via `JWT_LEEWAY_SECS`. If not set or invalid,
+/// a secure default of 60 seconds is used. To avoid misconfiguration weakening
+/// validation, values greater than 300 seconds are clamped to 300.
+>>>>>>> 9472be959 (security(jwt): make validation leeway configurable via JWT_LEEWAY_SECS (capped at 300s); keep explicit exp validation\n\n- Add leeway config with safe default (60s) and cap (300s)\n- Use env var JWT_LEEWAY_SECS; invalid values fall back to default\n- Update docs and .env.example accordingly\n- Re-run fmt, clippy (deny warnings), tests: all pass\n\nNo functional changes to token structure; secure defaults preserved.)
 fn leeway_secs() -> u64 {
     const DEFAULT: u64 = 60;
     const MAX: u64 = 300;
@@ -157,17 +164,21 @@ fn create_token_with_clock(user_id: &str, clock: &dyn Clock) -> Result<String, J
 pub fn validate_token(token: &str) -> Result<Claims, JwtError> {
     let secret = jwt_secret()?;
     let mut validation = Validation::new(Algorithm::HS256);
-    // Enforce `nbf` and expiration with small leeway to tolerate minor clock skew.
+    // Enforce `nbf` by default with small leeway to tolerate minor clock skew.
     validation.validate_nbf = true;
+    // Be explicit about expiration validation to satisfy conservative scanners
+    // (it's true by default in jsonwebtoken but we set it for clarity).
     validation.validate_exp = true;
     validation.leeway = leeway_secs();
     // Enforce issuer/audience checks if configured via environment.
     if let Ok(issuer) = env::var("JWT_ISSUER") {
+        // jsonwebtoken validates `iss` when set; expects a set of acceptable values
         let mut set = HashSet::new();
         set.insert(issuer);
         validation.iss = Some(set);
     }
     if let Ok(aud) = env::var("JWT_AUDIENCE") {
+        // jsonwebtoken expects a set for `aud` validation
         let mut set = HashSet::new();
         set.insert(aud);
         validation.aud = Some(set);

@@ -10,11 +10,14 @@ This module provides production-grade primitives for user authentication:
 
 - `JWT_SECRET` (required): Secret key for signing/validating JWTs. Must be strong and kept out of source control.
 - `JWT_EXP_HOURS` (optional): Token lifetime in hours. Defaults to `24`.
+- `JWT_LEEWAY_SECS` (optional): Validation leeway in seconds to account for minor clock skew (defaults to `60`, clamped to a maximum of `300`).
+- `JWT_ISSUER` (optional): Expected token issuer. When set, tokens are issued with and validated against this value.
+- `JWT_AUDIENCE` (optional): Expected token audience. When set, tokens are issued with and validated against this value.
 
 ## Security Notes
 
 - No hardcoded secrets: tokens require `JWT_SECRET` (min 32 bytes).
-- Tokens include `sub`, `iat`, and `exp` claims and fail validation after expiration.
+- Tokens include `sub`, `iat`, `nbf`, and `exp` claims. Validation enforces `nbf` and `exp` with a small leeway (default 60s, configurable up to 300s) to account for clock skew.
 - Password hashes never serialize (`#[serde(skip_serializing)]`).
 - Argon2 (v0.5) with unique random salt per password; verification uses constant-time checks.
 - Safe expiration math: internally guards against integer overflow when computing `exp`.
