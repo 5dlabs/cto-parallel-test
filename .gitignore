@@ -1,15 +1,24 @@
-# Rust
-/target
+# Rust artifacts
+/target/
 Cargo.lock
 **/*.rs.bk
 *.pdb
+*.rlib
+*.so
+*.dylib
+*.dll
 
 # IDE
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
+
+# Environment
+.env
+.env.local
+.env.production
 
 # OS
 .DS_Store
@@ -20,6 +29,5 @@ hooks/
 .hooks/
 **/hooks/
 
-# Environment variables (contains secrets)
-.env.local
-.env.production
+# Debug
+debug/

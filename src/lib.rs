@@ -1,6 +1,6 @@
-//! # CTO Parallel Test - E-commerce API
+//! CTO Parallel Test E-commerce API
 //!
-//! This library provides core functionality for an e-commerce system,
-//! including user authentication with JWT tokens and secure password handling.
+//! This library provides authentication and e-commerce functionality
+//! including user management, product catalog, and shopping cart features.
 
 pub mod auth;
