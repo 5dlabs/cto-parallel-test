@@ -45,6 +45,7 @@ jobs:
   gate_code_scanning:
     name: Code Scanning Gate
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     needs: analyze
     permissions:
       contents: read
