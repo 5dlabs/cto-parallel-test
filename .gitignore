@@ -1,0 +1,25 @@
+# Rust
+/target
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Hook files - never commit
+hooks/
+.hooks/
+**/hooks/
+
+# Environment variables (contains secrets)
+.env.local
+.env.production
