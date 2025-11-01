@@ -5,7 +5,6 @@
 //! - Inventory management
 //! - Product filtering and search
 //! - Thread-safe in-memory storage
-
 pub mod models;
 pub mod service;
 

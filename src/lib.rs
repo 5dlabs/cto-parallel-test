@@ -1,6 +1,6 @@
-//! CTO Parallel Test - E-commerce Application
+//! cto-parallel-test library crate
 //!
-//! This library provides core functionality for an e-commerce application,
-//! including product catalog management, shopping cart operations, and user authentication.
+//! Provides a thread-safe in-memory product catalog with CRUD,
+//! inventory management, and flexible filtering using Decimal prices.
 
 pub mod catalog;
