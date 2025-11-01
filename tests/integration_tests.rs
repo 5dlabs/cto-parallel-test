@@ -432,7 +432,10 @@ fn test_service_health_check() {
     let service = get_test_product_service();
 
     // Basic functionality checks
-    assert!(!service.get_all().is_empty(), "Service should have products");
+    assert!(
+        !service.get_all().is_empty(),
+        "Service should have products"
+    );
 
     // CRUD operations work
     let product = service.create(NewProduct {
