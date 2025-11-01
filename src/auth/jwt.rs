@@ -54,6 +54,13 @@ pub struct Claims {
 /// assert!(!token.is_empty());
 /// ```
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
+    // JUSTIFICATION FOR DISALLOWED METHOD:
+    // JWT tokens REQUIRE wall-clock time (SystemTime) not monotonic time (Instant).
+    // JWT 'exp' and 'iat' claims are Unix timestamps representing absolute points in time.
+    // These must be consistent across systems and restarts, which requires SystemTime.
+    // This is a fundamental requirement of RFC 7519 (JWT specification).
+    // Alternative: Implement Clock abstraction, but adds complexity for standard JWT behavior.
+    #[allow(clippy::disallowed_methods)]
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")
