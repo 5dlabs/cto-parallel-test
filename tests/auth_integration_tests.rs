@@ -1,4 +1,4 @@
-use ecommerce_catalog::auth::{create_token, validate_token, User};
+use cto_parallel_test::auth::{create_token, validate_token, User};
 
 #[test]
 fn test_complete_auth_flow() {
