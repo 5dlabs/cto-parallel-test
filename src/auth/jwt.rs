@@ -54,10 +54,13 @@ pub struct Claims {
 /// - Production environments MUST set `JWT_SECRET` environment variable
 /// - Development fallback secret is intentionally weak
 ///
+/// # Errors
+///
+/// This function will return an error if JWT encoding fails (e.g., invalid claims structure).
+///
 /// # Panics
 ///
 /// Panics if system time is before Unix epoch (extremely unlikely in practice).
-#[allow(clippy::missing_errors_doc)]
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
     // Note: Using SystemTime::now() as required by task specification
     // In production, consider using a Clock abstraction for better testability
@@ -67,14 +70,12 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 
     let expiration = now.as_secs() + 24 * 3600; // 24 hours from now
 
-    // Note: JWT claims use numeric timestamps, typically stored as usize
-    // On 32-bit systems with far-future dates this could theoretically truncate,
-    // but in practice this is not a concern for timestamps until year 2106
-    #[allow(clippy::cast_possible_truncation)]
+    // JWT spec uses numeric dates (seconds since epoch). We use usize for platform compatibility.
+    // u64::MAX exceeds practical timestamp limits (year 584 billion+), so conversion is safe.
     let claims = Claims {
         sub: user_id.to_owned(),
-        exp: expiration as usize,
-        iat: now.as_secs() as usize,
+        exp: usize::try_from(expiration).expect("timestamp exceeds usize range"),
+        iat: usize::try_from(now.as_secs()).expect("timestamp exceeds usize range"),
     };
 
     // Load JWT secret from environment, fallback to development secret
@@ -117,7 +118,6 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 /// let claims = validate_token(&token).unwrap();
 /// assert_eq!(claims.sub, "123");
 /// ```
-#[allow(clippy::missing_errors_doc)]
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let secret = std::env::var("JWT_SECRET")
         .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
