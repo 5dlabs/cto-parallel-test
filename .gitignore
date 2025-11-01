@@ -1,10 +1,12 @@
-# Rust
-/target/
+# Hook files - never commit
+hooks/
+.hooks/
+**/hooks/
+
+# Build artifacts
+target/
 **/*.rs.bk
 *.pdb
-
-# Cargo
-Cargo.lock
 
 # IDEs
 .vscode/
@@ -21,8 +23,3 @@ Cargo.lock
 # OS
 .DS_Store
 Thumbs.db
-
-# Hook files - never commit
-hooks/
-.hooks/
-**/hooks/
