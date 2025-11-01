@@ -1,103 +1,60 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <prompt>
-    <role>You are a senior Rust test engineer specializing in integration testing, API testing, and test-driven development.</role>
-
+    <role>You are a senior QA engineer and Rust developer specializing in integration testing, test automation, and quality assurance.</role>
     <task>
         <id>7</id>
         <title>Integration Tests</title>
-        <description>Create comprehensive integration tests for the entire application. Test authentication (JWT, passwords), API endpoints (health check, products), shopping cart operations, and full end-to-end user workflows. Validate that all modules integrate correctly and the system functions as a cohesive whole.</description>
+        <description>Create comprehensive integration tests covering all APIs, authentication flows, and end-to-end user scenarios.</description>
         <priority>high</priority>
         <status>pending</status>
         <dependencies>2,5,6</dependencies>
-        <level>2</level>
         <estimated_time>60 minutes</estimated_time>
+        <level>2</level>
     </task>
-
     <technical_specifications>
-        <spec>Use Rust built-in testing with #[test] and #[actix_web::test] attributes</spec>
-        <spec>Use Actix-web test utilities (test::init_service, test::TestRequest, test::call_service)</spec>
-        <spec>Test authentication: JWT creation/validation, password hashing/verification</spec>
-        <spec>Test API endpoints: health check, product routes</spec>
-        <spec>Test integration: full user flow from authentication to cart operations</spec>
-        <spec>Verify HTTP status codes (200, 400, 401, 404)</spec>
-        <spec>Validate JSON response structures and data correctness</spec>
-        <spec>Test with in-memory services (no database needed)</spec>
+        <spec>Use Actix-web test utilities for HTTP testing</spec>
+        <spec>Test all API endpoints (health, products, cart, auth)</spec>
+        <spec>Verify JWT authentication and authorization</spec>
+        <spec>Test complete user flows end-to-end</spec>
+        <spec>Independent tests with no shared state</spec>
+        <spec>Mock services for isolated testing</spec>
     </technical_specifications>
-
     <implementation_details>
-        <overview>Create three test files covering authentication, API endpoints, and full integration. Tests validate all previous tasks work together correctly. Level 2 task - final system validation.</overview>
+Create tests/ directory with integration_tests.rs, api_tests.rs, auth_tests.rs.
 
-        <step number="1">
-            <action>Create tests/auth_tests.rs</action>
-            <details>
-                Test JWT lifecycle, password hashing/verification, User serialization.
-                Use #[test] attribute for unit tests.
-            </details>
-        </step>
+Build test utilities for initializing test app and services.
 
-        <step number="2">
-            <action>Create tests/api_tests.rs</action>
-            <details>
-                Test health check endpoint, product routes.
-                Use #[actix_web::test] attribute.
-                Initialize test app with services.
-                Use TestRequest to make HTTP calls.
-            </details>
-        </step>
+Test API endpoints with actix_web::test module.
 
-        <step number="3">
-            <action>Create tests/integration_tests.rs</action>
-            <details>
-                Test full user flow: create product, create token, add to cart, get cart.
-                Verify multi-module integration.
-                Assert correct data in responses.
-            </details>
-        </step>
+Verify JWT token creation, validation, and expiration.
 
-        <step number="4">
-            <action>Update src/main.rs</action>
-            <details>
-                Make modules public: pub mod api, pub mod schema, pub mod auth, pub mod catalog, pub mod cart.
-            </details>
-        </step>
+Test password hashing and verification.
 
-        <step number="5">
-            <action>Run tests and verify</action>
-            <details>
-                cargo test
-                Verify all tests pass.
-            </details>
-        </step>
+Create end-to-end flow tests: register → login → browse → add to cart → checkout.
+
+Ensure all tests are independent and repeatable.
     </implementation_details>
-
     <acceptance_criteria>
-        <criterion>Files tests/integration_tests.rs, tests/api_tests.rs, tests/auth_tests.rs created</criterion>
-        <criterion>src/main.rs updated with public module declarations</criterion>
-        <criterion>Authentication tests cover JWT and password operations</criterion>
-        <criterion>API tests cover health check and product routes</criterion>
-        <criterion>Integration test covers full user flow (create product → add to cart → get cart)</criterion>
-        <criterion>All tests compile without errors</criterion>
+        <criterion>All test files created in tests/ directory</criterion>
+        <criterion>API endpoint tests cover all routes</criterion>
+        <criterion>Auth tests verify JWT and passwords</criterion>
+        <criterion>Integration tests cover full user flows</criterion>
         <criterion>cargo test passes all tests</criterion>
-        <criterion>Tests verify HTTP status codes, JSON structures, and data correctness</criterion>
+        <criterion>Tests are independent</criterion>
+        <criterion>No flaky tests</criterion>
     </acceptance_criteria>
-
     <test_strategy>
-        <validation>Run cargo test and verify all tests pass. Test individual files. Check test coverage.</validation>
+Run cargo test to execute all tests.
+Verify health check, product, cart, and auth endpoints.
+Test success and error scenarios.
+Verify authentication requirements enforced.
+Test complete shopping flow integration.
     </test_strategy>
-
     <instructions>
-        Create comprehensive tests covering authentication, API endpoints, and full integration. Use Actix-web test utilities. Verify all modules work together. Ensure all tests pass.
+1. Create test directory structure
+2. Build test utilities for app initialization
+3. Write API tests for all endpoints
+4. Write authentication tests
+5. Create end-to-end integration tests
+6. Run cargo test and verify all pass
     </instructions>
-
-    <context>
-        <project>
-            <name>Parallel Task Execution Test</name>
-            <repository>https://github.com/5dlabs/cto-parallel-test</repository>
-        </project>
-        <execution_context>
-            <level>2</level>
-            <depends_on>Tasks 2, 5, 6</depends_on>
-            <purpose>Final validation of complete system</purpose>
-        </execution_context>
-    </context>
 </prompt>

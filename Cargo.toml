@@ -4,13 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-diesel = { version = "2.1.0", features = ["postgres", "r2d2"] }
-r2d2 = "0.8.10"
-dotenvy = "0.15.7"
 rust_decimal = { version = "1.30", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
-actix-web = "4.3.1"
 serde_json = "1.0"
+actix-web = "4.3.1"
 jsonwebtoken = { version = "10.1.0", features = ["aws_lc_rs"] }
 argon2 = "0.5.0"
 password-hash = { version = "0.5.0", features = ["getrandom"] }
@@ -20,4 +17,5 @@ name = "cto_parallel_test"
 path = "src/lib.rs"
 
 [dev-dependencies]
+rust_decimal_macros = "1.30"
 serde_json = "1.0"

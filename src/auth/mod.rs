@@ -1,9 +1,13 @@
-#[allow(dead_code, unused_imports)]
+//! # Authentication Module
+//!
+//! This module provides secure user authentication functionality including:
+//! - JWT token creation and validation with 24-hour expiration
+//! - Argon2 password hashing with random salt
+//! - User model with password verification
+//! - Authentication request/response DTOs
+
 pub mod jwt;
-#[allow(dead_code, unused_imports)]
 pub mod models;
 
-#[allow(unused_imports)]
-pub use self::jwt::{create_token, validate_token};
-#[allow(unused_imports)]
+pub use self::jwt::{create_token, validate_token, Claims};
 pub use self::models::User;

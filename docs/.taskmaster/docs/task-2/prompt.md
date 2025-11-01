@@ -1,106 +1,246 @@
-# Task 2: API Endpoints - Agent Prompt
+# Autonomous Agent Prompt: API Endpoints Setup
 
-You are a Rust backend developer tasked with creating the REST API endpoint structure using Actix-web.
+## Mission
+Set up the REST API routing infrastructure using Actix-web framework, creating the HTTP server and route structure for an e-commerce application.
 
-## Your Mission
-Set up the HTTP server and routing infrastructure for a test e-commerce API. Create modular routing with a health check endpoint and placeholders for user and product routes that will be implemented by other tasks.
+## Goal
+Create a working HTTP server with:
+- Health check endpoint
+- Route scopes for authentication, users, products, and cart
+- Error handling infrastructure
+- Placeholder endpoints for future implementation
+- Logging middleware
 
-## What You Must Create
+## Prerequisites
+- Task 1 (Database Schema) must be complete
+- `src/schema.rs` must exist
+- PostgreSQL running (for full integration)
 
-### 1. Update `Cargo.toml`
-Add these dependencies to the `[dependencies]` section (Task 1 already added database deps):
+## Step-by-Step Instructions
+
+### 1. Add Actix-web Dependencies
+Update `Cargo.toml` `[dependencies]` section:
 ```toml
 actix-web = "4.3.1"
+actix-rt = "2.8"
+tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+env_logger = "0.10"
+log = "0.4"
 ```
 
-### 2. Create `src/api/mod.rs`
-Simple module export:
+Verify: `cargo check`
+
+### 2. Create API Module Structure
+Create `src/api/mod.rs`:
 ```rust
 pub mod routes;
+pub mod errors;
+
+pub use routes::configure_routes;
+pub use errors::ApiError;
 ```
 
-### 3. Create `src/api/routes.rs`
-Implement complete routing structure with:
-- `configure_routes(cfg: &mut web::ServiceConfig)` function
-- `/api` scope with nested `/users` and `/products` scopes
-- `health_check()` async handler returning JSON `{"status": "ok"}`
-- `user_routes()` placeholder returning NotImplemented
-- `product_routes()` placeholder returning NotImplemented
-- Import `crate::schema` to validate Task 1 dependency
+### 3. Implement Error Handling
+Create `src/api/errors.rs` with an ApiError enum that implements `ResponseError` trait. Include variants for:
+- NotFound
+- BadRequest
+- InternalError
+- Unauthorized
 
-### 4. Create/Update `src/main.rs`
-Implement server startup:
-- Use `#[actix_web::main]` macro
-- Import `api` and `schema` modules
-- Create `HttpServer` binding to `127.0.0.1:8080`
-- Configure with `api::routes::configure_routes`
-- Return `std::io::Result<()>`
+Each variant should return appropriate HTTP status codes and JSON error responses.
 
-## Key Requirements
+### 4. Configure Routes
+Create `src/api/routes.rs`:
+```rust
+use actix_web::{web, HttpResponse, Responder};
 
-✅ **Routing Structure**:
-- Base scope: `/api`
-- Nested scopes: `/api/users`, `/api/products`
-- Direct endpoint: `/api/health`
+pub fn configure_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        web::scope("/api")
+            .route("/health", web::get().to(health_check))
+            .service(web::scope("/auth").configure(auth_routes))
+            .service(web::scope("/users").configure(user_routes))
+            .service(web::scope("/products").configure(product_routes))
+            .service(web::scope("/cart").configure(cart_routes))
+    );
+}
 
-✅ **Health Check**:
-- HTTP GET method
-- Returns 200 OK
-- JSON body: `{"status": "ok"}`
+async fn health_check() -> impl Responder {
+    HttpResponse::Ok().json(serde_json::json!({
+        "status": "ok",
+        "version": env!("CARGO_PKG_VERSION")
+    }))
+}
 
-✅ **Placeholder Routes**:
-- User and product routes return 501 Not Implemented
-- Use `HttpResponse::NotImplemented()`
-- Can be empty endpoints (just for structure)
+fn auth_routes(cfg: &mut web::ServiceConfig) {
+    cfg.route("/register", web::post().to(not_implemented))
+       .route("/login", web::post().to(not_implemented));
+}
 
-✅ **Dependencies**:
-- Must import `schema` module from Task 1
-- Server must compile after Task 1 completes
+fn user_routes(cfg: &mut web::ServiceConfig) {
+    cfg.route("", web::get().to(not_implemented));
+}
 
-## Constraints
-- This is a **Level 1** task depending on Task 1
-- Also modifies `Cargo.toml` (like Task 1) - use standard formatting
-- Keep implementations simple - this is a test project
-- Placeholder routes are intentional - other tasks will implement
+fn product_routes(cfg: &mut web::ServiceConfig) {
+    cfg.route("", web::get().to(not_implemented))
+       .route("/{id}", web::get().to(not_implemented));
+}
 
-## Validation
-After completing the work:
-1. Verify all files exist at specified paths
-2. Run `cargo check` to ensure compilation
-3. Run `cargo run` to start server (if Task 1 complete)
-4. Test health endpoint: `curl http://localhost:8080/api/health`
-5. Verify placeholder routes exist but return 501
+fn cart_routes(cfg: &mut web::ServiceConfig) {
+    cfg.route("", web::get().to(not_implemented))
+       .route("/add", web::post().to(not_implemented))
+       .route("/remove/{product_id}", web::delete().to(not_implemented))
+       .route("/clear", web::post().to(not_implemented));
+}
 
-## Success Definition
-Task is complete when:
-- `src/api/mod.rs` and `src/api/routes.rs` exist
-- `src/main.rs` is properly configured
-- `Cargo.toml` includes all required dependencies
-- Server starts and binds to port 8080
-- Health check returns correct JSON response
-- Code compiles with schema import from Task 1
+async fn not_implemented() -> impl Responder {
+    HttpResponse::NotImplemented().json(serde_json::json!({
+        "error": "not_implemented",
+        "message": "This endpoint will be implemented in a later task"
+    }))
+}
+```
 
-## Context
-You're working on a parallel task execution test.
+### 5. Set Up HTTP Server
+Update `src/main.rs`:
+```rust
+use actix_web::{middleware::Logger, App, HttpServer};
+use env_logger::Env;
 
-**Your dependencies**:
-- Task 1: Database Schema (must complete before you finish)
+mod api;
+mod config;
+mod models;
+mod schema;
 
-**Tasks depending on you**:
-- Task 5: Shopping Cart API (needs your route structure)
-- Task 7: Integration Tests (will test your endpoints)
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
 
-**Parallel to you (Level 1)**:
-- Task 5: Shopping Cart API (also Level 1, different dependencies)
+    println!("🚀 Starting API server on http://127.0.0.1:8080");
 
-**Your work enables**:
-- Task 3 to add authentication routes
-- Task 4 to add product routes
-- Task 5 to add cart routes
-- Task 7 to test all endpoints
+    HttpServer::new(|| {
+        App::new()
+            .wrap(Logger::default())
+            .configure(api::configure_routes)
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
+}
+```
 
----
+### 6. Test the Server
+Start the server:
+```bash
+cargo run
+```
 
-**Start working now. Create the files, write the code, and verify the server starts correctly.**
+In another terminal, test endpoints:
+```bash
+# Health check (should return 200)
+curl http://localhost:8080/api/health
+
+# Placeholder endpoint (should return 501)
+curl http://localhost:8080/api/products
+
+# Non-existent route (should return 404)
+curl http://localhost:8080/api/invalid
+```
+
+### 7. Create Integration Test
+Create `tests/api_routes_test.rs`:
+```rust
+use actix_web::{test, App};
+
+#[actix_web::test]
+async fn test_health_check() {
+    let app = test::init_service(
+        App::new().configure(your_crate::api::configure_routes)
+    ).await;
+
+    let req = test::TestRequest::get()
+        .uri("/api/health")
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+
+    let body = test::read_body(resp).await;
+    let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    assert_eq!(json["status"], "ok");
+}
+
+#[actix_web::test]
+async fn test_not_implemented_endpoints() {
+    let app = test::init_service(
+        App::new().configure(your_crate::api::configure_routes)
+    ).await;
+
+    let req = test::TestRequest::get()
+        .uri("/api/products")
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 501); // Not Implemented
+}
+```
+
+Run tests: `cargo test`
+
+## Success Criteria
+You have succeeded when:
+- [ ] Server starts without errors
+- [ ] Health check returns 200 OK with JSON `{"status":"ok"}`
+- [ ] All placeholder endpoints return 501 Not Implemented
+- [ ] Non-existent routes return 404
+- [ ] Logger middleware prints request logs
+- [ ] `cargo check` passes
+- [ ] `cargo test` passes
+- [ ] Error responses follow consistent JSON format
+
+## Error Handling
+- **Port already in use**: Change port or stop conflicting process
+- **Module not found**: Ensure Task 1 files exist (schema.rs, models.rs, config/)
+- **Compilation errors**: Check Actix-web version (4.3.1)
+
+## Route Structure
+```
+/api
+├── /health (GET) - Health check
+├── /auth
+│   ├── /register (POST) - User registration (Task 3)
+│   └── /login (POST) - User login (Task 3)
+├── /users (GET) - User management (Task 3)
+├── /products
+│   ├── / (GET) - List products (Task 4)
+│   └── /{id} (GET) - Get product (Task 4)
+└── /cart
+    ├── / (GET) - Get cart (Task 5)
+    ├── /add (POST) - Add to cart (Task 5)
+    ├── /remove/{product_id} (DELETE) - Remove from cart (Task 5)
+    └── /clear (POST) - Clear cart (Task 5)
+```
+
+## Key Patterns
+- Use `web::scope()` for grouping related routes
+- Return `impl Responder` for async handlers
+- Use `serde_json::json!` macro for JSON responses
+- Implement `ResponseError` trait for custom errors
+- Use middleware for cross-cutting concerns (logging, CORS)
+
+## Resources
+- Actix-web docs: https://actix.rs/docs/
+- Architecture: `.taskmaster/docs/architecture.md`
+
+## Time Estimate
+50 minutes for experienced Rust/Actix-web developer.
+
+## Deliverables
+1. `src/api/mod.rs` - Module exports
+2. `src/api/routes.rs` - Route configuration
+3. `src/api/errors.rs` - Error handling
+4. `src/main.rs` - HTTP server
+5. `tests/api_routes_test.rs` - Integration tests
+6. Updated `Cargo.toml` - Dependencies

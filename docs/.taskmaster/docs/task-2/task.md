@@ -1,128 +1,190 @@
 # Task 2: API Endpoints
 
 ## Overview
-Create REST API endpoints for core operations of the application using Actix-web framework. This is a Level 1 task that depends on Task 1 (Database Schema) and provides the HTTP interface layer for the application.
+Establish the REST API routing infrastructure using Actix-web, creating the HTTP layer that connects clients to business logic.
 
 ## Context
-This task establishes the web server and routing infrastructure for the e-commerce test API. It creates the foundation that other modules (authentication, catalog, cart) will build upon by registering their route handlers.
+This is a **Level 1 task** that depends on Task 1 (Database Schema). It sets up the API server and routing structure that will be populated by subsequent tasks with actual endpoint implementations.
 
 ## Objectives
 1. Set up Actix-web HTTP server
-2. Create modular routing structure
+2. Configure route structure with scopes
 3. Implement health check endpoint
-4. Define placeholder route configurations for users and products
-5. Configure the main application entry point
+4. Create placeholder route configurations for future endpoints
+5. Establish error handling patterns
+6. Configure CORS and middleware (if needed)
 
 ## Dependencies
-- **Task 1: Database Schema Setup** - Required to import schema definitions
+- **Task 1:** Database Schema Setup (requires schema.rs to be available)
 
-## Blocked By
-None initially, but needs Task 1's schema.rs to complete successfully.
-
-## Files to Create/Modify
-- `src/api/mod.rs` - API module exports
-- `src/api/routes.rs` - Route definitions and configuration
-- `src/main.rs` - Application entry point and server setup
-- `Cargo.toml` - Add Actix-web dependencies
-
-## Technical Specifications
-
-### Web Framework
-- **Framework**: Actix-web 4.3.1
-- **Serialization**: Serde 1.0 with derive feature
-- **JSON**: serde_json 1.0
-- **Server**: Asynchronous HTTP server on 127.0.0.1:8080
-
-### Architecture Pattern
-- **Modular routing**: Separate modules for different API domains
-- **Scope-based organization**: `/api` base scope with nested scopes
-- **Configuration pattern**: ServiceConfig-based route registration
-- **Async runtime**: Actix-web's built-in async runtime
-
-### API Structure
-```
-/api
-├── /health (GET) - Health check endpoint
-├── /users/* - User-related endpoints (placeholder)
-└── /products/* - Product-related endpoints (placeholder)
-```
+## Architecture Context
+Refer to `.taskmaster/docs/architecture.md` sections:
+- **API Endpoints** (lines 373-395): Complete endpoint listing
+- **Backend Architecture** (lines 73-105): Module structure
+- **High-Level Architecture** (lines 32-71): System overview
 
 ## Implementation Plan
 
-### Step 1: Update Cargo.toml
-Add web framework dependencies:
-
+### Step 1: Add Actix-web Dependencies
+Update `Cargo.toml`:
 ```toml
 [dependencies]
 actix-web = "4.3.1"
+actix-rt = "2.8"
+tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 ```
 
-**Note**: Task 1 already added database dependencies. Ensure no conflicts.
+**Validation:** Run `cargo check`
 
-### Step 2: Create API Module (src/api/mod.rs)
-Simple module export file:
-
+### Step 2: Create API Module Structure
+Create `src/api/mod.rs`:
 ```rust
 pub mod routes;
+pub mod errors;
+
+pub use routes::configure_routes;
+pub use errors::ApiError;
 ```
 
-This establishes the API module namespace and exports the routes submodule.
-
-### Step 3: Create Route Configuration (src/api/routes.rs)
-Implement the core routing logic:
-
+### Step 3: Implement Error Handling
+Create `src/api/errors.rs`:
 ```rust
-use actix_web::{web, HttpResponse, Scope};
-use crate::schema;
+use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
+use std::fmt;
+
+#[derive(Debug)]
+pub enum ApiError {
+    NotFound(String),
+    BadRequest(String),
+    InternalError(String),
+    Unauthorized(String),
+}
+
+impl fmt::Display for ApiError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ApiError::NotFound(msg) => write!(f, "Not Found: {}", msg),
+            ApiError::BadRequest(msg) => write!(f, "Bad Request: {}", msg),
+            ApiError::InternalError(msg) => write!(f, "Internal Error: {}", msg),
+            ApiError::Unauthorized(msg) => write!(f, "Unauthorized: {}", msg),
+        }
+    }
+}
+
+impl ResponseError for ApiError {
+    fn error_response(&self) -> HttpResponse {
+        match self {
+            ApiError::NotFound(msg) => HttpResponse::NotFound().json(serde_json::json!({
+                "error": "not_found",
+                "message": msg
+            })),
+            ApiError::BadRequest(msg) => HttpResponse::BadRequest().json(serde_json::json!({
+                "error": "bad_request",
+                "message": msg
+            })),
+            ApiError::InternalError(msg) => HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "internal_error",
+                "message": msg
+            })),
+            ApiError::Unauthorized(msg) => HttpResponse::Unauthorized().json(serde_json::json!({
+                "error": "unauthorized",
+                "message": msg
+            })),
+        }
+    }
+
+    fn status_code(&self) -> StatusCode {
+        match self {
+            ApiError::NotFound(_) => StatusCode::NOT_FOUND,
+            ApiError::BadRequest(_) => StatusCode::BAD_REQUEST,
+            ApiError::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+        }
+    }
+}
+```
+
+### Step 4: Create Route Configuration
+Create `src/api/routes.rs`:
+```rust
+use actix_web::{web, HttpResponse, Responder};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/api")
-            .service(health_check)
+            .route("/health", web::get().to(health_check))
+            .service(web::scope("/auth").configure(auth_routes))
             .service(web::scope("/users").configure(user_routes))
             .service(web::scope("/products").configure(product_routes))
+            .service(web::scope("/cart").configure(cart_routes))
     );
 }
 
-#[actix_web::get("/health")]
-async fn health_check() -> HttpResponse {
-    HttpResponse::Ok().json(serde_json::json!({"status": "ok"}))
+async fn health_check() -> impl Responder {
+    HttpResponse::Ok().json(serde_json::json!({
+        "status": "ok",
+        "version": env!("CARGO_PKG_VERSION")
+    }))
+}
+
+// Placeholder configurations - to be implemented in later tasks
+fn auth_routes(cfg: &mut web::ServiceConfig) {
+    // Task 3: Authentication endpoints
+    cfg.route("/register", web::post().to(not_implemented))
+       .route("/login", web::post().to(not_implemented));
 }
 
 fn user_routes(cfg: &mut web::ServiceConfig) {
-    // Placeholder - Task 3 will implement
-    cfg.service(web::resource("").route(web::get().to(|| HttpResponse::NotImplemented())));
+    // Task 3: User management endpoints
+    cfg.route("", web::get().to(not_implemented));
 }
 
 fn product_routes(cfg: &mut web::ServiceConfig) {
-    // Placeholder - Task 4 will implement
-    cfg.service(web::resource("").route(web::get().to(|| HttpResponse::NotImplemented())));
+    // Task 4: Product catalog endpoints
+    cfg.route("", web::get().to(not_implemented))
+       .route("/{id}", web::get().to(not_implemented));
+}
+
+fn cart_routes(cfg: &mut web::ServiceConfig) {
+    // Task 5: Shopping cart endpoints
+    cfg.route("", web::get().to(not_implemented))
+       .route("/add", web::post().to(not_implemented))
+       .route("/remove/{product_id}", web::delete().to(not_implemented))
+       .route("/clear", web::post().to(not_implemented));
+}
+
+async fn not_implemented() -> impl Responder {
+    HttpResponse::NotImplemented().json(serde_json::json!({
+        "error": "not_implemented",
+        "message": "This endpoint will be implemented in a later task"
+    }))
 }
 ```
 
-**Key Design Decisions**:
-- `configure_routes` accepts `ServiceConfig` for modular composition
-- Health check uses Actix-web's macro routing (`#[actix_web::get]`)
-- Placeholder routes return 501 Not Implemented
-- Import schema to validate Task 1 dependency
-
-### Step 4: Create Main Application (src/main.rs)
-Set up the HTTP server:
-
+### Step 5: Set Up Main Application
+Update `src/main.rs`:
 ```rust
-use actix_web::{App, HttpServer};
+use actix_web::{middleware::Logger, App, HttpServer};
+use env_logger::Env;
+
 mod api;
+mod config;
+mod models;
 mod schema;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    println!("Starting API server");
+    // Initialize logger
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
+
+    println!("🚀 Starting API server on http://127.0.0.1:8080");
 
     HttpServer::new(|| {
         App::new()
-            .configure(api::routes::configure_routes)
+            .wrap(Logger::default())
+            .configure(api::configure_routes)
     })
     .bind("127.0.0.1:8080")?
     .run()
@@ -130,79 +192,89 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
-**Key Features**:
-- Uses `#[actix_web::main]` macro for async runtime
-- Imports both `api` and `schema` modules
-- Single app instance with route configuration
-- Binds to localhost port 8080
-- Returns IO errors for proper error propagation
-
-### Step 5: Verify Dependencies Resolution
-After all file changes:
-
-```bash
-cargo check
-cargo tree
+### Step 6: Add Logging Support
+Update `Cargo.toml`:
+```toml
+[dependencies]
+env_logger = "0.10"
+log = "0.4"
 ```
 
-Ensure no dependency conflicts between Task 1's database deps and Task 2's web deps.
+## Testing Strategy
 
-## Architectural Considerations
+### Manual Testing
+```bash
+# Start the server
+cargo run
 
-### Modularity
-The routing structure is designed for extension:
-- Each domain (users, products, cart) gets its own scope
-- Route configuration is delegated to domain-specific functions
-- Future tasks can implement actual handlers in separate modules
+# Test health check
+curl http://localhost:8080/api/health
 
-### Async Design
-- All handlers are `async fn`
-- Actix-web provides actor-based concurrency
-- Non-blocking I/O for database and external services
+# Expected response:
+# {"status":"ok","version":"0.1.0"}
 
-### Error Handling
-- Server startup errors propagate via `std::io::Result`
-- Route handlers will implement proper error responses
-- Health check always succeeds (for monitoring)
+# Test not-implemented endpoints
+curl http://localhost:8080/api/products
+# Expected: 501 Not Implemented
 
-### Conflict Points
-This task modifies `Cargo.toml`, which Task 1 also modified. The orchestrator must merge:
-- Task 1's database dependencies
-- Task 2's web framework dependencies
+# Test 404 handling
+curl http://localhost:8080/api/nonexistent
+# Expected: 404 Not Found
+```
 
-Both sets are independent and should merge cleanly.
+### Integration Tests
+Create `tests/api_routes_test.rs`:
+```rust
+#[cfg(test)]
+mod tests {
+    use actix_web::{test, App};
+
+    #[actix_web::test]
+    async fn test_health_check() {
+        let app = test::init_service(
+            App::new().configure(crate::api::configure_routes)
+        ).await;
+
+        let req = test::TestRequest::get()
+            .uri("/api/health")
+            .to_request();
+
+        let resp = test::call_service(&app, req).await;
+        assert!(resp.status().is_success());
+    }
+}
+```
 
 ## Risks and Considerations
-
-1. **Cargo.toml Conflicts**: Both Task 1 and Task 2 modify this file. Git merge should handle cleanly since different dependencies are added.
-
-2. **Schema Import**: The `use crate::schema;` line validates that Task 1 completed. Without it, compilation fails.
-
-3. **Placeholder Routes**: The NotImplemented responses are intentional. Tasks 3, 4, and 5 will replace these.
-
-4. **Port Binding**: Port 8080 must be available. In a real deployment, this would be configurable.
-
-## Testing Strategy
-See `acceptance-criteria.md` for detailed validation steps.
+- **Port Binding:** Ensure port 8080 is available
+- **Module Dependencies:** Task 1 must be complete before this task
+- **Placeholder Routes:** Return 501 (Not Implemented) to clearly indicate future work
+- **Error Handling:** Establish patterns early for consistency
+- **CORS:** May need CORS middleware for frontend integration (Task 6)
 
 ## Success Criteria
-- HTTP server starts without errors
-- Health check endpoint responds with 200 OK
-- Placeholder routes return 501 Not Implemented
-- Code compiles with Task 1's schema
-- Dependencies resolve without conflicts
+- [ ] Actix-web dependencies added to Cargo.toml
+- [ ] `src/api/mod.rs` exports routes and errors
+- [ ] `src/api/errors.rs` defines ApiError enum with ResponseError trait
+- [ ] `src/api/routes.rs` configures all route scopes
+- [ ] Health check endpoint returns 200 OK with JSON
+- [ ] Placeholder routes return 501 Not Implemented
+- [ ] Server starts without errors on port 8080
+- [ ] `cargo check` and `cargo build` succeed
+- [ ] Logger middleware configured
+- [ ] Route structure matches architecture document
 
-## Related Tasks
-- **Task 1**: Database Schema (dependency - must complete first)
-- **Task 3**: User Authentication (will implement user_routes)
-- **Task 4**: Product Catalog (will implement product_routes)
-- **Task 5**: Shopping Cart (will add cart routes)
-- **Task 7**: Integration Tests (will test these endpoints)
+## Files Modified/Created
+- `Cargo.toml` - Add actix-web and logging dependencies
+- `src/api/mod.rs` - API module exports
+- `src/api/routes.rs` - Route configuration
+- `src/api/errors.rs` - Error handling
+- `src/main.rs` - HTTP server setup
+- `tests/api_routes_test.rs` - Integration tests
 
-## Diagram
-See `diagrams.mmd` for visual representation of the routing structure.
-
-## References
-- [Actix-web Documentation](https://actix.rs/)
-- [Actix-web Routing](https://actix.rs/docs/url-dispatch/)
-- Project PRD: `.taskmaster/docs/prd.txt`
+## Next Steps
+This routing infrastructure will be populated by:
+- **Task 3:** Authentication endpoints (/api/auth/*)
+- **Task 4:** Product catalog endpoints (/api/products/*)
+- **Task 5:** Shopping cart endpoints (/api/cart/*)
+- **Task 6:** Frontend will consume these APIs

@@ -116,7 +116,7 @@ YAML_CHANGES=\\\$(git diff --name-only origin/main...HEAD | grep -E '\\\.(yaml|y
 - **Source Branch**: main
 - **GitHub App**: 5DLabs-Cleo
 - **Working Directory**: .
-- **Implementation Target**: task 1
+- **Implementation Target**: task 4
 
 ## Allowed Environment Variables
 
@@ -137,7 +137,9 @@ These are the environment variable NAMES available to the agent. Values are neve
   - QA_READY
   - RUN_NAME
   - SERVICE_NAME
+  - TASK_FRAMEWORK
   - TASK_ID
+  - TASK_LANGUAGE
   - WORKFLOW_NAME
   - WORKFLOW_STAGE
 
@@ -222,7 +224,7 @@ You may NOT create a PR until ALL of the following succeed locally:
 
 ## Current Task Documentation
 
-**Your current task (1) documentation:**
+**Your current task (4) documentation:**
 - See @task/task.md for requirements and description
 - See @task/acceptance-criteria.md for success criteria
 - See @task/architecture.md for technical approach and guidance
@@ -243,7 +245,7 @@ See @.taskmaster/docs/architecture.md for system design patterns and architectur
 6. **Test**: Verify all acceptance criteria are met
 
 ### Task Context
-- **Task ID**: 1
+- **Task ID**: 4
 - **Repository**: 5dlabs/cto-parallel-test
 - **Branch**: main
 - **Working Directory**: .
@@ -272,7 +274,7 @@ cargo build --workspace --all-features
 ### Git Workflow
 ```bash
 # Commit with task-specific message (see @github-guidelines.md for details)
-git commit -m "feat(task-1): implement [brief description]
+git commit -m "feat(task-4): implement [brief description]
 
 - [specific changes made]
 - [tests added/updated]
@@ -284,7 +286,7 @@ git commit -m "feat(task-1): implement [brief description]
 **CRITICAL**: After completing implementation, you MUST create a pull request using GitHub CLI:
 
 ```bash
-gh pr create --title "feat(task-1): [brief description]" \
+gh pr create --title "feat(task-4): [brief description]" \
              --body "[detailed PR description with changes, testing, and notes]"
 ```
 
@@ -292,7 +294,7 @@ gh pr create --title "feat(task-1): [brief description]" \
 
 **IMPORTANT PR HANDLING**:
 - Always check if a PR already exists for this task before creating a new one
-- Use `gh pr list --state all --label "task-1"` to find existing PRs for your task
+- Use `gh pr list --state all --label "task-4"` to find existing PRs for your task
 - If a PR exists and is OPEN: continue working on the existing PR (push more commits)
 - If a PR exists and is MERGED: the task is complete - do NOT create a new PR
 - If a PR exists and is CLOSED (not merged): create a new PR with `gh pr create`
