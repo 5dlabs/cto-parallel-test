@@ -184,11 +184,6 @@ mod tests {
         };
         let token = create_token_with_clock(123, &mock_clock).expect("Token creation failed");
         let result = validate_token(&token);
-
-        if let Err(ref e) = result {
-            eprintln!("Token validation failed: {e}");
-        }
-
         assert!(result.is_ok(), "Token validation should succeed");
         let claims = result.unwrap();
         assert_eq!(claims.sub, "123");
