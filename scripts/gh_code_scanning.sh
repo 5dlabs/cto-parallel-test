@@ -38,7 +38,8 @@ if ! gh auth status -t >/dev/null 2>&1; then
   echo "[error] gh is not authenticated. Provide a token with security_events scope." >&2
   echo "        Export GITHUB_TOKEN and login:" >&2
   echo "        export GITHUB_TOKEN=\"<token-with-security_events>\"" >&2
-  echo "        gh auth login --with-token <<< \"$GITHUB_TOKEN\"" >&2
+  # Do not reference $GITHUB_TOKEN directly to avoid unbound-var errors and accidental disclosure.
+  echo '        gh auth login --with-token <<< "$GITHUB_TOKEN"' >&2
   exit 2
 fi
 
