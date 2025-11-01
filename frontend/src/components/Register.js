@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -9,17 +9,22 @@ import {
   Paper,
   Link,
   Grid,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import { authAPI } from '../services/api';
 
 function Register() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     setFormData({
@@ -28,9 +33,40 @@ function Register() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Register submitted:', formData);
+    setError(null);
+
+    // Validate password match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    // Validate password length
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await authAPI.register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      // Registration successful - redirect to login
+      alert('Registration successful! Please log in.');
+      navigate('/login');
+    } catch (err) {
+      console.error('Registration failed:', err);
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,33 +81,25 @@ function Register() {
             Create a new account to start shopping
           </Typography>
 
+          {error && (
+            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, width: '100%' }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="First Name"
-                  name="firstName"
-                  variant="outlined"
-                  required
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  autoComplete="given-name"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Last Name"
-                  name="lastName"
-                  variant="outlined"
-                  required
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  autoComplete="family-name"
-                />
-              </Grid>
-            </Grid>
+            <TextField
+              fullWidth
+              label="Username"
+              name="username"
+              variant="outlined"
+              margin="normal"
+              required
+              value={formData.username}
+              onChange={handleChange}
+              autoComplete="username"
+              disabled={loading}
+            />
             <TextField
               fullWidth
               label="Email Address"
@@ -83,6 +111,7 @@ function Register() {
               value={formData.email}
               onChange={handleChange}
               autoComplete="email"
+              disabled={loading}
             />
             <TextField
               fullWidth
@@ -95,6 +124,8 @@ function Register() {
               value={formData.password}
               onChange={handleChange}
               autoComplete="new-password"
+              disabled={loading}
+              helperText="Minimum 6 characters"
             />
             <TextField
               fullWidth
@@ -107,6 +138,7 @@ function Register() {
               value={formData.confirmPassword}
               onChange={handleChange}
               autoComplete="new-password"
+              disabled={loading}
             />
             <Button
               type="submit"
@@ -114,8 +146,9 @@ function Register() {
               variant="contained"
               size="large"
               sx={{ mt: 3, mb: 2 }}
+              disabled={loading}
             >
-              Sign Up
+              {loading ? <CircularProgress size={24} /> : 'Sign Up'}
             </Button>
             <Box sx={{ textAlign: 'center' }}>
               <Typography variant="body2">

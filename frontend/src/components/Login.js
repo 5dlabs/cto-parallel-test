@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -8,16 +8,42 @@ import {
   Box,
   Paper,
   Link,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
+import { authAPI } from '../services/api';
 
 function Login() {
-  const [email, setEmail] = useState('');
+  const navigate = useNavigate();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login submitted:', { email, password });
+    setError(null);
+    setLoading(true);
+
+    try {
+      const response = await authAPI.login(username, password);
+
+      // Store token and user info
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify({
+        id: response.data.user_id,
+        username: response.data.username,
+      }));
+
+      // Redirect to products page
+      navigate('/products');
+    } catch (err) {
+      console.error('Login failed:', err);
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,17 +58,24 @@ function Login() {
             Enter your credentials to access your account
           </Typography>
 
+          {error && (
+            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, width: '100%' }}>
             <TextField
               fullWidth
-              label="Email Address"
-              type="email"
+              label="Username"
+              type="text"
               variant="outlined"
               margin="normal"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
+              disabled={loading}
             />
             <TextField
               fullWidth
@@ -54,6 +87,7 @@ function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
+              disabled={loading}
             />
             <Button
               type="submit"
@@ -61,8 +95,9 @@ function Login() {
               variant="contained"
               size="large"
               sx={{ mt: 3, mb: 2 }}
+              disabled={loading}
             >
-              Sign In
+              {loading ? <CircularProgress size={24} /> : 'Sign In'}
             </Button>
             <Box sx={{ textAlign: 'center' }}>
               <Typography variant="body2">
