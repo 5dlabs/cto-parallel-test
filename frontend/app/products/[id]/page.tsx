@@ -1,63 +1,110 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, ShoppingCart, Heart, Share2 } from 'lucide-react';
 
-// Mock product data - in production this would come from an API
-const mockProducts = [
-  {
-    id: 1,
-    name: 'Wireless Headphones',
-    price: 79.99,
-    category: 'Electronics',
-    description: 'High-quality wireless headphones with advanced noise cancellation technology. Perfect for music lovers and professionals who need focus in noisy environments.',
-    features: [
-      'Active Noise Cancellation',
-      '30-hour battery life',
-      'Bluetooth 5.0',
-      'Comfortable over-ear design',
-      'Built-in microphone for calls',
-    ],
-    inStock: true,
-    rating: 4.5,
-    reviews: 234,
-  },
-  {
-    id: 2,
-    name: 'Smart Watch',
-    price: 199.99,
-    category: 'Electronics',
-    description: 'Feature-rich smartwatch with comprehensive fitness tracking, heart rate monitoring, and smartphone notifications.',
-    features: [
-      'Heart rate monitoring',
-      'GPS tracking',
-      'Water resistant',
-      'Sleep tracking',
-      '7-day battery life',
-    ],
-    inStock: true,
-    rating: 4.7,
-    reviews: 567,
-  },
-  // Add more products as needed
-];
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  category?: string;
+  description?: string;
+  inventory_count: number;
+}
+
+async function fetchProduct(id: number): Promise<Product | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/products/${id}`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch product:', error);
+    return null;
+  }
+}
+
+async function addToCart(productId: number, quantity: number): Promise<boolean> {
+  try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const response = await fetch(`${API_BASE_URL}/cart/add`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      body: JSON.stringify({ product_id: productId, quantity }),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to add to cart:', error);
+    return false;
+  }
+}
 
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const productId = parseInt(params.id as string);
-  
-  // Find product by ID
-  const product = mockProducts.find(p => p.id === productId) || mockProducts[0];
 
-  const handleAddToCart = () => {
-    // In production, this would add to cart state/context
-    alert(`Added ${product.name} to cart!`);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchProduct(productId)
+      .then(data => {
+        setProduct(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [productId]);
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    const success = await addToCart(product.id, 1);
+    if (success) {
+      alert(`Added ${product.name} to cart!`);
+    } else {
+      alert('Failed to add to cart. Please login first.');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="container px-4 py-8 md:px-8">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <p className="text-lg text-muted-foreground">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="container px-4 py-8 md:px-8">
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+          <p className="text-xl font-semibold mb-2 text-destructive">Product not found</p>
+          <p className="text-muted-foreground mb-4">{error || 'This product does not exist'}</p>
+          <Button onClick={() => router.push('/products')}>Back to Products</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const inStock = product.inventory_count > 0;
 
   return (
     <div className="container px-4 py-8 md:px-8">
@@ -82,7 +129,7 @@ export default function ProductDetailPage() {
               </div>
             </div>
           </Card>
-          
+
           {/* Thumbnail Gallery (placeholder) */}
           <div className="grid grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
@@ -99,20 +146,13 @@ export default function ProductDetailPage() {
         <div className="space-y-6">
           {/* Title and Category */}
           <div className="space-y-2">
-            <Badge variant="secondary">{product.category}</Badge>
+            {product.category && <Badge variant="secondary">{product.category}</Badge>}
             <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
               {product.name}
             </h1>
             <div className="flex items-center gap-4">
-              <div className="flex items-center">
-                <span className="text-yellow-500">★</span>
-                <span className="ml-1 text-sm font-medium">{product.rating}</span>
-                <span className="ml-1 text-sm text-muted-foreground">
-                  ({product.reviews} reviews)
-                </span>
-              </div>
-              {product.inStock ? (
-                <Badge variant="default" className="bg-green-500">In Stock</Badge>
+              {inStock ? (
+                <Badge variant="default" className="bg-green-500">In Stock ({product.inventory_count} available)</Badge>
               ) : (
                 <Badge variant="destructive">Out of Stock</Badge>
               )}
@@ -127,25 +167,14 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold">Description</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              {product.description}
-            </p>
-          </div>
-
-          {/* Features */}
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold">Key Features</h2>
-            <ul className="space-y-2">
-              {product.features.map((feature, index) => (
-                <li key={index} className="flex items-start">
-                  <span className="mr-2 text-primary">✓</span>
-                  <span className="text-muted-foreground">{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {product.description && (
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold">Description</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                {product.description}
+              </p>
+            </div>
+          )}
 
           <Separator />
 
@@ -156,10 +185,10 @@ export default function ProductDetailPage() {
                 className="flex-1"
                 size="lg"
                 onClick={handleAddToCart}
-                disabled={!product.inStock}
+                disabled={!inStock}
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />
-                {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                {inStock ? 'Add to Cart' : 'Out of Stock'}
               </Button>
               <Button variant="outline" size="lg">
                 <Heart className="h-5 w-5" />
@@ -168,7 +197,7 @@ export default function ProductDetailPage() {
                 <Share2 className="h-5 w-5" />
               </Button>
             </div>
-            
+
             <Card className="bg-primary/5">
               <CardContent className="p-4">
                 <div className="grid grid-cols-3 gap-4 text-center text-sm">

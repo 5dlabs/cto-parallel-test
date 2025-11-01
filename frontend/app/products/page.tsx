@@ -1,85 +1,75 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-// Mock product data - in production this would come from an API
-const products = [
-  {
-    id: 1,
-    name: 'Wireless Headphones',
-    price: 79.99,
-    category: 'Electronics',
-    image: '/placeholder-product.jpg',
-    description: 'High-quality wireless headphones with noise cancellation',
-    inStock: true,
-  },
-  {
-    id: 2,
-    name: 'Smart Watch',
-    price: 199.99,
-    category: 'Electronics',
-    image: '/placeholder-product.jpg',
-    description: 'Feature-rich smartwatch with fitness tracking',
-    inStock: true,
-  },
-  {
-    id: 3,
-    name: 'Laptop Backpack',
-    price: 49.99,
-    category: 'Accessories',
-    image: '/placeholder-product.jpg',
-    description: 'Durable backpack with padded laptop compartment',
-    inStock: true,
-  },
-  {
-    id: 4,
-    name: 'Mechanical Keyboard',
-    price: 129.99,
-    category: 'Electronics',
-    image: '/placeholder-product.jpg',
-    description: 'Premium mechanical keyboard with RGB lighting',
-    inStock: false,
-  },
-  {
-    id: 5,
-    name: 'Portable Charger',
-    price: 34.99,
-    category: 'Electronics',
-    image: '/placeholder-product.jpg',
-    description: '20000mAh power bank with fast charging',
-    inStock: true,
-  },
-  {
-    id: 6,
-    name: 'USB-C Hub',
-    price: 59.99,
-    category: 'Accessories',
-    image: '/placeholder-product.jpg',
-    description: 'Multi-port USB-C hub with HDMI and Ethernet',
-    inStock: true,
-  },
-  {
-    id: 7,
-    name: 'Wireless Mouse',
-    price: 39.99,
-    category: 'Electronics',
-    image: '/placeholder-product.jpg',
-    description: 'Ergonomic wireless mouse with precision tracking',
-    inStock: true,
-  },
-  {
-    id: 8,
-    name: 'Phone Stand',
-    price: 24.99,
-    category: 'Accessories',
-    image: '/placeholder-product.jpg',
-    description: 'Adjustable phone stand for desk or nightstand',
-    inStock: true,
-  },
-];
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  category?: string;
+  image?: string;
+  description?: string;
+  inventory_count: number;
+}
+
+async function fetchProducts(): Promise<Product[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/products`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+    // Return empty array on error - no mock fallback
+    return [];
+  }
+}
 
 export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchProducts()
+      .then(data => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="container px-4 py-8 md:px-8">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <p className="text-lg text-muted-foreground">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container px-4 py-8 md:px-8">
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+          <p className="text-xl font-semibold mb-2 text-destructive">Failed to load products</p>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="container px-4 py-8 md:px-8">
       {/* Page Header */}
@@ -94,53 +84,60 @@ export default function ProductsPage() {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {products.map((product) => (
-          <Card key={product.id} className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow">
-            <CardHeader className="p-0">
-              <div className="relative aspect-square w-full bg-muted">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm text-muted-foreground">Product Image</span>
+        {products.map((product) => {
+          const inStock = product.inventory_count > 0;
+          return (
+            <Card key={product.id} className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow">
+              <CardHeader className="p-0">
+                <div className="relative aspect-square w-full bg-muted">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-sm text-muted-foreground">Product Image</span>
+                  </div>
+                  {!inStock && (
+                    <Badge className="absolute top-2 right-2" variant="destructive">
+                      Out of Stock
+                    </Badge>
+                  )}
                 </div>
-                {!product.inStock && (
-                  <Badge className="absolute top-2 right-2" variant="destructive">
-                    Out of Stock
+              </CardHeader>
+              <CardContent className="flex-1 p-4 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-lg line-clamp-2">
+                    {product.name}
+                  </CardTitle>
+                </div>
+                {product.category && (
+                  <Badge variant="secondary" className="text-xs">
+                    {product.category}
                   </Badge>
                 )}
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 p-4 space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <CardTitle className="text-lg line-clamp-2">
-                  {product.name}
-                </CardTitle>
-              </div>
-              <Badge variant="secondary" className="text-xs">
-                {product.category}
-              </Badge>
-              <CardDescription className="line-clamp-2">
-                {product.description}
-              </CardDescription>
-              <div className="pt-2">
-                <p className="text-2xl font-bold">
-                  ${product.price.toFixed(2)}
-                </p>
-              </div>
-            </CardContent>
-            <CardFooter className="p-4 pt-0 flex gap-2">
-              <Link href={`/products/${product.id}`} className="flex-1">
-                <Button variant="outline" className="w-full">
-                  View Details
+                {product.description && (
+                  <CardDescription className="line-clamp-2">
+                    {product.description}
+                  </CardDescription>
+                )}
+                <div className="pt-2">
+                  <p className="text-2xl font-bold">
+                    ${product.price.toFixed(2)}
+                  </p>
+                </div>
+              </CardContent>
+              <CardFooter className="p-4 pt-0 flex gap-2">
+                <Link href={`/products/${product.id}`} className="flex-1">
+                  <Button variant="outline" className="w-full">
+                    View Details
+                  </Button>
+                </Link>
+                <Button
+                  className="flex-1"
+                  disabled={!inStock}
+                >
+                  {inStock ? 'Add to Cart' : 'Unavailable'}
                 </Button>
-              </Link>
-              <Button 
-                className="flex-1" 
-                disabled={!product.inStock}
-              >
-                {product.inStock ? 'Add to Cart' : 'Unavailable'}
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Empty State (if no products) */}
