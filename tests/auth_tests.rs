@@ -1,7 +1,4 @@
 //! Authentication module tests.
-#![allow(clippy::disallowed_methods)]
-#![allow(clippy::cast_sign_loss)]
-#![allow(clippy::manual_abs_diff)]
 //!
 //! These tests demonstrate authentication testing patterns including:
 //! - JWT token creation and validation
@@ -43,13 +40,15 @@ struct MockUser {
 // ============================================================================
 
 /// Creates a JWT token for a user
-fn create_mock_token(user_id: &str, secret: &str, expiration_hours: i64) -> Result<String, String> {
+fn create_mock_token(user_id: &str, secret: &str, expiration_hours: u64) -> Result<String, String> {
+    // Allow SystemTime::now() in test code demonstrating authentication patterns
+    #[allow(clippy::disallowed_methods)]
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_err(|e| format!("Time error: {e}"))?
         .as_secs();
 
-    let exp = now + (expiration_hours * 3600) as u64;
+    let exp = now + (expiration_hours * 3600);
 
     let claims = Claims {
         sub: user_id.to_string(),
@@ -145,6 +144,8 @@ fn test_validate_token_checks_expiration() {
     let token = create_mock_token("user123", "test", 24).unwrap();
     let claims = validate_mock_token(&token, "test").unwrap();
 
+    // Allow SystemTime::now() in test code demonstrating authentication patterns
+    #[allow(clippy::disallowed_methods)]
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
@@ -452,17 +453,15 @@ fn test_token_expiration_time_set_correctly() {
     let token = create_mock_token("user123", "test", hours).unwrap();
     let claims = validate_mock_token(&token, "test").unwrap();
 
+    // Allow SystemTime::now() in test code demonstrating authentication patterns
+    #[allow(clippy::disallowed_methods)]
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
 
-    let expected_exp = now + (hours * 3600) as u64;
-    let diff = if claims.exp > expected_exp {
-        claims.exp - expected_exp
-    } else {
-        expected_exp - claims.exp
-    };
+    let expected_exp = now + (hours * 3600);
+    let diff = claims.exp.abs_diff(expected_exp);
 
     // Allow for 2 second difference due to test execution time
     assert!(diff <= 2, "Expiration time should be set correctly");
@@ -473,6 +472,8 @@ fn test_token_issued_at_time_is_current() {
     let token = create_mock_token("user123", "test", 24).unwrap();
     let claims = validate_mock_token(&token, "test").unwrap();
 
+    // Allow SystemTime::now() in test code demonstrating authentication patterns
+    #[allow(clippy::disallowed_methods)]
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
