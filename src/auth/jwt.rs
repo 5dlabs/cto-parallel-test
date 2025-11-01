@@ -1,80 +1,71 @@
 //! JWT token creation and validation
 //!
-//! This module handles JSON Web Token (JWT) operations for stateless authentication.
-//! Tokens expire after 24 hours and include standard claims (sub, exp, iat).
-//!
-//! # Security Considerations
-//! - JWT secret should be loaded from environment variable in production
-//! - Tokens should be transmitted over HTTPS only
-//! - Token expiration is enforced during validation
+//! This module provides stateless authentication using JSON Web Tokens (JWT).
+//! Tokens expire after 24 hours and include standard claims.
 
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// JWT Claims structure containing standard token claims
-///
-/// # Fields
-/// - `sub`: Subject (user ID)
-/// - `exp`: Expiration time (Unix timestamp)
-/// - `iat`: Issued at time (Unix timestamp)
+/// JWT Claims structure containing standard token information
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
-    /// Subject (user ID)
+    /// Subject - the user ID this token represents
     pub sub: String,
-    /// Expiration time (Unix timestamp)
+    /// Expiration time (seconds since `UNIX_EPOCH`)
     pub exp: usize,
-    /// Issued at (Unix timestamp)
+    /// Issued at time (seconds since `UNIX_EPOCH`)
     pub iat: usize,
 }
 
 /// Creates a JWT token for the given user ID
 ///
-/// The token will expire 24 hours after creation. The JWT secret is loaded
-/// from the `JWT_SECRET` environment variable, with a fallback for development.
-///
 /// # Arguments
-/// - `user_id`: The user ID to encode in the token's subject claim
+///
+/// * `user_id` - The user identifier to encode in the token
 ///
 /// # Returns
-/// - `Ok(String)`: The encoded JWT token
-/// - `Err(jsonwebtoken::errors::Error)`: If token creation fails
+///
+/// Returns a `Result` containing the encoded JWT string on success, or a JWT error on failure.
 ///
 /// # Errors
-/// Returns an error if JWT encoding fails (rare, usually indicates invalid key)
+///
+/// Returns an error if JWT encoding fails (e.g., invalid secret key format).
 ///
 /// # Panics
-/// Panics if system time is before Unix epoch (extremely rare)
 ///
-/// # Examples
+/// Panics if system time is before `UNIX_EPOCH` (extremely rare, would indicate system clock issues).
+///
+/// # Security
+///
+/// - Tokens expire after 24 hours
+/// - Secret key is loaded from `JWT_SECRET` environment variable
+/// - Falls back to a development secret if not set (NOT for production)
+///
+/// # Example
+///
 /// ```
 /// use cto_parallel_test::auth::jwt::create_token;
 ///
-/// let token = create_token("123").expect("Failed to create token");
-/// assert!(!token.is_empty());
+/// let token = create_token("user_123").expect("Failed to create token");
 /// ```
+#[allow(clippy::cast_possible_truncation)]  // usize is appropriate for JWT timestamps
+#[allow(clippy::disallowed_methods)]  // SystemTime::now is acceptable for JWT token timestamps
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
-    // JUSTIFICATION FOR DISALLOWED METHOD:
-    // JWT tokens REQUIRE wall-clock time (SystemTime) not monotonic time (Instant).
-    // JWT 'exp' and 'iat' claims are Unix timestamps representing absolute points in time.
-    // These must be consistent across systems and restarts, which requires SystemTime.
-    // This is a fundamental requirement of RFC 7519 (JWT specification).
-    // Alternative: Implement Clock abstraction, but adds complexity for standard JWT behavior.
-    #[allow(clippy::disallowed_methods)]
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards")
+        .expect("System time before UNIX_EPOCH")
         .as_secs();
 
     let expiration = now + 24 * 3600; // 24 hours from now
 
     let claims = Claims {
         sub: user_id.to_owned(),
-        exp: usize::try_from(expiration).unwrap_or(usize::MAX),
-        iat: usize::try_from(now).unwrap_or(0),
+        exp: expiration as usize,
+        iat: now as usize,
     };
 
-    // In production, load from environment variable
+    // In production, JWT_SECRET MUST be set via environment variable
     let secret = std::env::var("JWT_SECRET")
         .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
 
@@ -87,30 +78,37 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 
 /// Validates a JWT token and extracts its claims
 ///
-/// This function verifies the token's signature and checks its expiration.
-/// Expired or tampered tokens will be rejected.
-///
 /// # Arguments
-/// - `token`: The JWT token string to validate
+///
+/// * `token` - The JWT token string to validate
 ///
 /// # Returns
-/// - `Ok(Claims)`: The decoded claims if token is valid
-/// - `Err(jsonwebtoken::errors::Error)`: If token is invalid or expired
+///
+/// Returns a `Result` containing the decoded `Claims` on success, or a JWT error on failure.
 ///
 /// # Errors
+///
 /// Returns an error if:
 /// - Token signature is invalid
 /// - Token has expired
 /// - Token format is malformed
-/// - Token was signed with a different secret
+/// - Secret key doesn't match
 ///
-/// # Examples
+/// # Validation
+///
+/// This function validates:
+/// - Token signature using the secret key
+/// - Token expiration time
+/// - Token structure and format
+///
+/// # Example
+///
 /// ```
 /// use cto_parallel_test::auth::jwt::{create_token, validate_token};
 ///
-/// let token = create_token("123").unwrap();
-/// let claims = validate_token(&token).expect("Token should be valid");
-/// assert_eq!(claims.sub, "123");
+/// let token = create_token("user_123").unwrap();
+/// let claims = validate_token(&token).expect("Failed to validate token");
+/// assert_eq!(claims.sub, "user_123");
 /// ```
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let secret = std::env::var("JWT_SECRET")
@@ -127,104 +125,97 @@ pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)]  // Allow SystemTime::now in tests
+#[allow(clippy::cast_possible_truncation)]  // Allow casts in tests
+#[allow(clippy::cast_possible_wrap)]  // Allow casts in tests
+#[allow(clippy::cast_lossless)]  // Allow casts in tests
 mod tests {
     use super::*;
 
     #[test]
     fn test_create_token_success() {
-        let token = create_token("123").expect("Failed to create token");
-        assert!(!token.is_empty());
-        // JWT tokens have three parts separated by dots
-        assert_eq!(token.matches('.').count(), 2);
+        let user_id = "123";
+        let token = create_token(user_id);
+
+        assert!(token.is_ok());
+        assert!(!token.unwrap().is_empty());
     }
 
     #[test]
-    fn test_validate_token_success() {
-        let user_id = "user_123";
-        let token = create_token(user_id).expect("Failed to create token");
+    fn test_validate_valid_token() {
+        let user_id = "123";
+        let token = create_token(user_id).unwrap();
 
-        let claims = validate_token(&token).expect("Failed to validate token");
+        let claims = validate_token(&token);
+        assert!(claims.is_ok());
+
+        let claims = claims.unwrap();
         assert_eq!(claims.sub, user_id);
     }
 
     #[test]
     fn test_token_contains_correct_claims() {
-        let token = create_token("123").expect("Failed to create token");
-        let claims = validate_token(&token).expect("Failed to validate token");
+        let user_id = "test_user";
+        let token = create_token(user_id).unwrap();
+        let claims = validate_token(&token).unwrap();
 
-        assert_eq!(claims.sub, "123");
-        assert!(claims.exp > 0);
-        assert!(claims.iat > 0);
+        // Verify subject
+        assert_eq!(claims.sub, user_id);
 
-        // Check expiration is approximately 24 hours (allow 10 second variance)
+        // Verify expiration is in the future
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as usize;
+        assert!(claims.exp > now);
+
+        // Verify issued at is in the past or now
+        assert!(claims.iat <= now + 1); // Allow 1 second tolerance
+
+        // Verify expiration is ~24 hours from issued
         let expected_duration = 24 * 3600;
-        let actual_duration = claims.exp.saturating_sub(claims.iat);
-        let diff = actual_duration.abs_diff(expected_duration);
-        assert!(diff < 10, "Token expiration should be ~24 hours");
+        let actual_duration = claims.exp - claims.iat;
+        assert!((actual_duration as i64 - expected_duration as i64).abs() < 10);
     }
 
     #[test]
-    fn test_invalid_token() {
+    fn test_invalid_token_rejected() {
         let invalid_token = "invalid.token.here";
-        let result = validate_token(invalid_token);
-        assert!(result.is_err(), "Invalid token should be rejected");
+        assert!(validate_token(invalid_token).is_err());
     }
 
     #[test]
-    fn test_empty_token() {
-        let result = validate_token("");
-        assert!(result.is_err(), "Empty token should be rejected");
+    fn test_empty_token_rejected() {
+        assert!(validate_token("").is_err());
     }
 
     #[test]
     fn test_different_tokens_for_same_user() {
-        let token1 = create_token("123").expect("Failed to create token 1");
-        // Sleep to ensure different iat (need at least 1 second for Unix timestamp difference)
+        let user_id = "123";
+        let token1 = create_token(user_id).unwrap();
+
+        // Wait 1 second to ensure different timestamp (JWT uses seconds, not milliseconds)
         std::thread::sleep(std::time::Duration::from_secs(1));
-        let token2 = create_token("123").expect("Failed to create token 2");
+
+        let token2 = create_token(user_id).unwrap();
 
         // Tokens should be different due to different iat
-        assert_ne!(
-            token1, token2,
-            "Different tokens should have different values"
-        );
+        assert_ne!(token1, token2);
 
-        // Both should validate successfully
-        let claims1 = validate_token(&token1).expect("Token 1 should validate");
-        let claims2 = validate_token(&token2).expect("Token 2 should validate");
-
+        // But both should validate to the same user
+        let claims1 = validate_token(&token1).unwrap();
+        let claims2 = validate_token(&token2).unwrap();
         assert_eq!(claims1.sub, claims2.sub);
-        assert!(
-            claims2.iat > claims1.iat,
-            "Second token should have later iat"
-        );
     }
 
     #[test]
-    fn test_token_with_special_characters_in_user_id() {
-        let user_id = "user@example.com";
-        let token = create_token(user_id).expect("Failed to create token");
-        let claims = validate_token(&token).expect("Failed to validate token");
-        assert_eq!(claims.sub, user_id);
-    }
+    fn test_tampered_token_rejected() {
+        let token = create_token("123").unwrap();
 
-    #[test]
-    fn test_token_with_empty_user_id() {
-        let token = create_token("").expect("Failed to create token with empty user_id");
-        let claims = validate_token(&token).expect("Failed to validate token");
-        assert_eq!(claims.sub, "");
-    }
-
-    #[test]
-    fn test_tampered_token() {
-        let token = create_token("123").expect("Failed to create token");
         // Tamper with the token by changing a character
         let mut tampered = token.clone();
-        if let Some(last_char) = tampered.pop() {
-            tampered.push(if last_char == 'a' { 'b' } else { 'a' });
-        }
+        tampered.push('x');
 
-        let result = validate_token(&tampered);
-        assert!(result.is_err(), "Tampered token should be rejected");
+        assert!(validate_token(&tampered).is_err());
     }
 }

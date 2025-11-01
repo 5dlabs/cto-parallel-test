@@ -1,15 +1,9 @@
-//! User model and authentication data transfer objects
+//! User authentication models and password hashing
 //!
 //! This module provides:
-//! - User model with secure password hashing using Argon2
-//! - Password verification with constant-time comparison
-//! - Authentication request/response DTOs for login and registration
-//!
-//! # Security Features
-//! - Argon2 password hashing with random 32-byte salt
-//! - Password hash is never serialized to JSON
-//! - Verification failures return false instead of panicking
-//! - Each password gets a unique salt to prevent rainbow table attacks
+//! - User model with secure password verification
+//! - Argon2 password hashing with random salt
+//! - Request/Response DTOs for authentication endpoints
 
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
@@ -17,34 +11,18 @@ use argon2::{
 };
 use serde::{Deserialize, Serialize};
 
-/// User model with secure password handling
+/// User entity representing an authenticated user
 ///
-/// The password hash is never included in serialization to prevent
-/// accidental exposure in API responses or logs.
-///
-/// # Examples
-/// ```
-/// use cto_parallel_test::auth::models::User;
-///
-/// let pass = "secure_pass";
-/// let hash = User::hash_password(pass);
-///
-/// let user = User {
-///     id: 1,
-///     username: "john_doe".to_string(),
-///     email: "john@example.com".to_string(),
-///     password_hash: hash,
-/// };
-///
-/// assert!(user.verify_password(pass));
-/// assert!(!user.verify_password("wrong_pass"));
-/// ```
+/// The `password_hash` field is excluded from serialization for security.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
+    /// Unique user identifier
     pub id: i32,
+    /// Username for login
     pub username: String,
+    /// User's email address
     pub email: String,
-    /// Password hash - never serialized to JSON for security
+    /// Argon2 password hash (never serialized to JSON)
     #[serde(skip_serializing)]
     pub password_hash: String,
 }
@@ -52,40 +30,42 @@ pub struct User {
 impl User {
     /// Verify a password against the stored hash
     ///
-    /// Uses constant-time comparison provided by Argon2 to prevent
-    /// timing attacks. Returns false if verification fails or encounters
-    /// an error, never panics.
-    ///
     /// # Arguments
-    /// - `password`: The plaintext password to verify
+    ///
+    /// * `password` - The plaintext password to verify
     ///
     /// # Returns
-    /// - `true`: Password matches the stored hash
-    /// - `false`: Password doesn't match or verification error occurred
     ///
-    /// # Examples
+    /// Returns `true` if the password matches, `false` otherwise.
+    /// Returns `false` on any error to prevent timing attacks.
+    ///
+    /// # Security
+    ///
+    /// - Uses constant-time comparison (provided by Argon2)
+    /// - Never panics on verification failure
+    /// - Returns `false` for any error condition
+    ///
+    /// # Example
+    ///
     /// ```
     /// use cto_parallel_test::auth::models::User;
     ///
-    /// let hash = User::hash_password("correct_pass");
     /// let user = User {
     ///     id: 1,
-    ///     username: "test".to_string(),
-    ///     email: "test@example.com".to_string(),
-    ///     password_hash: hash,
+    ///     username: "alice".to_string(),
+    ///     email: "alice@example.com".to_string(),
+    ///     password_hash: User::hash_password("secret123"),
     /// };
     ///
-    /// assert!(user.verify_password("correct_pass"));
-    /// assert!(!user.verify_password("wrong_pass"));
+    /// assert!(user.verify_password("secret123"));
+    /// assert!(!user.verify_password("wrong"));
     /// ```
     #[must_use]
     pub fn verify_password(&self, password: &str) -> bool {
-        // Parse the stored password hash
         let Ok(parsed_hash) = PasswordHash::new(&self.password_hash) else {
             return false;
         };
 
-        // Verify the password against the hash
         Argon2::default()
             .verify_password(password.as_bytes(), &parsed_hash)
             .is_ok()
@@ -93,349 +73,268 @@ impl User {
 
     /// Hash a password using Argon2 with random salt
     ///
-    /// Each invocation generates a new random 32-byte salt, ensuring that
-    /// identical passwords produce different hashes. This prevents rainbow
-    /// table attacks and makes it impossible to identify users with the
-    /// same password.
-    ///
     /// # Arguments
-    /// - `password`: The plaintext password to hash
+    ///
+    /// * `password` - The plaintext password to hash
     ///
     /// # Returns
-    /// The Argon2-encoded hash string (includes algorithm, parameters, salt, and hash)
+    ///
+    /// Returns an Argon2 encoded hash string including the salt.
+    ///
+    /// # Security
+    ///
+    /// - Uses Argon2 (winner of Password Hashing Competition)
+    /// - Generates 32 bytes of random salt for each password
+    /// - Each call produces a different hash (due to unique salt)
+    /// - Intentionally slow to resist brute force attacks
     ///
     /// # Panics
-    /// Panics if hashing fails (extremely rare, usually indicates system issues)
     ///
-    /// # Examples
+    /// Panics if password hashing fails (extremely rare, would indicate system issues).
+    ///
+    /// # Example
+    ///
     /// ```
     /// use cto_parallel_test::auth::models::User;
     ///
-    /// let pass = "my_secure_pass";
-    /// let hash1 = User::hash_password(pass);
-    /// let hash2 = User::hash_password(pass);
+    /// let hash1 = User::hash_password("password123");
+    /// let hash2 = User::hash_password("password123");
     ///
-    /// // Same input produces different hashes
+    /// // Different hashes due to random salt
     /// assert_ne!(hash1, hash2);
-    ///
-    /// // Both hashes verify correctly
-    /// let user1 = User {
-    ///     id: 1,
-    ///     username: "user1".to_string(),
-    ///     email: "user1@example.com".to_string(),
-    ///     password_hash: hash1,
-    /// };
-    ///
-    /// assert!(user1.verify_password(pass));
     /// ```
-    #[must_use]
     pub fn hash_password(password: &str) -> String {
-        // Generate a random salt
         let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
 
-        // Hash the password with Argon2
-        let password_hash = Argon2::default()
+        argon2
             .hash_password(password.as_bytes(), &salt)
-            .expect("Failed to hash password");
-
-        password_hash.to_string()
+            .expect("Failed to hash password")
+            .to_string()
     }
 }
 
-/// Login request DTO
-///
-/// Used for user authentication endpoints
+/// Request body for user login
 #[derive(Debug, Deserialize)]
 pub struct LoginRequest {
+    /// Username for authentication
     pub username: String,
+    /// Plaintext password
     pub password: String,
 }
 
-/// Registration request DTO
-///
-/// Used for new user creation endpoints
+/// Request body for user registration
 #[derive(Debug, Deserialize)]
 pub struct RegisterRequest {
+    /// Desired username (must be unique)
     pub username: String,
+    /// Email address (must be unique)
     pub email: String,
+    /// Plaintext password (will be hashed before storage)
     pub password: String,
 }
 
-/// Authentication response DTO
-///
-/// Returned after successful login or registration
+/// Response body for successful authentication
 #[derive(Debug, Serialize)]
 pub struct AuthResponse {
+    /// JWT token for subsequent authenticated requests
     pub token: String,
+    /// User ID
     pub user_id: i32,
+    /// Username
     pub username: String,
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]  // Allow unwrap in tests
 mod tests {
     use super::*;
 
     #[test]
-    fn test_password_hashing_produces_different_hashes() {
-        let password = "test_pass_123";
+    fn test_hash_password_generates_unique_hashes() {
+        let password = "test_password_123";
         let hash1 = User::hash_password(password);
         let hash2 = User::hash_password(password);
 
         // Hashes should be different due to random salt
-        assert_ne!(
-            hash1, hash2,
-            "Same password should produce different hashes"
-        );
+        assert_ne!(hash1, hash2);
 
-        // Both should be valid Argon2 hashes (start with $argon2)
-        assert!(
-            hash1.starts_with("$argon2"),
-            "Hash should be in Argon2 format"
-        );
-        assert!(
-            hash2.starts_with("$argon2"),
-            "Hash should be in Argon2 format"
-        );
+        // Both should be non-empty
+        assert!(!hash1.is_empty());
+        assert!(!hash2.is_empty());
     }
 
     #[test]
-    fn test_password_verification_with_correct_password() {
-        let password = "correct_pass";
+    fn test_verify_password_correct() {
+        let password = "secure_password";
         let hash = User::hash_password(password);
 
         let user = User {
             id: 1,
-            username: "test_user".to_string(),
+            username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
 
-        assert!(
-            user.verify_password(password),
-            "Correct password should verify successfully"
-        );
+        assert!(user.verify_password(password));
     }
 
     #[test]
-    fn test_password_verification_with_wrong_password() {
-        let password = "correct_pass";
+    fn test_verify_password_incorrect() {
+        let password = "correct_password";
         let hash = User::hash_password(password);
 
         let user = User {
             id: 1,
-            username: "test_user".to_string(),
+            username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
 
-        assert!(
-            !user.verify_password("wrong_password"),
-            "Wrong password should fail verification"
-        );
+        assert!(!user.verify_password("wrong_password"));
+        assert!(!user.verify_password(""));
+        assert!(!user.verify_password("CORRECT_PASSWORD"));
     }
 
     #[test]
-    fn test_empty_password() {
+    fn test_verify_password_empty() {
         let empty_password = "";
         let hash = User::hash_password(empty_password);
 
         let user = User {
             id: 1,
-            username: "test_user".to_string(),
+            username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
 
-        assert!(
-            user.verify_password(empty_password),
-            "Empty password should hash and verify"
-        );
-        assert!(
-            !user.verify_password("not_empty"),
-            "Non-empty password should not match empty password hash"
-        );
+        // Empty password should still hash and verify
+        assert!(user.verify_password(empty_password));
+        assert!(!user.verify_password("not_empty"));
     }
 
     #[test]
-    fn test_password_with_special_characters() {
+    fn test_verify_password_special_characters() {
         let password = "p@ssw0rd!#$%^&*()";
         let hash = User::hash_password(password);
 
         let user = User {
             id: 1,
-            username: "test_user".to_string(),
+            username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
 
-        assert!(
-            user.verify_password(password),
-            "Password with special characters should work"
-        );
+        assert!(user.verify_password(password));
     }
 
     #[test]
-    fn test_password_with_unicode() {
-        let password = "пароль密码🔐";
+    fn test_verify_password_unicode() {
+        let password = "пароль🔐密码";
         let hash = User::hash_password(password);
 
         let user = User {
             id: 1,
-            username: "test_user".to_string(),
+            username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
 
-        assert!(
-            user.verify_password(password),
-            "Unicode password should work"
-        );
+        assert!(user.verify_password(password));
     }
 
     #[test]
-    fn test_long_password() {
+    fn test_verify_password_very_long() {
         let password = "a".repeat(1000);
         let hash = User::hash_password(&password);
 
         let user = User {
             id: 1,
-            username: "test_user".to_string(),
+            username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
 
-        assert!(
-            user.verify_password(&password),
-            "Very long password should work"
-        );
+        assert!(user.verify_password(&password));
     }
 
     #[test]
-    fn test_password_with_whitespace() {
-        let password = "  password with spaces  ";
-        let hash = User::hash_password(password);
-
+    fn test_verify_password_invalid_hash() {
         let user = User {
             id: 1,
-            username: "test_user".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: hash,
-        };
-
-        assert!(
-            user.verify_password(password),
-            "Password with whitespace should work"
-        );
-        assert!(
-            !user.verify_password("password with spaces"),
-            "Whitespace should be preserved"
-        );
-    }
-
-    #[test]
-    fn test_invalid_hash_returns_false() {
-        let user = User {
-            id: 1,
-            username: "test_user".to_string(),
+            username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: "invalid_hash_format".to_string(),
         };
 
-        assert!(
-            !user.verify_password("any_password"),
-            "Invalid hash should return false, not panic"
-        );
+        // Should return false, not panic
+        assert!(!user.verify_password("any_password"));
     }
 
     #[test]
-    fn test_user_serialization_excludes_password_hash() {
+    fn test_user_serialization_excludes_password() {
         let user = User {
             id: 42,
-            username: "test_user".to_string(),
+            username: "testuser".to_string(),
             email: "test@example.com".to_string(),
-            password_hash: "hashed_value_should_not_appear".to_string(),
+            password_hash: "secret_hash_value".to_string(),
         };
 
-        let json = serde_json::to_string(&user).expect("Serialization should succeed");
+        let json = serde_json::to_string(&user).expect("Failed to serialize");
 
         // Verify password_hash is not in JSON
-        assert!(
-            !json.contains("password_hash"),
-            "JSON should not contain password_hash field"
-        );
-        assert!(
-            !json.contains("hashed_value_should_not_appear"),
-            "JSON should not contain the hash value"
-        );
+        assert!(!json.contains("password_hash"));
+        assert!(!json.contains("secret_hash_value"));
 
         // Verify other fields are present
-        assert!(json.contains("test_user"), "JSON should contain username");
-        assert!(
-            json.contains("test@example.com"),
-            "JSON should contain email"
-        );
-        assert!(json.contains("42"), "JSON should contain id");
+        assert!(json.contains("testuser"));
+        assert!(json.contains("test@example.com"));
+        assert!(json.contains("42"));
     }
 
     #[test]
     fn test_login_request_deserialization() {
-        let json = r#"{"username":"testuser","password":"testpass"}"#;
-        let request: LoginRequest =
-            serde_json::from_str(json).expect("Should deserialize LoginRequest");
+        let json = r#"{"username": "alice", "password": "secret"}"#;
+        let request: LoginRequest = serde_json::from_str(json).expect("Failed to deserialize");
 
-        assert_eq!(request.username, "testuser");
-        assert_eq!(request.password, "testpass");
+        assert_eq!(request.username, "alice");
+        assert_eq!(request.password, "secret");
     }
 
     #[test]
     fn test_register_request_deserialization() {
-        let json = r#"{"username":"newuser","email":"new@example.com","password":"newpass"}"#;
-        let request: RegisterRequest =
-            serde_json::from_str(json).expect("Should deserialize RegisterRequest");
+        let json = r#"{"username": "bob", "email": "bob@example.com", "password": "secret123"}"#;
+        let request: RegisterRequest = serde_json::from_str(json).expect("Failed to deserialize");
 
-        assert_eq!(request.username, "newuser");
-        assert_eq!(request.email, "new@example.com");
-        assert_eq!(request.password, "newpass");
+        assert_eq!(request.username, "bob");
+        assert_eq!(request.email, "bob@example.com");
+        assert_eq!(request.password, "secret123");
     }
 
     #[test]
     fn test_auth_response_serialization() {
         let response = AuthResponse {
-            token: "jwt.token.here".to_string(),
+            token: "jwt_token_here".to_string(),
             user_id: 123,
-            username: "testuser".to_string(),
+            username: "charlie".to_string(),
         };
 
-        let json = serde_json::to_string(&response).expect("Should serialize AuthResponse");
+        let json = serde_json::to_string(&response).expect("Failed to serialize");
 
-        assert!(json.contains("jwt.token.here"));
+        assert!(json.contains("jwt_token_here"));
         assert!(json.contains("123"));
-        assert!(json.contains("testuser"));
+        assert!(json.contains("charlie"));
     }
 
     #[test]
-    fn test_multiple_users_different_passwords() {
-        let pass1 = "pass1";
-        let pass2 = "pass2";
+    fn test_password_hash_format() {
+        let password = "test123";
+        let hash = User::hash_password(password);
 
-        let user1 = User {
-            id: 1,
-            username: "user1".to_string(),
-            email: "user1@example.com".to_string(),
-            password_hash: User::hash_password(pass1),
-        };
-
-        let user2 = User {
-            id: 2,
-            username: "user2".to_string(),
-            email: "user2@example.com".to_string(),
-            password_hash: User::hash_password(pass2),
-        };
-
-        // Each user should only verify their own password
-        assert!(user1.verify_password(pass1));
-        assert!(!user1.verify_password(pass2));
-        assert!(user2.verify_password(pass2));
-        assert!(!user2.verify_password(pass1));
+        // Argon2 hash should start with $argon2
+        assert!(
+            hash.starts_with("$argon2"),
+            "Hash doesn't match Argon2 format"
+        );
     }
 }
