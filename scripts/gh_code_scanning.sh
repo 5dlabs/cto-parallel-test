@@ -34,17 +34,46 @@ fi
 
 echo "[info] Repository: ${REPO}"
 
-if ! gh auth status -t >/dev/null 2>&1; then
+# Ensure we are authenticated to GitHub. If GH_TOKEN/GITHUB_TOKEN is present,
+# attempt a non-interactive login; otherwise, emit clear instructions.
+ensure_auth() {
+  if gh auth status -t >/dev/null 2>&1; then
+    return 0
+  fi
+
+  # Prefer GH_TOKEN, fallback to GITHUB_TOKEN
+  local token
+  token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+  if [[ -n "${token}" ]]; then
+    # Avoid echoing secrets. Login quietly and re-check status.
+    gh auth login --with-token >/dev/null 2>&1 <<< "${token}" || true
+  fi
+
+  gh auth status -t >/dev/null 2>&1
+}
+
+if ! ensure_auth; then
   echo "[error] gh is not authenticated. Provide a token with security_events scope." >&2
-  echo "        Export GITHUB_TOKEN and login:" >&2
+  echo "        Export GITHUB_TOKEN (or GH_TOKEN) and login:" >&2
   echo "        export GITHUB_TOKEN=\"<token-with-security_events>\"" >&2
-  # Do not reference $GITHUB_TOKEN directly to avoid unbound-var errors and accidental disclosure.
+  # Do not echo token values; show safe placeholder usage only.
   echo '        gh auth login --with-token <<< "$GITHUB_TOKEN"' >&2
   exit 2
 fi
 
 # Determine PR number
 PR=${PR:-}
+# 1) Prefer explicit PR env
+# 2) Fallback to PR_URL env if present (e.g., set by CI harness)
+# 3) Finally, try to resolve from current branch via gh
+if [[ -z "${PR}" ]]; then
+  if [[ -n "${PR_URL:-}" ]]; then
+    if [[ "$PR_URL" =~ /pull/([0-9]+) ]]; then
+      PR="${BASH_REMATCH[1]}"
+    fi
+  fi
+fi
+
 if [[ -z "${PR}" ]]; then
   current_branch=$(git rev-parse --abbrev-ref HEAD)
   PR=$(gh pr list --repo "$REPO" --head "$current_branch" --json number -q '.[0].number' || true)
