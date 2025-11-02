@@ -1,10 +1,22 @@
 [package]
-name = "ecommerce_catalog"
+name = "cto-parallel-test"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# Authentication dependencies
+jsonwebtoken = "8.3.0"
+argon2 = { version = "0.5.0", features = ["std"] }
+rand = "0.8.5"
+
+# Catalog and cart dependencies
 rust_decimal = { version = "1.30", features = ["serde"] }
+
+# Web framework (for Task 5 API endpoints)
+actix-web = "4.4"
+actix-rt = "2.9"
+
+# Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
@@ -12,5 +24,5 @@ serde_json = "1.0"
 rust_decimal_macros = "1.30"
 
 [lib]
-name = "ecommerce_catalog"
+name = "cto_parallel_test"
 path = "src/lib.rs"
