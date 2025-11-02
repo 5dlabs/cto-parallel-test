@@ -26,7 +26,7 @@ jsonwebtoken = "8.3.0"
 argon2 = "0.5.0"
 rand = "0.8.5"
 
-# Web framework
+# Web framework and async runtime
 actix-web = "4.3.1"
 actix-rt = "2.8"
 tokio = { version = "1", features = ["full"] }

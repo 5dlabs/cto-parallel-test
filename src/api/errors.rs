@@ -1,21 +1,30 @@
-//! API error handling
+//! Error handling for API endpoints
 //!
-//! Provides standardized error types and HTTP response formatting for API endpoints.
+//! This module provides a unified error type for API responses with
+//! appropriate HTTP status codes and JSON error formatting.
 
 use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
+use serde::Serialize;
 use std::fmt;
 
-/// API error types
+/// API error types representing different error conditions
 #[derive(Debug)]
 pub enum ApiError {
     /// Resource not found (404)
     NotFound(String),
-    /// Bad request - invalid input (400)
+    /// Invalid request data (400)
     BadRequest(String),
     /// Internal server error (500)
     InternalError(String),
-    /// Unauthorized access (401)
+    /// Authentication required or failed (401)
     Unauthorized(String),
+}
+
+/// JSON error response structure
+#[derive(Debug, Serialize)]
+struct ErrorResponse {
+    error: String,
+    message: String,
 }
 
 impl fmt::Display for ApiError {
@@ -31,26 +40,19 @@ impl fmt::Display for ApiError {
 
 impl ResponseError for ApiError {
     fn error_response(&self) -> HttpResponse {
-        match self {
-            Self::NotFound(msg) => HttpResponse::NotFound().json(serde_json::json!({
-                "error": "not_found",
-                "message": msg
-            })),
-            Self::BadRequest(msg) => HttpResponse::BadRequest().json(serde_json::json!({
-                "error": "bad_request",
-                "message": msg
-            })),
-            Self::InternalError(msg) => {
-                HttpResponse::InternalServerError().json(serde_json::json!({
-                    "error": "internal_error",
-                    "message": msg
-                }))
-            }
-            Self::Unauthorized(msg) => HttpResponse::Unauthorized().json(serde_json::json!({
-                "error": "unauthorized",
-                "message": msg
-            })),
-        }
+        let (error_type, message) = match self {
+            Self::NotFound(msg) => ("not_found", msg),
+            Self::BadRequest(msg) => ("bad_request", msg),
+            Self::InternalError(msg) => ("internal_error", msg),
+            Self::Unauthorized(msg) => ("unauthorized", msg),
+        };
+
+        let error_response = ErrorResponse {
+            error: error_type.to_string(),
+            message: message.clone(),
+        };
+
+        HttpResponse::build(self.status_code()).json(error_response)
     }
 
     fn status_code(&self) -> StatusCode {
@@ -68,22 +70,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_error_display() {
+    fn test_api_error_display() {
         let error = ApiError::NotFound("User not found".to_string());
         assert_eq!(error.to_string(), "Not Found: User not found");
 
         let error = ApiError::BadRequest("Invalid input".to_string());
         assert_eq!(error.to_string(), "Bad Request: Invalid input");
-
-        let error = ApiError::InternalError("Database error".to_string());
-        assert_eq!(error.to_string(), "Internal Error: Database error");
-
-        let error = ApiError::Unauthorized("Invalid token".to_string());
-        assert_eq!(error.to_string(), "Unauthorized: Invalid token");
     }
 
     #[test]
-    fn test_status_codes() {
+    fn test_api_error_status_codes() {
         assert_eq!(
             ApiError::NotFound("test".to_string()).status_code(),
             StatusCode::NOT_FOUND

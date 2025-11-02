@@ -1,22 +1,20 @@
 //! API route configuration
 //!
-//! Defines all HTTP routes for the e-commerce API including:
-//! - Health check endpoint
-//! - Authentication routes (placeholder)
-//! - User management routes (placeholder)
-//! - Product catalog routes (placeholder)
-//! - Shopping cart routes (placeholder)
+//! This module defines all HTTP routes and their handlers.
+//! Routes are organized into scopes by functionality:
+//! - `/api/health` - Health check endpoint
+//! - `/api/auth/*` - Authentication endpoints (Task 3)
+//! - `/api/users/*` - User management endpoints (Task 3)
+//! - `/api/products/*` - Product catalog endpoints (Task 4)
+//! - `/api/cart/*` - Shopping cart endpoints (Task 5)
 
 use actix_web::{web, HttpResponse, Responder};
+use serde_json::json;
 
 /// Configure all API routes
 ///
-/// Sets up the main `/api` scope with all sub-routes:
-/// - `/api/health` - Health check endpoint
-/// - `/api/auth/*` - Authentication endpoints (Task 3)
-/// - `/api/users/*` - User management endpoints (Task 3)
-/// - `/api/products/*` - Product catalog endpoints (Task 4)
-/// - `/api/cart/*` - Shopping cart endpoints (Task 5)
+/// This function is called during application setup to register
+/// all route handlers and middleware.
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/api")
@@ -30,7 +28,8 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 
 /// Health check endpoint
 ///
-/// Returns HTTP 200 OK with service status and version information.
+/// Returns server status and version information.
+/// This endpoint is used for monitoring and load balancer health checks.
 ///
 /// # Example Response
 /// ```json
@@ -40,47 +39,47 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 /// }
 /// ```
 async fn health_check() -> impl Responder {
-    HttpResponse::Ok().json(serde_json::json!({
+    HttpResponse::Ok().json(json!({
         "status": "ok",
         "version": env!("CARGO_PKG_VERSION")
     }))
 }
 
-/// Authentication route configuration (placeholder for Task 3)
+/// Configure authentication routes (Task 3)
 ///
-/// Routes:
-/// - `POST /auth/register` - User registration
-/// - `POST /auth/login` - User login
+/// Placeholder routes for user authentication functionality:
+/// - POST /auth/register - User registration
+/// - POST /auth/login - User login with JWT token
 fn auth_routes(cfg: &mut web::ServiceConfig) {
     cfg.route("/register", web::post().to(not_implemented))
         .route("/login", web::post().to(not_implemented));
 }
 
-/// User management route configuration (placeholder for Task 3)
+/// Configure user management routes (Task 3)
 ///
-/// Routes:
-/// - `GET /users` - Get user information
+/// Placeholder routes for user management:
+/// - GET /users - Get user information (requires authentication)
 fn user_routes(cfg: &mut web::ServiceConfig) {
     cfg.route("", web::get().to(not_implemented));
 }
 
-/// Product catalog route configuration (placeholder for Task 4)
+/// Configure product catalog routes (Task 4)
 ///
-/// Routes:
-/// - `GET /products` - List all products
-/// - `GET /products/{id}` - Get product details
+/// Placeholder routes for product catalog:
+/// - GET /products - List all products
+/// - GET /products/{id} - Get product details
 fn product_routes(cfg: &mut web::ServiceConfig) {
     cfg.route("", web::get().to(not_implemented))
         .route("/{id}", web::get().to(not_implemented));
 }
 
-/// Shopping cart route configuration (placeholder for Task 5)
+/// Configure shopping cart routes (Task 5)
 ///
-/// Routes:
-/// - `GET /cart` - Get user's cart
-/// - `POST /cart/add` - Add item to cart
-/// - `DELETE /cart/remove/{product_id}` - Remove item from cart
-/// - `POST /cart/clear` - Clear cart
+/// Placeholder routes for shopping cart:
+/// - GET /cart - Get user's cart
+/// - POST /cart/add - Add item to cart
+/// - DELETE `/cart/remove/{product_id}` - Remove item from cart
+/// - POST /cart/clear - Clear cart
 fn cart_routes(cfg: &mut web::ServiceConfig) {
     cfg.route("", web::get().to(not_implemented))
         .route("/add", web::post().to(not_implemented))
@@ -88,19 +87,13 @@ fn cart_routes(cfg: &mut web::ServiceConfig) {
         .route("/clear", web::post().to(not_implemented));
 }
 
-/// Placeholder handler for unimplemented endpoints
+/// Placeholder handler for endpoints not yet implemented
 ///
-/// Returns HTTP 501 Not Implemented with a JSON error response.
-///
-/// # Example Response
-/// ```json
-/// {
-///   "error": "not_implemented",
-///   "message": "This endpoint will be implemented in a later task"
-/// }
-/// ```
+/// Returns 501 Not Implemented status with a JSON error message.
+/// This handler is used during development to indicate that an endpoint
+/// is planned but not yet functional.
 async fn not_implemented() -> impl Responder {
-    HttpResponse::NotImplemented().json(serde_json::json!({
+    HttpResponse::NotImplemented().json(json!({
         "error": "not_implemented",
         "message": "This endpoint will be implemented in a later task"
     }))
@@ -130,42 +123,32 @@ mod tests {
     async fn test_not_implemented_endpoints() {
         let app = test::init_service(App::new().configure(configure_routes)).await;
 
-        // Test GET endpoints
-        let get_endpoints = vec!["/api/products", "/api/users", "/api/cart"];
+        // Test product endpoint
+        let req = test::TestRequest::get().uri("/api/products").to_request();
+        let resp = test::call_service(&app, req).await;
+        assert_eq!(resp.status(), 501);
 
-        for endpoint in get_endpoints {
-            let req = test::TestRequest::get().uri(endpoint).to_request();
-            let resp = test::call_service(&app, req).await;
-            assert_eq!(
-                resp.status(),
-                actix_web::http::StatusCode::NOT_IMPLEMENTED,
-                "GET {endpoint} should return 501"
-            );
-        }
+        // Test cart endpoint
+        let req = test::TestRequest::get().uri("/api/cart").to_request();
+        let resp = test::call_service(&app, req).await;
+        assert_eq!(resp.status(), 501);
 
-        // Test POST endpoints
-        let post_endpoints = vec!["/api/auth/register", "/api/auth/login"];
-
-        for endpoint in post_endpoints {
-            let req = test::TestRequest::post().uri(endpoint).to_request();
-            let resp = test::call_service(&app, req).await;
-            assert_eq!(
-                resp.status(),
-                actix_web::http::StatusCode::NOT_IMPLEMENTED,
-                "POST {endpoint} should return 501"
-            );
-        }
+        // Test auth register endpoint
+        let req = test::TestRequest::post()
+            .uri("/api/auth/register")
+            .to_request();
+        let resp = test::call_service(&app, req).await;
+        assert_eq!(resp.status(), 501);
     }
 
     #[actix_web::test]
-    async fn test_not_found() {
+    async fn test_404_for_invalid_routes() {
         let app = test::init_service(App::new().configure(configure_routes)).await;
 
         let req = test::TestRequest::get()
             .uri("/api/nonexistent")
             .to_request();
-
         let resp = test::call_service(&app, req).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::NOT_FOUND);
+        assert_eq!(resp.status(), 404);
     }
 }

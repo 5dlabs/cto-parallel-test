@@ -10,4 +10,5 @@ pub mod models;
 pub mod schema;
 
 // Re-export commonly used types
+pub use api::configure_routes;
 pub use config::db::{establish_connection_pool, DbConnection, Pool};

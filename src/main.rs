@@ -1,9 +1,10 @@
-//! E-Commerce API Server
+//! E-Commerce Application Server
 //!
-//! Main entry point for the Actix-web HTTP server.
-//! Configures and runs the API server with logging middleware.
+//! This is the main entry point for the HTTP server.
+//! It configures and starts the Actix-web server with all routes and middleware.
 
 use actix_web::{middleware::Logger, App, HttpServer};
+use cto_parallel_test::configure_routes;
 use env_logger::Env;
 
 #[actix_web::main]
@@ -12,14 +13,18 @@ async fn main() -> std::io::Result<()> {
     // Can be overridden with RUST_LOG environment variable
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
-    log::info!("🚀 Starting API server on http://127.0.0.1:8080");
+    let host = "127.0.0.1";
+    let port = 8080;
+
+    log::info!("🚀 Starting API server on http://{host}:{port}");
+    log::info!("📝 Health check available at http://{host}:{port}/api/health");
 
     HttpServer::new(|| {
         App::new()
             .wrap(Logger::default())
-            .configure(cto_parallel_test::api::configure_routes)
+            .configure(configure_routes)
     })
-    .bind("127.0.0.1:8080")?
+    .bind((host, port))?
     .run()
     .await
 }
