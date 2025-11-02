@@ -1,0 +1,37 @@
+name: Gitleaks
+
+on:
+  push:
+    branches: ["main", "feature/**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  secrets-scan:
+    name: Secret Scanning (gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Minimal history; scanning workspace only (no git history)
+          fetch-depth: 1
+
+      - name: Run Gitleaks
+        id: gitleaks
+        uses: DariuszPorowski/github-action-gitleaks@v2
+        with:
+          no_git: true
+          redact: true
+          verbose: true
+          report_format: sarif
+          fail: true
+
+      - name: Upload SARIF to Code Scanning
+        if: ${{ steps.gitleaks.outputs.exitcode == 1 }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ steps.gitleaks.outputs.report }}

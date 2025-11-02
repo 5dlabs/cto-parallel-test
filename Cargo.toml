@@ -1,9 +1,18 @@
 [package]
-name = "ecommerce_api"
+name = "cto-parallel-test"
 version = "0.1.0"
 edition = "2021"
+license = "UNLICENSED"
+publish = false
+
+[lib]
+name = "cto_parallel_test"
+path = "src/lib.rs"
 
 [dependencies]
 rust_decimal = { version = "1.30", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+[dev-dependencies]
+once_cell = "1.19"
