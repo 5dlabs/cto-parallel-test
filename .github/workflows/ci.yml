@@ -1,0 +1,71 @@
+name: Continuous Integration
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-rust:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      # 🚀 CRITICAL: Use Swatinem/rust-cache for intelligent dependency caching
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: . -> target
+          shared-key: rust-cache-ci
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::pedantic
+
+  test-rust:
+    runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: . -> target
+          shared-key: rust-cache-ci
+
+      - name: Install Diesel CLI
+        run: cargo install diesel_cli --no-default-features --features postgres
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgres://test:test@localhost:5432/test_db
+        run: diesel migration run
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgres://test:test@localhost:5432/test_db
+        run: cargo test --all-features --all-targets

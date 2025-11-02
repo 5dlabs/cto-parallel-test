@@ -1,0 +1,71 @@
+name: Deploy
+on:
+  push:
+    branches: [main, develop, feature/*, feat/*, fix/*]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_BASE: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: . -> target
+          shared-key: rust-cache-build
+
+      # Build the library (this is a library crate, not a binary)
+      - name: Build library
+        run: |
+          cargo build --release --lib
+          echo "✅ Library built successfully"
+
+      # For now, we'll just verify the build works
+      # In future tasks, when binary targets are added, we'll copy them to workspace
+      - name: Verify build artifacts
+        run: |
+          ls -lh target/release/
+          echo "Build verification complete"
+
+      - uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker
+          install: true
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
