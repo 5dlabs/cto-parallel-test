@@ -39,17 +39,24 @@ jobs:
         run: |
           set -euo pipefail
           echo "Checking Code Scanning alerts for PR #$PR in $REPO..."
-          # List open alerts for visibility
+          # List open alerts for visibility (include both severity fields)
           gh api \
             "/repos/$REPO/code-scanning/alerts?state=open&pr=$PR" \
             --paginate \
-            --jq '.[] | {rule_id: .rule.id, severity: .rule.severity, message: .most_recent_instance.message.text, url: .html_url}' || true
+            --jq '.[] | {rule_id: .rule.id, severity: (.rule.severity // "unknown"), security_severity: (.rule.security_severity_level // "unknown"), message: .most_recent_instance.message.text, url: .html_url}' || true
 
           # Compute violation count for severity medium|high|critical
           violations=$(gh api \
             "/repos/$REPO/code-scanning/alerts?state=open&pr=$PR" \
             --paginate \
-            | jq '[.[] | select((.rule.severity // "unknown") | test("^(?i)(medium|high|critical)$"))] | length')
+            | jq '
+              def normalize(s): (s|ascii_downcase) as $s | if $s=="error" then "high" elif $s=="warning" then "medium" elif $s=="note" then "low" else $s end;
+              [ .[]
+                | { sev: ([.rule.security_severity_level?, .rule.severity?, .security_severity_level?, .severity?]
+                           | map(select(. != null) | normalize)
+                           | first // "unknown") }
+                | select(.sev | test("^(medium|high|critical)$"))
+              ] | length')
 
           echo "Violation count (MED/HIGH/CRITICAL): $violations"
           if [ "$violations" -gt 0 ]; then
@@ -57,4 +64,3 @@ jobs:
             exit 1
           fi
           echo "No MEDIUM/HIGH/CRITICAL Code Scanning alerts found. Gate passed."
-

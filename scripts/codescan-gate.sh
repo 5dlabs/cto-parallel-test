@@ -63,10 +63,11 @@ fi
 err "Checking Code Scanning alerts for PR #$PR in $REPO..."
 
 # Fetch all open alerts for this PR (paginate in case of many)
+# Include both rule.severity and rule.security_severity_level for visibility
 alerts=$(gh api \
   "/repos/$REPO/code-scanning/alerts?state=open&pr=$PR" \
   --paginate \
-  --jq '.[] | {rule_id: .rule.id, severity: .rule.severity, message: .most_recent_instance.message.text, url: .html_url}')
+  --jq '.[] | {rule_id: .rule.id, severity: (.rule.severity // "unknown"), security_severity: (.rule.security_severity_level // "unknown"), message: .most_recent_instance.message.text, url: .html_url}')
 
 if [[ -z "$alerts" ]]; then
   echo "No open Code Scanning alerts for PR #$PR."
@@ -75,11 +76,22 @@ fi
 
 echo "Open alerts:\n$alerts" | sed 's/^/- /'
 
-# Fail if any medium/high/critical severities are present
+# Fail if any medium/high/critical severities are present.
+# Be robust across engines:
+# - Prefer rule.security_severity_level (low|medium|high|critical)
+# - Fallback to rule.severity which may be error|warning|note and map to high|medium|low
+# - As last resort, check top-level .security_severity_level/.severity if provided
 violations=$(gh api \
   "/repos/$REPO/code-scanning/alerts?state=open&pr=$PR" \
   --paginate \
-  | jq '[.[] | select((.rule.severity // "unknown") | test("^(?i)(medium|high|critical)$"))] | length')
+  | jq '
+    def normalize(s): (s|ascii_downcase) as $s | if $s=="error" then "high" elif $s=="warning" then "medium" elif $s=="note" then "low" else $s end;
+    [ .[]
+      | { sev: ([.rule.security_severity_level?, .rule.severity?, .security_severity_level?, .severity?]
+                 | map(select(. != null) | normalize)
+                 | first // "unknown") }
+      | select(.sev | test("^(medium|high|critical)$"))
+    ] | length')
 
 if [[ "$violations" -gt 0 ]]; then
   err "Found $violations MEDIUM/HIGH/CRITICAL alerts. Failing gate."
@@ -88,4 +100,3 @@ fi
 
 echo "No MEDIUM/HIGH/CRITICAL alerts found. Gate passed."
 exit 0
-
