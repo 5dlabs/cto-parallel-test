@@ -44,3 +44,11 @@ To enforce blocking in GitHub, enable required status checks on the `main` branc
 - `Cargo Audit / cargo audit`
 
 In GitHub: Settings → Branches → Branch protection rules → Edit `main` → Require status checks → search and select the checks above.
+
+## Local Code Scanning Gate
+
+To check GitHub Code Scanning alerts for the current PR locally and fail on any MEDIUM/HIGH/CRITICAL severities, use:
+
+`scripts/codescan-gate.sh`
+
+Requirements: `gh` (authenticated) and `jq`.
