@@ -1,73 +1,51 @@
-# Autonomous Agent Prompt: Product Catalog Module
+# Autonomous Agent Prompt: Shopping Cart API
 
 ## Mission
-Implement a thread-safe product catalog system with inventory management and filtering capabilities for an e-commerce API. This is a foundational module with no dependencies.
-
-## Goal
-Create a complete product management system with:
-- Thread-safe in-memory product storage
-- CRUD operations for products
-- Inventory tracking and updates
-- Flexible product filtering (name, price, stock)
-- Decimal precision for prices
-- Auto-incrementing product IDs
+Implement a complete shopping cart system with JWT-authenticated API endpoints, integrating with existing auth and catalog modules.
 
 ## Prerequisites
-- Rust toolchain installed
-- Working directory: project root
-- No external dependencies (Level 0 task)
+- Task 3 complete (JWT validation available)
+- Task 4 complete (ProductService available)
 
-## Step-by-Step Instructions
+## Implementation Steps
 
-### 1. Add Dependencies
-Add to `Cargo.toml`:
-```toml
-[dependencies]
-rust_decimal = { version = "1.30", features = ["serde"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-```
+1. **Create cart module** with service layer
+2. **Implement CartService** with thread-safe storage
+3. **Create API routes** with JWT authentication
+4. **Integrate services** in main.rs
+5. **Test** all cart operations
 
-### 2. Create Module Structure
-Create `src/catalog/mod.rs`:
+## Key Implementation Details
+
+### JWT Extraction Pattern
 ```rust
-pub mod models;
-pub mod service;
-
-pub use self::models::{Product, NewProduct, ProductFilter};
-pub use self::service::ProductService;
+fn extract_user_id(req: &HttpRequest) -> Result<i32, ()> {
+    if let Some(auth_header) = req.headers().get("Authorization") {
+        if let Ok(auth_str) = auth_header.to_str() {
+            if auth_str.starts_with("Bearer ") {
+                let token = &auth_str[7..];
+                if let Ok(claims) = validate_token(token) {
+                    return Ok(claims.sub.parse::<i32>().unwrap_or(0));
+                }
+            }
+        }
+    }
+    Err(())
+}
 ```
 
-### 3. Implement Product Models
-Create `src/catalog/models.rs` with the Product, NewProduct, and ProductFilter structs using rust_decimal::Decimal for prices.
-
-### 4. Implement ProductService
-Create `src/catalog/service.rs` with thread-safe storage using Arc<Mutex<Vec<Product>>> and implement:
-- `new()` - Initialize empty service
-- `create(NewProduct)` - Add product with auto-incrementing ID
-- `get_all()` - Return all products
-- `get_by_id(i32)` - Find product by ID
-- `update_inventory(i32, i32)` - Update stock count
-- `filter(ProductFilter)` - Search products
-- `delete(i32)` - Remove product
-
-### 5. Register Module
-Update `src/main.rs` or `src/lib.rs`:
+### Inventory Validation
+Before adding items:
 ```rust
-pub mod catalog;
+if product.inventory_count >= quantity {
+    // Add to cart
+} else {
+    // Return 400 Bad Request
+}
 ```
-
-### 6. Write Tests
-Test CRUD operations, filtering, concurrency, and decimal precision.
 
 ## Success Criteria
-- [ ] All dependencies added
-- [ ] Models implement Clone, Serialize, Deserialize
-- [ ] ProductService is thread-safe
-- [ ] Auto-incrementing IDs work
-- [ ] Filtering works for all criteria
-- [ ] Prices maintain decimal precision
-- [ ] All tests pass
-
-## Time Estimate
-40 minutes for experienced Rust developer.
+- All endpoints return 401 without valid JWT
+- Items added correctly with quantity tracking
+- Inventory validated before adding
+- Cart operations isolated per user
