@@ -173,21 +173,19 @@ mod tests {
         assert_eq!(claims.sub, user_id);
 
         // Check expiration is in the future (~24 hours)
-        #[allow(clippy::cast_possible_truncation)]
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("Time went backwards")
-            .as_secs() as usize;
-        let expected_exp = now + 86400; // 24 hours
+            .as_secs();
+        let now_usize = usize::try_from(now).expect("timestamp exceeds usize range");
+        let expected_exp = now_usize + 86400; // 24 hours
 
         // Allow 10 second tolerance for test execution time
-        #[allow(clippy::cast_possible_wrap)]
-        let exp_diff = (claims.exp as i64 - expected_exp as i64).abs();
+        let exp_diff = claims.exp.abs_diff(expected_exp);
         assert!(exp_diff < 10);
 
         // Check issued at time is recent
-        #[allow(clippy::cast_possible_wrap)]
-        let iat_diff = (claims.iat as i64 - now as i64).abs();
+        let iat_diff = claims.iat.abs_diff(now_usize);
         assert!(iat_diff < 10);
     }
 
