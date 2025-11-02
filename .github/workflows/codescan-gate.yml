@@ -1,0 +1,60 @@
+name: Code Scanning Gate
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  security-events: read
+  pull-requests: read
+
+jobs:
+  gate:
+    name: Enforce Code Scanning Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure dependencies (gh, jq)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v gh >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y gh
+          fi
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y jq
+          fi
+
+      - name: Run Code Scanning gate (block MED/HIGH/CRITICAL)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Checking Code Scanning alerts for PR #$PR in $REPO..."
+          # List open alerts for visibility
+          gh api \
+            "/repos/$REPO/code-scanning/alerts?state=open&pr=$PR" \
+            --paginate \
+            --jq '.[] | {rule_id: .rule.id, severity: .rule.severity, message: .most_recent_instance.message.text, url: .html_url}' || true
+
+          # Compute violation count for severity medium|high|critical
+          violations=$(gh api \
+            "/repos/$REPO/code-scanning/alerts?state=open&pr=$PR" \
+            --paginate \
+            | jq '[.[] | select((.rule.severity // "unknown") | test("^(?i)(medium|high|critical)$"))] | length')
+
+          echo "Violation count (MED/HIGH/CRITICAL): $violations"
+          if [ "$violations" -gt 0 ]; then
+            echo "Found $violations MEDIUM/HIGH/CRITICAL Code Scanning alerts. Failing gate." >&2
+            exit 1
+          fi
+          echo "No MEDIUM/HIGH/CRITICAL Code Scanning alerts found. Gate passed."
+
