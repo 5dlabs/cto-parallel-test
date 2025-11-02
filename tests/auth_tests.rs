@@ -11,7 +11,7 @@ struct Claims {
 }
 
 // Test fixture for JWT operations
-const JWT_TEST_KEY: &str = "test-jwt-secret";
+const JWT_TEST_KEY: &str = "mock-jwt-testing-key";
 
 /// Helper function to convert timestamp to usize
 #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
