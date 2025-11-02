@@ -36,7 +36,11 @@ impl ProductService {
 
         // Basic input hygiene: trim name and clamp stock to non-negative.
         let name = new_product.name.trim().to_string();
-        let stock = if new_product.stock < 0 { 0 } else { new_product.stock };
+        let stock = if new_product.stock < 0 {
+            0
+        } else {
+            new_product.stock
+        };
 
         let product = Product {
             id,

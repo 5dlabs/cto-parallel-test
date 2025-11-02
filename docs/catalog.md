@@ -16,7 +16,7 @@ use rust_decimal::Decimal;
 use std::str::FromStr;
 
 let svc = ProductService::new();
-let p = svc.create(NewProduct {
+let p = svc.create(&NewProduct {
     name: "Widget".to_string(),
     price: Decimal::from_str("19.99").unwrap(),
     stock: 5,
