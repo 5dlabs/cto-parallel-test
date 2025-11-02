@@ -1,0 +1,32 @@
+# Rust artifacts
+/target/
+Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Hook files - never commit
+hooks/
+.hooks/
+**/hooks/
+
+# Build artifacts
+*.rlib
+*.so
+*.dylib
+*.dll
+
+# Debug
+debug/
