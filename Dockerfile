@@ -1,6 +1,7 @@
 # Multi-stage build for Rust library project
 # Stage 1: Build the library
-FROM rust:1.83-bookworm AS builder
+# Using rust:latest to ensure Diesel 2.3+ compatibility (requires rustc 1.86+)
+FROM rust:latest AS builder
 
 WORKDIR /build
 
