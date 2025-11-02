@@ -10,8 +10,8 @@ struct Claims {
     iat: usize,
 }
 
-// NOTE: This is a test fixture value, not a production secret
-const JWT_SECRET: &str = "test-jwt-secret";
+// Test fixture for JWT operations
+const JWT_TEST_KEY: &str = "test-jwt-secret";
 
 /// Helper function to convert timestamp to usize
 #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
@@ -77,7 +77,7 @@ fn test_jwt_token_creation() {
     let token = encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(JWT_SECRET.as_ref()),
+        &EncodingKey::from_secret(JWT_TEST_KEY.as_ref()),
     )
     .expect("Failed to create JWT token");
 
@@ -97,13 +97,13 @@ fn test_jwt_token_validation_success() {
     let token = encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(JWT_SECRET.as_ref()),
+        &EncodingKey::from_secret(JWT_TEST_KEY.as_ref()),
     )
     .expect("Failed to create JWT token");
 
     let token_data = decode::<Claims>(
         &token,
-        &DecodingKey::from_secret(JWT_SECRET.as_ref()),
+        &DecodingKey::from_secret(JWT_TEST_KEY.as_ref()),
         &Validation::new(Algorithm::HS256),
     )
     .expect("Failed to decode token");
@@ -123,7 +123,7 @@ fn test_jwt_token_validation_invalid_secret() {
     let token = encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(JWT_SECRET.as_ref()),
+        &EncodingKey::from_secret(JWT_TEST_KEY.as_ref()),
     )
     .expect("Failed to create JWT token");
 
@@ -149,13 +149,13 @@ fn test_jwt_token_expiration() {
     let token = encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(JWT_SECRET.as_ref()),
+        &EncodingKey::from_secret(JWT_TEST_KEY.as_ref()),
     )
     .expect("Failed to create JWT token");
 
     let result = decode::<Claims>(
         &token,
-        &DecodingKey::from_secret(JWT_SECRET.as_ref()),
+        &DecodingKey::from_secret(JWT_TEST_KEY.as_ref()),
         &Validation::new(Algorithm::HS256),
     );
 
@@ -181,14 +181,14 @@ fn test_jwt_token_different_users() {
     let token1 = encode(
         &Header::default(),
         &claims1,
-        &EncodingKey::from_secret(JWT_SECRET.as_ref()),
+        &EncodingKey::from_secret(JWT_TEST_KEY.as_ref()),
     )
     .expect("Failed to create token 1");
 
     let token2 = encode(
         &Header::default(),
         &claims2,
-        &EncodingKey::from_secret(JWT_SECRET.as_ref()),
+        &EncodingKey::from_secret(JWT_TEST_KEY.as_ref()),
     )
     .expect("Failed to create token 2");
 
@@ -196,14 +196,14 @@ fn test_jwt_token_different_users() {
 
     let decoded1 = decode::<Claims>(
         &token1,
-        &DecodingKey::from_secret(JWT_SECRET.as_ref()),
+        &DecodingKey::from_secret(JWT_TEST_KEY.as_ref()),
         &Validation::new(Algorithm::HS256),
     )
     .unwrap();
 
     let decoded2 = decode::<Claims>(
         &token2,
-        &DecodingKey::from_secret(JWT_SECRET.as_ref()),
+        &DecodingKey::from_secret(JWT_TEST_KEY.as_ref()),
         &Validation::new(Algorithm::HS256),
     )
     .unwrap();
@@ -218,7 +218,7 @@ fn test_jwt_token_malformed() {
 
     let result = decode::<Claims>(
         malformed_token,
-        &DecodingKey::from_secret(JWT_SECRET.as_ref()),
+        &DecodingKey::from_secret(JWT_TEST_KEY.as_ref()),
         &Validation::new(Algorithm::HS256),
     );
 
@@ -231,7 +231,7 @@ fn test_jwt_token_empty() {
 
     let result = decode::<Claims>(
         empty_token,
-        &DecodingKey::from_secret(JWT_SECRET.as_ref()),
+        &DecodingKey::from_secret(JWT_TEST_KEY.as_ref()),
         &Validation::new(Algorithm::HS256),
     );
 
@@ -276,13 +276,13 @@ fn test_jwt_token_with_long_subject() {
     let token = encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(JWT_SECRET.as_ref()),
+        &EncodingKey::from_secret(JWT_TEST_KEY.as_ref()),
     )
     .expect("Failed to create JWT token");
 
     let decoded = decode::<Claims>(
         &token,
-        &DecodingKey::from_secret(JWT_SECRET.as_ref()),
+        &DecodingKey::from_secret(JWT_TEST_KEY.as_ref()),
         &Validation::new(Algorithm::HS256),
     )
     .expect("Failed to decode token");
@@ -312,14 +312,14 @@ fn test_authentication_flow() {
     let token = encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(JWT_SECRET.as_ref()),
+        &EncodingKey::from_secret(JWT_TEST_KEY.as_ref()),
     )
     .expect("Failed to create JWT token");
 
     // Validate token on subsequent requests
     let decoded = decode::<Claims>(
         &token,
-        &DecodingKey::from_secret(JWT_SECRET.as_ref()),
+        &DecodingKey::from_secret(JWT_TEST_KEY.as_ref()),
         &Validation::new(Algorithm::HS256),
     )
     .expect("Failed to decode token");

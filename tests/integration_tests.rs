@@ -24,8 +24,8 @@ struct Claims {
     iat: usize,
 }
 
-// Test JWT secret - not a real secret, only for unit tests
-const JWT_SECRET: &str = "test-jwt-secret";
+// Test fixture for JWT operations  
+const JWT_TEST_KEY: &str = "test-jwt-secret";
 
 /// Helper function to convert timestamp to usize
 #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
@@ -45,7 +45,7 @@ fn create_user_token(user_email: &str) -> String {
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(JWT_SECRET.as_ref()),
+        &EncodingKey::from_secret(JWT_TEST_KEY.as_ref()),
     )
     .expect("Failed to create JWT token")
 }
@@ -54,7 +54,7 @@ fn create_user_token(user_email: &str) -> String {
 fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let token_data = decode::<Claims>(
         token,
-        &DecodingKey::from_secret(JWT_SECRET.as_ref()),
+        &DecodingKey::from_secret(JWT_TEST_KEY.as_ref()),
         &Validation::new(Algorithm::HS256),
     )?;
     Ok(token_data.claims)
@@ -392,7 +392,7 @@ fn test_token_expiration_handling() {
     let expired_token = encode(
         &Header::default(),
         &expired_claims,
-        &EncodingKey::from_secret(JWT_SECRET.as_ref()),
+        &EncodingKey::from_secret(JWT_TEST_KEY.as_ref()),
     )
     .expect("Failed to create token");
 
