@@ -1,0 +1,36 @@
+# Git files
+.git
+.gitignore
+.github
+
+# Build artifacts
+target
+Cargo.lock
+
+# Documentation
+*.md
+docs/
+task/
+
+# Development files
+.env
+.env.*
+.vscode
+.idea
+*.swp
+*.swo
+
+# CI/CD
+.github/workflows
+
+# Frontend (not needed for backend image)
+frontend/
+node_modules/
+
+# Test files
+tests/
+
+# Temporary files
+*.tmp
+*.log
+.DS_Store
