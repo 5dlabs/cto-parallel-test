@@ -1,0 +1,9 @@
+(function() {
+    var implementors = Object.fromEntries([["cto_parallel_test",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.91.0/core/clone/trait.Clone.html\" title=\"trait core::clone::Clone\">Clone</a> for <a class=\"struct\" href=\"cto_parallel_test/auth/jwt/struct.Claims.html\" title=\"struct cto_parallel_test::auth::jwt::Claims\">Claims</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.91.0/core/clone/trait.Clone.html\" title=\"trait core::clone::Clone\">Clone</a> for <a class=\"struct\" href=\"cto_parallel_test/auth/models/struct.User.html\" title=\"struct cto_parallel_test::auth::models::User\">User</a>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[597]}
