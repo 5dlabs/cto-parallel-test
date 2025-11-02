@@ -1,0 +1,19 @@
+[package]
+name = "cto-parallel-test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Decimal handling for prices
+rust_decimal = { version = "1.30", features = ["serde"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[dev-dependencies]
+rust_decimal_macros = "1.30"
+
+[lib]
+name = "cto_parallel_test"
+path = "src/lib.rs"
