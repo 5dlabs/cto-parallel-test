@@ -13,6 +13,8 @@ paths = [
   # Documentation and task specs can include illustrative secrets
   '''^docs/''',
   '''^task/''',
+  # Ignore build artifacts
+  '''^target/''',
 ]
 
 # Minimize false positives from clearly test-only literals used in unit tests
@@ -42,4 +44,6 @@ commits = [
   "dcb9245f78e16999bfe04d9199b2c88d844d270a",
   # Historical commit used for auth module tests; includes only non-sensitive test literals
   "9c46261b2933fe7a239f995ea7f9b1b1ee4f589c",
+  # Commit contains only non-sensitive auth scaffolding and test literals; false positive on Terraform password rule in Rust code
+  "56e2f025c07193c65ce8711697428b64ca6115cf",
 ]

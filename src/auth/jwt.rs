@@ -66,6 +66,13 @@ fn leeway_secs() -> u64 {
 /// Create a JWT token for the given user ID with 24-hour expiration
 ///
 /// Security: the JWT secret must be provided via `JWT_SECRET` and be >= 32 bytes.
+///
+/// # Errors
+///
+/// Returns [`JwtError::MissingSecret`] if `JWT_SECRET` is unset, [`JwtError::WeakSecret`]
+/// if the secret is shorter than 32 bytes, [`JwtError::InvalidExpiration`] if the
+/// configured expiration cannot be represented safely, or wraps underlying
+/// `jsonwebtoken` errors as [`JwtError::Jwt`].
 pub fn create_token(user_id: &str) -> Result<String, JwtError> {
     create_token_with_clock(user_id, &SystemClock)
 }
@@ -100,6 +107,12 @@ fn create_token_with_clock(user_id: &str, clock: &dyn Clock) -> Result<String, J
 }
 
 /// Validate a JWT token and extract claims
+///
+/// # Errors
+///
+/// Returns [`JwtError::MissingSecret`] if `JWT_SECRET` is unset, [`JwtError::WeakSecret`]
+/// if the secret is too short, or wraps signature/format/expiration failures from
+/// `jsonwebtoken` as [`JwtError::Jwt`].
 pub fn validate_token(token: &str) -> Result<Claims, JwtError> {
     let secret = read_secret()?;
     let mut validation = Validation::new(Algorithm::HS256);
@@ -272,4 +285,3 @@ mod tests {
         assert_eq!(token, token2);
     }
 }
-
