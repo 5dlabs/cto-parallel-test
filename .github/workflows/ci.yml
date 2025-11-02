@@ -94,7 +94,12 @@ jobs:
           shared-key: rust-cache-ci
 
       - name: Install Diesel CLI
-        run: cargo install diesel_cli --no-default-features --features postgres --locked
+        run: |
+          if ! command -v diesel &> /dev/null; then
+            cargo install diesel_cli --no-default-features --features postgres --locked
+          else
+            echo "✅ Diesel CLI already installed"
+          fi
 
       - name: Run migrations
         env:
