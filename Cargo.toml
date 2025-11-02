@@ -23,7 +23,7 @@ serde_json = "1.0"
 rust_decimal = { version = "1.30", features = ["serde"] }
 
 # Authentication
-jsonwebtoken = "8.3.0"
+jsonwebtoken = "9.3.0"
 argon2 = "0.5.0"
 rand = "0.8.5"
 
@@ -31,7 +31,7 @@ rand = "0.8.5"
 chrono = { version = "0.4", features = ["serde"] }
 
 # Environment configuration
-dotenv = "0.15.0"
+dotenvy = "0.15.7"
 
 # Database ORM and connection pooling
 diesel = { version = "2.1.0", features = ["postgres", "r2d2", "chrono", "numeric"] }
