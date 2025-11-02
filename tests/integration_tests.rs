@@ -24,7 +24,7 @@ struct Claims {
     iat: usize,
 }
 
-// Test fixture for JWT operations  
+// Test fixture for JWT operations
 const JWT_TEST_KEY: &str = "mock-jwt-testing-key";
 
 /// Helper function to convert timestamp to usize
