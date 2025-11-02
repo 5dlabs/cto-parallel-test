@@ -1,5 +1,5 @@
 [package]
-name = "ecommerce-api"
+name = "cto-parallel-test"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,6 +7,9 @@ edition = "2021"
 rust_decimal = { version = "1.30", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+[dev-dependencies]
+rust_decimal_macros = "1.30"
 
 [lib]
 path = "src/lib.rs"
