@@ -40,4 +40,6 @@ commits = [
   "b0e5ce60c50fa1d653740cb145338627ef27770a",
   "bf9c62351e620c07dcbd67b84064a62aad4e5ba7",
   "dcb9245f78e16999bfe04d9199b2c88d844d270a",
+  # Historical commit used for auth module tests; includes only non-sensitive test literals
+  "9c46261b2933fe7a239f995ea7f9b1b1ee4f589c",
 ]
