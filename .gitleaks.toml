@@ -1,24 +1,14 @@
-# Gitleaks configuration to allow test passwords in test code
-# These are not real secrets, just test data
+title = "5dlabs/cto-parallel-test gitleaks config"
+
+[extend]
+# Use the maintained default gitleaks ruleset
+useDefault = true
 
 [allowlist]
-description = "Allowlist for test code"
-
-# Allow test passwords in test files
+description = "Allow common test paths"
+# Keep allowlist minimal; expand only if tests trip rules
 paths = [
-    '''src/auth/models\.rs'''
+  '''(^|/)test[s]?/''',
+  '''(^|/)tests?/data/''',
 ]
 
-# Allow common test password patterns
-regexes = [
-    '''test_pw_123''',
-    '''my_test_pw_123''',
-    '''test_password''',
-    '''mypassword'''
-]
-
-# Stop words to exclude from detection
-stopwords = [
-    '''test_pw''',
-    '''test_password'''
-]
