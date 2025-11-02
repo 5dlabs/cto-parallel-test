@@ -1,0 +1,5 @@
+# Test data in authentication tests - these are not real secrets
+src/auth/models.rs:*test_password*
+src/auth/models.rs:*secret_password*
+src/auth/models.rs:*secure_password*
+src/auth/models.rs:*eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9*

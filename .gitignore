@@ -1,0 +1,43 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo lock file (uncomment for libraries)
+# Cargo.lock
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Hook files - never commit
+hooks/
+.hooks/
+**/hooks/
+
+# Test coverage reports
+*.profraw
+*.profdata
+coverage/
+tarpaulin-report.html
+tarpaulin-report.json
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
