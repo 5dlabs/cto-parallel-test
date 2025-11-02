@@ -1,13 +1,13 @@
 # Task 6: Frontend Components
 
 ## Overview
-Build a React-based frontend with Material-UI for the e-commerce application, including all major UI components and routing.
+Build a React-based frontend with shadcn/ui for the e-commerce application, including all major UI components and routing.
 
 ## Context
 **Level 0 task** (no dependencies) - Can run in parallel with backend tasks. Creates the user interface independently of backend implementation.
 
 ## Objectives
-1. Set up React project with Material-UI
+1. Set up React project with shadcn/ui and Tailwind CSS
 2. Implement routing with React Router
 3. Create Header, Footer, and layout components
 4. Build HomePage, ProductList, Cart, Login, and Register pages
@@ -27,21 +27,45 @@ npm install
 Create `package.json` with dependencies:
 - react, react-dom (18.2.0)
 - react-router-dom (6.14.2)
-- @mui/material, @mui/icons-material (5.14.0)
+- tailwindcss, autoprefixer, postcss
 - axios (1.4.0)
-- @emotion/react, @emotion/styled
+- @radix-ui/react-* components (installed via shadcn/ui)
+- class-variance-authority, clsx, tailwind-merge
 
-### Step 2: Create App Shell
+### Step 2: Initialize shadcn/ui
+```bash
+cd frontend
+npx shadcn@latest init
+```
+
+Configure shadcn/ui with:
+- TypeScript: No (using JavaScript)
+- Style: Default
+- Base color: Slate
+- CSS variables: Yes
+
+### Step 3: Create App Shell
 `frontend/src/App.js` with:
-- ThemeProvider setup
 - Router configuration
 - Route definitions for all pages
+- Tailwind CSS global styles
 
-### Step 3: Build Layout Components
-- **Header.js**: AppBar with navigation, cart badge, login button
+### Step 4: Add shadcn/ui Components
+Add required components:
+```bash
+npx shadcn@latest add button
+npx shadcn@latest add card
+npx shadcn@latest add badge
+npx shadcn@latest add input
+npx shadcn@latest add form
+npx shadcn@latest add navigation-menu
+```
+
+### Step 5: Build Layout Components
+- **Header.js**: Navigation header with links, cart badge, login button
 - **Footer.js**: Simple copyright footer
 
-### Step 4: Implement Page Components
+### Step 6: Implement Page Components
 - **HomePage.js**: Landing page with call-to-action
 - **ProductList.js**: Grid of product cards
 - **ProductDetail.js**: Single product view
@@ -63,7 +87,8 @@ npm run build  # Verify production build
 - [ ] All routes accessible via navigation
 - [ ] Components render without errors
 - [ ] Responsive design works on mobile/desktop
-- [ ] Material-UI theme applied consistently
+- [ ] shadcn/ui components render correctly
+- [ ] Tailwind CSS styles applied consistently
 
 ## Files Created
 - `frontend/package.json`
