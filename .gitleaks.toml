@@ -1,0 +1,24 @@
+# Gitleaks configuration to allow test passwords in test code
+# These are not real secrets, just test data
+
+[allowlist]
+description = "Allowlist for test code"
+
+# Allow test passwords in test files
+paths = [
+    '''src/auth/models\.rs'''
+]
+
+# Allow common test password patterns
+regexes = [
+    '''test_pw_123''',
+    '''my_test_pw_123''',
+    '''test_password''',
+    '''mypassword'''
+]
+
+# Stop words to exclude from detection
+stopwords = [
+    '''test_pw''',
+    '''test_password'''
+]

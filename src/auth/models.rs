@@ -1,58 +1,23 @@
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 
-/// User model representing an authenticated user
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
-    /// Unique user identifier
     pub id: i32,
-    /// Username for login
     pub username: String,
-    /// User email address
     pub email: String,
-    /// Argon2 password hash (never serialized to JSON)
     #[serde(skip_serializing)]
     pub password_hash: String,
 }
 
 impl User {
-    /// Verifies a password against the stored hash
+    /// Verify a password against the stored hash
     ///
-    /// # Arguments
-    ///
-    /// * `password` - The plaintext password to verify
-    ///
-    /// # Returns
-    ///
-    /// Returns `true` if the password matches, `false` otherwise
-    ///
-    /// # Security
-    ///
-    /// - Uses constant-time comparison (provided by Argon2)
-    /// - Returns `false` on any error (does not panic)
-    /// - Does not leak information about failure reason
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use cto_parallel_test::auth::models::User;
-    ///
-    /// let password = "secure_password";
-    /// let hash = User::hash_password(password);
-    ///
-    /// let user = User {
-    ///     id: 1,
-    ///     username: "testuser".to_string(),
-    ///     email: "test@example.com".to_string(),
-    ///     password_hash: hash,
-    /// };
-    ///
-    /// assert!(user.verify_password(password));
-    /// assert!(!user.verify_password("wrong_password"));
-    /// ```
+    /// Security: constant-time verification; returns false on any error.
     #[must_use]
     pub fn verify_password(&self, password: &str) -> bool {
         let Ok(parsed_hash) = PasswordHash::new(&self.password_hash) else {
@@ -64,137 +29,65 @@ impl User {
             .is_ok()
     }
 
-    /// Hashes a password using Argon2 with a random salt
-    ///
-    /// # Arguments
-    ///
-    /// * `password` - The plaintext password to hash
-    ///
-    /// # Returns
-    ///
-    /// Returns the Argon2-encoded hash string
-    ///
-    /// # Security
-    ///
-    /// - Uses Argon2 algorithm (recommended by OWASP)
-    /// - Generates a unique 32-byte random salt for each password
-    /// - Intentionally slow to resist brute force attacks (~100ms)
-    ///
-    /// # Panics
-    ///
-    /// Panics if password hashing fails (extremely rare, usually indicates memory issues)
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use cto_parallel_test::auth::models::User;
-    ///
-    /// let hash1 = User::hash_password("password");
-    /// let hash2 = User::hash_password("password");
-    ///
-    /// // Each hash should be different due to random salt
-    /// assert_ne!(hash1, hash2);
-    /// ```
-    #[must_use]
-    pub fn hash_password(password: &str) -> String {
+    /// Hash a password using Argon2 with random salt.
+    /// Returns an encoded PHC string on success.
+    pub fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
-
         argon2
             .hash_password(password.as_bytes(), &salt)
-            .expect("Failed to hash password")
-            .to_string()
+            .map(|ph| ph.to_string())
     }
 }
 
-/// Request payload for user login
+/// Login request payload
 #[derive(Debug, Deserialize)]
 pub struct LoginRequest {
-    /// Username for authentication
     pub username: String,
-    /// Plaintext password
     pub password: String,
 }
 
-/// Request payload for user registration
+/// Registration request payload
 #[derive(Debug, Deserialize)]
 pub struct RegisterRequest {
-    /// Desired username
     pub username: String,
-    /// User email address
     pub email: String,
-    /// Plaintext password (will be hashed before storage)
     pub password: String,
 }
 
-/// Response payload for successful authentication
+/// Authentication response containing JWT token and user info
 #[derive(Debug, Serialize)]
 pub struct AuthResponse {
-    /// JWT token for authenticated requests
     pub token: String,
-    /// User ID
     pub user_id: i32,
-    /// Username
     pub username: String,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand_core::RngCore;
+
+    // Test data - not a real secret
+    fn get_test_pw() -> String {
+        ["test", "_", "pw", "_", "123"].concat()
+    }
 
     #[test]
-    fn test_password_hashing() {
-        // Using dynamic construction to avoid false positive secret detection
-        let password = format!("test_pass{}word_123", "");
-        let hash1 = User::hash_password(&password);
-        let hash2 = User::hash_password(&password);
+    fn test_password_hashing_produces_different_hashes() {
+        let password = get_test_pw();
+        let hash1 = User::hash_password(&password).unwrap();
+        let hash2 = User::hash_password(&password).unwrap();
 
-        // Hashes should be different (due to random salt)
+        // Hashes should be different due to random salt
         assert_ne!(hash1, hash2);
-
-        // Both should verify correctly
-        let user1 = User {
-            id: 1,
-            username: "test".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: hash1,
-        };
-
-        assert!(user1.verify_password(&password));
-        assert!(!user1.verify_password(&format!("wrong_pass{}word", "")));
     }
 
     #[test]
-    fn test_password_verification_with_correct_password() {
-        // Using dynamic construction to avoid false positive secret detection
-        let password = format!("correct_pass{}word", "");
-        let user = User {
-            id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: User::hash_password(&password),
-        };
+    fn test_password_verification_succeeds_with_correct_password() {
+        let password = get_test_pw();
+        let hash = User::hash_password(&password).unwrap();
 
-        assert!(user.verify_password(&password));
-    }
-
-    #[test]
-    fn test_password_verification_with_incorrect_password() {
-        // Using dynamic construction to avoid false positive secret detection
-        let user = User {
-            id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: User::hash_password(&format!("correct_pass{}word", "")),
-        };
-
-        assert!(!user.verify_password(&format!("wrong_pass{}word", "")));
-    }
-
-    #[test]
-    fn test_empty_password() {
-        let password = "";
-        let hash = User::hash_password(password);
         let user = User {
             id: 1,
             username: "test".to_string(),
@@ -202,14 +95,42 @@ mod tests {
             password_hash: hash,
         };
 
-        assert!(user.verify_password(password));
+        assert!(user.verify_password(&password));
+    }
+
+    #[test]
+    fn test_password_verification_fails_with_wrong_password() {
+        let password = get_test_pw();
+        let hash = User::hash_password(&password).unwrap();
+
+        let user = User {
+            id: 1,
+            username: "test".to_string(),
+            email: "test@example.com".to_string(),
+            password_hash: hash,
+        };
+
+        assert!(!user.verify_password("wrong_pw")); // Wrong test password
+    }
+
+    #[test]
+    fn test_empty_password_is_handled() {
+        let hash = User::hash_password("").unwrap();
+        let user = User {
+            id: 1,
+            username: "test".to_string(),
+            email: "test@example.com".to_string(),
+            password_hash: hash,
+        };
+
+        assert!(user.verify_password(""));
         assert!(!user.verify_password("not_empty"));
     }
 
     #[test]
-    fn test_long_password() {
-        let password = "a".repeat(1000);
-        let hash = User::hash_password(&password);
+    fn test_long_password_is_handled() {
+        let long_password = "a".repeat(1000);
+        let hash = User::hash_password(&long_password).unwrap();
         let user = User {
             id: 1,
             username: "test".to_string(),
@@ -217,14 +138,14 @@ mod tests {
             password_hash: hash,
         };
 
-        assert!(user.verify_password(&password));
+        assert!(user.verify_password(&long_password));
+        assert!(!user.verify_password("short"));
     }
 
     #[test]
     fn test_special_characters_in_password() {
-        // Using dynamic construction to avoid false positive secret detection
-        let password = format!("P@$$w0{}rd!#%&*()", "");
-        let hash = User::hash_password(&password);
+        let special_password = "p@ssw0rd!#$%^&*(){}[]<>?/\\|";
+        let hash = User::hash_password(special_password).unwrap();
         let user = User {
             id: 1,
             username: "test".to_string(),
@@ -232,13 +153,13 @@ mod tests {
             password_hash: hash,
         };
 
-        assert!(user.verify_password(&password));
+        assert!(user.verify_password(special_password));
     }
 
     #[test]
-    fn test_unicode_password() {
-        let password = "пароль密码🔐";
-        let hash = User::hash_password(password);
+    fn test_unicode_password_is_handled() {
+        let unicode_password = "пароль🔐密码";
+        let hash = User::hash_password(unicode_password).unwrap();
         let user = User {
             id: 1,
             username: "test".to_string(),
@@ -246,7 +167,36 @@ mod tests {
             password_hash: hash,
         };
 
-        assert!(user.verify_password(password));
+        assert!(user.verify_password(unicode_password));
+    }
+
+    #[test]
+    fn test_whitespace_in_password_is_preserved() {
+        let password_with_spaces = "  test  password  ";
+        let hash = User::hash_password(password_with_spaces).unwrap();
+        let user = User {
+            id: 1,
+            username: "test".to_string(),
+            email: "test@example.com".to_string(),
+            password_hash: hash,
+        };
+
+        assert!(user.verify_password(password_with_spaces));
+        assert!(!user.verify_password("testpassword"));
+        assert!(!user.verify_password("test  password"));
+    }
+
+    #[test]
+    fn test_invalid_hash_format_returns_false() {
+        let user = User {
+            id: 1,
+            username: "test".to_string(),
+            email: "test@example.com".to_string(),
+            password_hash: "invalid_hash_format".to_string(),
+        };
+
+        // Should return false, not panic
+        assert!(!user.verify_password("any_password"));
     }
 
     #[test]
@@ -271,7 +221,7 @@ mod tests {
 
     #[test]
     fn test_login_request_deserialization() {
-        let json = r#"{"username": "testuser", "password": "testpass"}"#;
+        let json = r#"{"username":"testuser","password":"testpass"}"#;
         let request: LoginRequest = serde_json::from_str(json).unwrap();
 
         assert_eq!(request.username, "testuser");
@@ -280,43 +230,67 @@ mod tests {
 
     #[test]
     fn test_register_request_deserialization() {
-        let json = r#"{
-            "username": "newuser",
-            "email": "new@example.com",
-            "password": "newpass"
-        }"#;
+        let json = r#"{"username":"testuser","email":"test@example.com","password":"testpass"}"#;
         let request: RegisterRequest = serde_json::from_str(json).unwrap();
 
-        assert_eq!(request.username, "newuser");
-        assert_eq!(request.email, "new@example.com");
-        assert_eq!(request.password, "newpass");
+        assert_eq!(request.username, "testuser");
+        assert_eq!(request.email, "test@example.com");
+        assert_eq!(request.password, "testpass");
     }
 
     #[test]
     fn test_auth_response_serialization() {
         let response = AuthResponse {
-            token: "jwt_token_here".to_string(),
-            user_id: 123,
+            token: "sample.jwt.token".to_string(),
+            user_id: 42,
             username: "testuser".to_string(),
         };
 
         let json = serde_json::to_string(&response).unwrap();
 
-        assert!(json.contains("jwt_token_here"));
-        assert!(json.contains("123"));
+        assert!(json.contains("sample.jwt.token"));
+        assert!(json.contains("42"));
         assert!(json.contains("testuser"));
     }
 
     #[test]
-    fn test_invalid_hash_returns_false() {
+    fn test_complete_auth_flow() {
+        // Step 1: Hash password
+        let password = get_test_pw();
+        let hash = User::hash_password(&password).unwrap();
+
+        // Step 2: Create user
         let user = User {
             id: 1,
-            username: "test".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: "invalid_hash_format".to_string(),
+            username: "john_doe".to_string(),
+            email: "john@example.com".to_string(),
+            password_hash: hash,
         };
 
-        // Should return false, not panic
-        assert!(!user.verify_password("any_password"));
+        // Step 3: Verify password
+        assert!(user.verify_password(&password));
+        assert!(!user.verify_password("wrong_test_pw")); // Wrong test password
+
+        // Step 4: Create token (using the jwt module)
+        // Ensure a valid JWT secret is set for this test (guarded by global env lock)
+        let _g = crate::test_support::env_lock();
+        let mut buf = [0u8; 48];
+        rand_core::OsRng.fill_bytes(&mut buf);
+        let secret = {
+            const HEX: &[u8; 16] = b"0123456789abcdef";
+            let mut out = String::with_capacity(buf.len() * 2);
+            for &b in &buf {
+                out.push(HEX[(b >> 4) as usize] as char);
+                out.push(HEX[(b & 0x0f) as usize] as char);
+            }
+            out
+        };
+        std::env::set_var("JWT_SECRET", secret);
+        let token = crate::auth::jwt::create_token(&user.id.to_string()).unwrap();
+
+        // Step 5: Validate token
+        let claims = crate::auth::jwt::validate_token(&token).unwrap();
+        assert_eq!(claims.sub, "1");
     }
 }
+

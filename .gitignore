@@ -1,22 +1,19 @@
-# Rust
+# Rust build artifacts
 /target/
 **/*.rs.bk
 *.pdb
 
-# Cargo
-Cargo.lock
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Environment
+# Environment files
 .env
 .env.local
 .env.production
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
 # OS
 .DS_Store
@@ -26,3 +23,10 @@ Thumbs.db
 hooks/
 .hooks/
 **/hooks/
+
+# Test coverage
+*.profraw
+*.profdata
+
+# Documentation build
+/doc/
