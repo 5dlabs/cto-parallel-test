@@ -67,10 +67,7 @@ fn extract_user_id(req: &HttpRequest) -> Result<i32, ()> {
 ///
 /// * 200 OK - Cart retrieved successfully
 /// * 401 Unauthorized - Missing or invalid JWT token
-pub async fn get_cart(
-    req: HttpRequest,
-    cart_service: web::Data<CartService>,
-) -> impl Responder {
+pub async fn get_cart(req: HttpRequest, cart_service: web::Data<CartService>) -> impl Responder {
     let Ok(user_id) = extract_user_id(&req) else {
         return HttpResponse::Unauthorized()
             .json(ErrorResponse::new("Unauthorized: Invalid or missing token"));
@@ -113,8 +110,7 @@ pub async fn add_item(
 
     // Validate quantity
     if add_request.quantity <= 0 {
-        return HttpResponse::BadRequest()
-            .json(ErrorResponse::new("Quantity must be positive"));
+        return HttpResponse::BadRequest().json(ErrorResponse::new("Quantity must be positive"));
     }
 
     // Get product and validate it exists
@@ -171,8 +167,7 @@ pub async fn update_item(
 
     // Validate quantity
     if update_request.quantity <= 0 {
-        return HttpResponse::BadRequest()
-            .json(ErrorResponse::new("Quantity must be positive"));
+        return HttpResponse::BadRequest().json(ErrorResponse::new("Quantity must be positive"));
     }
 
     // Verify product exists
@@ -220,9 +215,7 @@ pub async fn remove_item(
 
     match cart_service.remove_item(user_id, *product_id) {
         Some(cart) => HttpResponse::Ok().json(cart),
-        None => {
-            HttpResponse::NotFound().json(ErrorResponse::new("Cart not found"))
-        }
+        None => HttpResponse::NotFound().json(ErrorResponse::new("Cart not found")),
     }
 }
 
@@ -243,9 +236,7 @@ pub async fn clear_cart(req: HttpRequest, cart_service: web::Data<CartService>) 
 
     match cart_service.clear_cart(user_id) {
         Some(cart) => HttpResponse::Ok().json(cart),
-        None => {
-            HttpResponse::NotFound().json(ErrorResponse::new("Cart not found"))
-        }
+        None => HttpResponse::NotFound().json(ErrorResponse::new("Cart not found")),
     }
 }
 
