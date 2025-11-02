@@ -1,0 +1,9 @@
+# Gitleaks configuration
+# Allowlist synthetic docs that include example passwords and tokens.
+
+[allowlist]
+description = "Ignore synthetic task docs"
+paths = [
+  '''docs/\.taskmaster/.*'''
+]
+

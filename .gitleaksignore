@@ -1,0 +1,4 @@
+# Ignore synthetic task documents that include example secrets/passwords.
+# These files are non-executable docs used for internal task scaffolding.
+docs/.taskmaster/**
+
