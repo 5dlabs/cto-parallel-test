@@ -39,9 +39,6 @@ jobs:
           echo "Build verification complete"
 
       - uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker
-          install: true
 
       - uses: docker/login-action@v3
         with:
