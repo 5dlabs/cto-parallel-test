@@ -42,4 +42,9 @@ assert_eq!(filtered.len(), 1);
 - Input validation: stock updates reject negative values
 - Passes `cargo fmt`, `cargo clippy -W clippy::pedantic -D warnings`, and `cargo test`
 
+### Code Scanning
+- Repository includes a CodeQL workflow that runs on PRs to `main` and enforces zero MEDIUM/HIGH/CRITICAL alerts via `scripts/gh_code_scanning.sh`.
+- Follow `github-guidelines.md` for the mandatory PR creation step so code scanning can execute.
+- Reference `coding-guidelines.md` for linting and testing gates to pass prior to PR.
+
 Refer to `coding-guidelines.md` and `github-guidelines.md` for project-wide standards.
