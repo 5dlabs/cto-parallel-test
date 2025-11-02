@@ -1,8 +1,7 @@
-target/
+/target
 gitleaks.sarif
 **/*.rs.bk
 **/*.swp
 **/*.swo
-Cargo.lock
 .env
 *.sarif
