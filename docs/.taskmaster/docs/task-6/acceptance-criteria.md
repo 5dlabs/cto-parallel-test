@@ -1,11 +1,12 @@
 # Acceptance Criteria: Frontend Components
 
 ## Requirements
-- [ ] `package.json` with all React and MUI dependencies
+- [ ] `package.json` with all React, Tailwind CSS, and shadcn/ui dependencies
 - [ ] `App.js` with routing configured
 - [ ] 8 components created in `components/` directory
 - [ ] All routes navigate correctly
-- [ ] Material-UI theme applied
+- [ ] shadcn/ui components render correctly
+- [ ] Tailwind CSS styles applied consistently
 - [ ] Responsive design works
 - [ ] `npm install` succeeds
 - [ ] `npm start` launches app
@@ -34,6 +35,6 @@
 - [ ] Header displays correctly
 - [ ] Footer at bottom of page
 - [ ] Product cards display in grid
-- [ ] Buttons and links styled with MUI
+- [ ] Buttons and links styled with shadcn/ui and Tailwind CSS
 - [ ] Cart icon shows badge
 - [ ] Responsive on mobile (< 768px)

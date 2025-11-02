@@ -1,14 +1,16 @@
 # Autonomous Agent Prompt: Frontend Components
 
 ## Mission
-Create a complete React frontend with Material-UI for an e-commerce application.
+Create a complete React frontend with shadcn/ui for an e-commerce application.
 
 ## Steps
-1. Create `frontend/package.json` with all dependencies
-2. Create `App.js` with routing and theme
-3. Build Header and Footer components
-4. Implement all page components
-5. Test that app runs without errors
+1. Create `frontend/package.json` with all dependencies (Tailwind CSS, shadcn/ui)
+2. Initialize shadcn/ui with `npx shadcn@latest init`
+3. Add shadcn/ui components (button, card, badge, input, form, navigation-menu)
+4. Create `App.js` with routing
+5. Build Header and Footer components using shadcn/ui
+6. Implement all page components with Tailwind CSS styling
+7. Test that app runs without errors
 
 ## Key Components
 
