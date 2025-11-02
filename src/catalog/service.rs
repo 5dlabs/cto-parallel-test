@@ -448,7 +448,11 @@ mod tests {
 
         let write_handle = thread::spawn(move || {
             for i in 5..10 {
-                let _ = service_write.create(create_test_product(&format!("New Product {i}"), "15.00", 3));
+                let _ = service_write.create(create_test_product(
+                    &format!("New Product {i}"),
+                    "15.00",
+                    3,
+                ));
             }
         });
 
