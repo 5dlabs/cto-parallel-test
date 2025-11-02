@@ -25,11 +25,7 @@ You MUST run `gh pr create` before your work is complete. Just pushing commits i
 - **Repository**: 
 - **Feature Branch**: feature/task--implementation
 - **Target Branch**: main (never push directly to this)
-<<<<<<< HEAD
-- **Authentication**: GitHub App (5DLabs-Cleo - pre-configured)
-=======
 - **Authentication**: GitHub App (5DLabs-Cipher - pre-configured)
->>>>>>> ba96a87cc (feat(auth): add secure JWT + Argon2 module)
 
 ### **Required Git Pattern:**
 
@@ -205,11 +201,7 @@ gh pr list --head feature/task--implementation
 - GitHub App authentication is pre-configured in the container
 - All git operations use GitHub App tokens automatically
 - Repository access: ``
-<<<<<<< HEAD
-- GitHub App: `5DLabs-Cleo`
-=======
 - GitHub App: `5DLabs-Cipher`
->>>>>>> ba96a87cc (feat(auth): add secure JWT + Argon2 module)
 
 ### Git Commands (GitHub App-based)
 ```bash
