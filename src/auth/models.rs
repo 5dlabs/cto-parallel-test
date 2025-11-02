@@ -49,11 +49,7 @@ impl User {
     ///
     /// # Returns
     ///
-    /// * `String` - The Argon2-encoded password hash
-    ///
-    /// # Panics
-    ///
-    /// Panics if password hashing fails (extremely rare, indicates system issues)
+    /// * `Result<String, password_hash::Error>` - The Argon2-encoded password hash or an error
     ///
     /// # Security
     ///
@@ -61,14 +57,14 @@ impl User {
     /// - Generates unique random 32-byte salt for each password
     /// - Salt is included in the encoded hash
     /// - Intentionally slow to resist brute force attacks
-    pub fn hash_password(password: &str) -> String {
+    /// # Errors
+    /// Returns an error if the operating system RNG or the hashing operation fails.
+    pub fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
-
         argon2
             .hash_password(password.as_bytes(), &salt)
-            .expect("Failed to hash password")
-            .to_string()
+            .map(|ph| ph.to_string())
     }
 }
 
@@ -98,6 +94,7 @@ pub struct AuthResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand_core::RngCore;
 
     // Test data - not a real secret
     fn get_test_pw() -> String {
@@ -107,8 +104,8 @@ mod tests {
     #[test]
     fn test_password_hashing_produces_different_hashes() {
         let password = get_test_pw();
-        let hash1 = User::hash_password(&password);
-        let hash2 = User::hash_password(&password);
+        let hash1 = User::hash_password(&password).unwrap();
+        let hash2 = User::hash_password(&password).unwrap();
 
         // Hashes should be different due to random salt
         assert_ne!(hash1, hash2);
@@ -117,7 +114,7 @@ mod tests {
     #[test]
     fn test_password_verification_succeeds_with_correct_password() {
         let password = get_test_pw();
-        let hash = User::hash_password(&password);
+        let hash = User::hash_password(&password).unwrap();
 
         let user = User {
             id: 1,
@@ -132,7 +129,7 @@ mod tests {
     #[test]
     fn test_password_verification_fails_with_wrong_password() {
         let password = get_test_pw();
-        let hash = User::hash_password(&password);
+        let hash = User::hash_password(&password).unwrap();
 
         let user = User {
             id: 1,
@@ -146,7 +143,7 @@ mod tests {
 
     #[test]
     fn test_empty_password_is_handled() {
-        let hash = User::hash_password("");
+        let hash = User::hash_password("").unwrap();
         let user = User {
             id: 1,
             username: "test".to_string(),
@@ -161,7 +158,7 @@ mod tests {
     #[test]
     fn test_long_password_is_handled() {
         let long_password = "a".repeat(1000);
-        let hash = User::hash_password(&long_password);
+        let hash = User::hash_password(&long_password).unwrap();
         let user = User {
             id: 1,
             username: "test".to_string(),
@@ -176,7 +173,7 @@ mod tests {
     #[test]
     fn test_special_characters_in_password() {
         let special_password = "p@ssw0rd!#$%^&*(){}[]<>?/\\|";
-        let hash = User::hash_password(special_password);
+        let hash = User::hash_password(special_password).unwrap();
         let user = User {
             id: 1,
             username: "test".to_string(),
@@ -190,7 +187,7 @@ mod tests {
     #[test]
     fn test_unicode_password_is_handled() {
         let unicode_password = "пароль🔐密码";
-        let hash = User::hash_password(unicode_password);
+        let hash = User::hash_password(unicode_password).unwrap();
         let user = User {
             id: 1,
             username: "test".to_string(),
@@ -204,7 +201,7 @@ mod tests {
     #[test]
     fn test_whitespace_in_password_is_preserved() {
         let password_with_spaces = "  test  password  ";
-        let hash = User::hash_password(password_with_spaces);
+        let hash = User::hash_password(password_with_spaces).unwrap();
         let user = User {
             id: 1,
             username: "test".to_string(),
@@ -288,7 +285,7 @@ mod tests {
     fn test_complete_auth_flow() {
         // Step 1: Hash password
         let password = get_test_pw();
-        let hash = User::hash_password(&password);
+        let hash = User::hash_password(&password).unwrap();
 
         // Step 2: Create user
         let user = User {
@@ -303,6 +300,20 @@ mod tests {
         assert!(!user.verify_password("wrong_test_pw")); // Wrong test password
 
         // Step 4: Create token (using the jwt module)
+        // Ensure a valid JWT secret is set for this test (guarded by global env lock)
+        let _g = crate::test_support::env_lock();
+        let mut buf = [0u8; 48];
+        rand_core::OsRng.fill_bytes(&mut buf);
+        let secret = {
+            const HEX: &[u8; 16] = b"0123456789abcdef";
+            let mut out = String::with_capacity(buf.len() * 2);
+            for &b in &buf {
+                out.push(HEX[(b >> 4) as usize] as char);
+                out.push(HEX[(b & 0x0f) as usize] as char);
+            }
+            out
+        };
+        std::env::set_var("JWT_SECRET", secret);
         let token = crate::auth::jwt::create_token(&user.id.to_string()).unwrap();
 
         // Step 5: Validate token
