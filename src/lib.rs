@@ -3,10 +3,12 @@
 //! This library provides the core functionality for an e-commerce application,
 //! including database schema, models, and business logic.
 
+pub mod api;
 pub mod catalog;
 pub mod config;
 pub mod models;
 pub mod schema;
 
 // Re-export commonly used types
+pub use api::configure_routes;
 pub use config::db::{establish_connection_pool, DbConnection, Pool};
