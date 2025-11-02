@@ -1,4 +1,4 @@
-use crate::schema::*;
+use crate::schema::{cart_items, carts, products, users};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
