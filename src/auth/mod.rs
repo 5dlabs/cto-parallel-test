@@ -9,4 +9,3 @@ pub use self::models::User;
 // Unit tests for the auth module
 #[cfg(test)]
 mod tests;
-

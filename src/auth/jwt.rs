@@ -101,14 +101,9 @@ fn expiration_hours() -> Result<u64, JwtError> {
 }
 
 /// Returns validation leeway (in seconds) to tolerate minor clock skew.
-<<<<<<< HEAD
-/// Configured via `JWT_LEEWAY_SECS` with default 60 and max 300.
-=======
-///
 /// The value can be configured via `JWT_LEEWAY_SECS`. If not set or invalid,
 /// a secure default of 60 seconds is used. To avoid misconfiguration weakening
 /// validation, values greater than 300 seconds are clamped to 300.
->>>>>>> 9472be959 (security(jwt): make validation leeway configurable via JWT_LEEWAY_SECS (capped at 300s); keep explicit exp validation\n\n- Add leeway config with safe default (60s) and cap (300s)\n- Use env var JWT_LEEWAY_SECS; invalid values fall back to default\n- Update docs and .env.example accordingly\n- Re-run fmt, clippy (deny warnings), tests: all pass\n\nNo functional changes to token structure; secure defaults preserved.)
 fn leeway_secs() -> u64 {
     const DEFAULT: u64 = 60;
     const MAX: u64 = 300;

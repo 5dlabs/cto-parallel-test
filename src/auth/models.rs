@@ -66,4 +66,3 @@ pub struct AuthResponse {
     pub user_id: i32,
     pub username: String,
 }
-
