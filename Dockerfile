@@ -1,6 +1,6 @@
 # Multi-stage build for Rust library project
 # Stage 1: Build the library
-FROM rust:1.75-bookworm as builder
+FROM rust:1.83-bookworm AS builder
 
 WORKDIR /build
 

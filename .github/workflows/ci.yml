@@ -58,7 +58,7 @@ jobs:
           shared-key: rust-cache-ci
 
       - name: Install Diesel CLI
-        run: cargo install diesel_cli --no-default-features --features postgres
+        run: cargo install diesel_cli --no-default-features --features postgres --force
 
       - name: Run migrations
         env:
