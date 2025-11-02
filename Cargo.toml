@@ -4,15 +4,31 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rust_decimal = { version = "1.30", features = ["serde"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-actix-web = "4.4"
-actix-rt = "2.9"
-tokio = { version = "1.35", features = ["macros", "rt-multi-thread"] }
-bcrypt = "0.15"
-jsonwebtoken = "9.2"
+# Database ORM and connection pooling
+diesel = { version = "2.1.0", features = ["postgres", "r2d2", "chrono", "numeric"] }
+r2d2 = "0.8.10"
+
+# Environment configuration
+dotenv = "0.15.0"
+
+# Date/time handling
 chrono = { version = "0.4", features = ["serde"] }
 
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Decimal handling for prices (with Diesel support)
+rust_decimal = { version = "1.30", features = ["serde", "db-diesel-postgres"] }
+
+# Authentication
+jsonwebtoken = "8.3.0"
+argon2 = "0.5.0"
+rand = "0.8.5"
+
 [dev-dependencies]
-actix-web = "4.4"
+rust_decimal_macros = "1.30"
+
+[lib]
+name = "cto_parallel_test"
+path = "src/lib.rs"
