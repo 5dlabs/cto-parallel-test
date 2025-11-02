@@ -7,8 +7,8 @@ use std::fmt::{self, Display, Formatter};
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     pub sub: String, // Subject (user id)
-    pub exp: usize,  // Expiration time (seconds since UNIX epoch)
-    pub iat: usize,  // Issued at (seconds since UNIX epoch)
+    pub exp: u64,    // Expiration time (seconds since UNIX epoch)
+    pub iat: u64,    // Issued at (seconds since UNIX epoch)
 }
 
 /// Error type for JWT creation/validation issues.
@@ -91,10 +91,8 @@ fn create_token_with_clock(user_id: &str, clock: &dyn Clock) -> Result<String, J
 
     let claims = Claims {
         sub: user_id.to_owned(),
-        #[allow(clippy::cast_possible_truncation)]
-        exp: expiration as usize,
-        #[allow(clippy::cast_possible_truncation)]
-        iat: now as usize,
+        exp: expiration,
+        iat: now,
     };
 
     let secret = read_secret()?;

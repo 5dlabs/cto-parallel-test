@@ -1,6 +1,5 @@
 # Test passwords in unit tests - not real secrets
 src/auth/models.rs:hashicorp-tf-password:*
-src/auth/jwt.rs:*
 
-# JWT test secrets
+# JWT test secrets (narrow allow for test-generated keys only)
 src/auth/jwt.rs:generic-api-key:*
