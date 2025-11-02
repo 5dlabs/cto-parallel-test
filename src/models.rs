@@ -1,11 +1,13 @@
-use crate::schema::*;
+use crate::schema::{cart_items, carts, products, users};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 // User models
-#[derive(Queryable, Identifiable, Serialize, Deserialize, Debug)]
+
+/// Represents a user in the database.
+#[derive(Queryable, Identifiable, Serialize, Deserialize, Debug, Clone)]
 #[diesel(table_name = users)]
 pub struct User {
     pub id: i32,
@@ -16,7 +18,8 @@ pub struct User {
     pub created_at: NaiveDateTime,
 }
 
-#[derive(Insertable, Deserialize)]
+/// Data required to create a new user.
+#[derive(Insertable, Deserialize, Debug)]
 #[diesel(table_name = users)]
 pub struct NewUser {
     pub username: String,
@@ -25,7 +28,9 @@ pub struct NewUser {
 }
 
 // Product models
-#[derive(Queryable, Identifiable, Serialize, Deserialize, Debug)]
+
+/// Represents a product in the database.
+#[derive(Queryable, Identifiable, Serialize, Deserialize, Debug, Clone)]
 #[diesel(table_name = products)]
 pub struct Product {
     pub id: i32,
@@ -35,7 +40,8 @@ pub struct Product {
     pub inventory_count: i32,
 }
 
-#[derive(Insertable, Deserialize)]
+/// Data required to create a new product.
+#[derive(Insertable, Deserialize, Debug)]
 #[diesel(table_name = products)]
 pub struct NewProduct {
     pub name: String,
@@ -45,7 +51,9 @@ pub struct NewProduct {
 }
 
 // Cart models
-#[derive(Queryable, Identifiable, Associations, Serialize, Deserialize, Debug)]
+
+/// Represents a shopping cart in the database.
+#[derive(Queryable, Identifiable, Associations, Serialize, Deserialize, Debug, Clone)]
 #[diesel(belongs_to(User))]
 #[diesel(table_name = carts)]
 pub struct Cart {
@@ -54,14 +62,17 @@ pub struct Cart {
     pub created_at: NaiveDateTime,
 }
 
-#[derive(Insertable)]
+/// Data required to create a new cart.
+#[derive(Insertable, Debug)]
 #[diesel(table_name = carts)]
 pub struct NewCart {
     pub user_id: i32,
 }
 
 // CartItem models
-#[derive(Queryable, Identifiable, Associations, Serialize, Deserialize, Debug)]
+
+/// Represents an item in a shopping cart.
+#[derive(Queryable, Identifiable, Associations, Serialize, Deserialize, Debug, Clone)]
 #[diesel(belongs_to(Cart))]
 #[diesel(belongs_to(Product))]
 #[diesel(table_name = cart_items)]
@@ -72,7 +83,8 @@ pub struct CartItem {
     pub quantity: i32,
 }
 
-#[derive(Insertable)]
+/// Data required to create a new cart item.
+#[derive(Insertable, Debug)]
 #[diesel(table_name = cart_items)]
 pub struct NewCartItem {
     pub cart_id: i32,
