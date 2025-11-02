@@ -26,3 +26,12 @@ Thumbs.db
 hooks/
 .hooks/
 **/hooks/
+
+# Frontend / Node.js
+node_modules/
+build/
+dist/
+.cache/
+*.log
+npm-debug.log*
+package-lock.json
