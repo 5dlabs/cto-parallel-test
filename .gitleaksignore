@@ -1,4 +1,9 @@
 # Ignore synthetic task documents that include example secrets/passwords.
 # These files are non-executable docs used for internal task scaffolding.
-docs/.taskmaster/**
-
+# Ignore by fingerprint (file:rule:line)
+/github/workspace/docs/.taskmaster/docs/task-7/task.txt:CSCAN0220-7:191
+/github/workspace/docs/.taskmaster/tasks/task_007.txt:CSCAN0220-7:192
+/github/workspace/docs/.taskmaster/tasks/task_007.txt:CSCAN0220-7:444
+/github/workspace/docs/.taskmaster/docs/task-3/task.xml:CSCAN0220-7:475
+/github/workspace/docs/.taskmaster/docs/task-3/task.xml:CSCAN0220-7:608
+/github/workspace/docs/.taskmaster/docs/task-3/task.md:generic-api-key:259
