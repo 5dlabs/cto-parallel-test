@@ -29,11 +29,12 @@ Add `pub mod auth;` to your crate and use:
 ```rust
 use cto_parallel_test::auth::{create_token, validate_token, User};
 
-let hashed = User::hash_password("password");
+let hashed = User::hash_password("password").unwrap();
 let user = User { id: 1, username: "u".into(), email: "e".into(), password_hash: hashed };
 assert!(user.verify_password("password"));
 
-std::env::set_var("JWT_SECRET", "a-very-long-strong-secret");
+// Example only: ensure secrets are at least 32 bytes in production
+std::env::set_var("JWT_SECRET", "this_is_a_very_long_secret_string_32b");
 let token = create_token("1").unwrap();
 let claims = validate_token(&token).unwrap();
 assert_eq!(claims.sub, "1");
@@ -47,4 +48,4 @@ Run the standard gates:
 - `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`
 - `cargo test --workspace --all-features`
 
-Unit tests set a deterministic `JWT_SECRET` for reliability.
+Unit tests generate a strong random `JWT_SECRET` for reliability and to avoid hardcoded secrets.

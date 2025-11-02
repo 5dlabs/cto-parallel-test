@@ -40,8 +40,8 @@ fn test_password_hashing() {
     let mut pw_bytes = [0u8; 24];
     OsRng.fill_bytes(&mut pw_bytes);
     let test_pw = hex_string(&pw_bytes);
-    let hash1 = User::hash_password(&test_pw);
-    let hash2 = User::hash_password(&test_pw);
+    let hash1 = User::hash_password(&test_pw).unwrap();
+    let hash2 = User::hash_password(&test_pw).unwrap();
 
     // Hashes should be different (due to random salt)
     assert_ne!(hash1, hash2);
@@ -96,7 +96,7 @@ fn test_user_serialization_excludes_password_hash() {
         id: 42,
         username: "alice".to_string(),
         email: "alice@example.com".to_string(),
-        password_hash: User::hash_password(&test_pw),
+        password_hash: User::hash_password(&test_pw).unwrap(),
     };
 
     let json = serde_json::to_string(&user).expect("serialize user");

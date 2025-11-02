@@ -32,18 +32,16 @@ impl User {
     ///
     /// Note: Heavy computation by design to resist brute-force.
     ///
-    /// # Panics
-    /// Panics if the operating system random number generator fails or
-    /// if Argon2 encounters a fatal error during hashing. These conditions
-    /// indicate a serious system-level failure.
-    #[allow(clippy::expect_used)]
-    pub fn hash_password(password: &str) -> String {
+    /// # Errors
+    /// Returns a [`password_hash::Error`] if the operating system random number
+    /// generator or the Argon2 hashing operation fails. Callers should surface
+    /// this as an internal error and avoid exposing details to users.
+    pub fn hash_password(password: &str) -> Result<String, password_hash::Error> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
         argon2
             .hash_password(password.as_bytes(), &salt)
-            .expect("Failed to hash password")
-            .to_string()
+            .map(|ph| ph.to_string())
     }
 }
 
