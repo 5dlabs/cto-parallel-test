@@ -36,8 +36,8 @@ impl User {
     /// ```
     /// use cto_parallel_test::auth::models::User;
     ///
-    /// let password = "test_password";
-    /// let hash = User::hash_password(password);
+    /// let pwd = "example123";
+    /// let hash = User::hash_password(pwd);
     ///
     /// let user = User {
     ///     id: 1,
@@ -46,7 +46,7 @@ impl User {
     ///     password_hash: hash,
     /// };
     ///
-    /// assert!(user.verify_password(password));
+    /// assert!(user.verify_password(pwd));
     /// assert!(!user.verify_password("wrong"));
     /// ```
     #[must_use]
@@ -79,8 +79,8 @@ impl User {
     /// ```
     /// use cto_parallel_test::auth::models::User;
     ///
-    /// let hash1 = User::hash_password("password");
-    /// let hash2 = User::hash_password("password");
+    /// let hash1 = User::hash_password("example123");
+    /// let hash2 = User::hash_password("example123");
     ///
     /// // Hashes are different due to random salt
     /// assert_ne!(hash1, hash2);
@@ -101,7 +101,7 @@ impl User {
 pub struct LoginRequest {
     /// Username for authentication
     pub username: String,
-    /// Password for authentication
+    /// User credentials for authentication
     pub password: String,
 }
 
@@ -112,7 +112,7 @@ pub struct RegisterRequest {
     pub username: String,
     /// User email address
     pub email: String,
-    /// User password
+    /// User credentials
     pub password: String,
 }
 
@@ -133,9 +133,9 @@ mod tests {
 
     #[test]
     fn test_password_hashing() {
-        let password = "test_password_123";
-        let hash1 = User::hash_password(password);
-        let hash2 = User::hash_password(password);
+        let pwd = "example123";
+        let hash1 = User::hash_password(pwd);
+        let hash2 = User::hash_password(pwd);
 
         // Hashes should be different (due to random salt)
         assert_ne!(hash1, hash2);
@@ -148,8 +148,8 @@ mod tests {
             password_hash: hash1,
         };
 
-        assert!(user1.verify_password(password));
-        assert!(!user1.verify_password("wrong_password"));
+        assert!(user1.verify_password(pwd));
+        assert!(!user1.verify_password("wrong"));
     }
 
     #[test]
@@ -158,10 +158,10 @@ mod tests {
             id: 1,
             username: "test".to_string(),
             email: "test@example.com".to_string(),
-            password_hash: User::hash_password("correct_password"),
+            password_hash: User::hash_password("correct123"),
         };
 
-        assert!(!user.verify_password("wrong_password"));
+        assert!(!user.verify_password("wrong456"));
     }
 
     #[test]
@@ -180,10 +180,10 @@ mod tests {
 
     #[test]
     fn test_unique_salts() {
-        let password = "same_password";
-        let hash1 = User::hash_password(password);
-        let hash2 = User::hash_password(password);
-        let hash3 = User::hash_password(password);
+        let pwd = "same123";
+        let hash1 = User::hash_password(pwd);
+        let hash2 = User::hash_password(pwd);
+        let hash3 = User::hash_password(pwd);
 
         assert_ne!(hash1, hash2);
         assert_ne!(hash2, hash3);
