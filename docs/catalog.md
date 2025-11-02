@@ -3,6 +3,7 @@
 Provides a thread-safe in-memory product catalog with:
 - CRUD operations
 - Inventory management (non-negative stock)
+  - Stock updates reject negatives; create clamps negatives to 0
 - Flexible filtering by name, price range, and stock range
 - Decimal precision prices via `rust_decimal`
 - Auto-incrementing, thread-safe IDs
@@ -40,6 +41,7 @@ assert_eq!(filtered.len(), 1);
 ## Security & Quality
 - No hardcoded secrets or external IO
 - Input validation: stock updates reject negative values
+- Input hygiene: create() trims name and clamps negative stock to 0
 - Passes `cargo fmt`, `cargo clippy -W clippy::pedantic -D warnings`, and `cargo test`
 
 ### Code Scanning
