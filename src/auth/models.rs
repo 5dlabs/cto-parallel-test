@@ -31,6 +31,19 @@ impl User {
 
     /// Hash a password using Argon2 with random salt.
     /// Returns an encoded PHC string on success.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<String, password_hash::Error>` - The Argon2-encoded password hash or an error
+    ///
+    /// # Security
+    ///
+    /// - Uses Argon2 algorithm (OWASP recommended)
+    /// - Generates unique random 32-byte salt for each password
+    /// - Salt is included in the encoded hash
+    /// - Intentionally slow to resist brute force attacks
+    /// # Errors
+    /// Returns an error if the operating system RNG or the hashing operation fails.
     pub fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
@@ -293,4 +306,3 @@ mod tests {
         assert_eq!(claims.sub, "1");
     }
 }
-
