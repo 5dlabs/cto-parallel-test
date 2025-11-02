@@ -45,10 +45,10 @@ impl User {
     /// assert!(user.verify_password("mypassword"));
     /// assert!(!user.verify_password("wrongpassword"));
     /// ```
+    #[must_use]
     pub fn verify_password(&self, password: &str) -> bool {
-        let parsed_hash = match PasswordHash::new(&self.password_hash) {
-            Ok(hash) => hash,
-            Err(_) => return false,
+        let Ok(parsed_hash) = PasswordHash::new(&self.password_hash) else {
+            return false;
         };
 
         Argon2::default()
@@ -128,22 +128,25 @@ mod tests {
         let password = "testpassword";
         let hash1 = User::hash_password(password);
         let hash2 = User::hash_password(password);
-        
-        assert_ne!(hash1, hash2, "Same password should produce different hashes due to random salt");
+
+        assert_ne!(
+            hash1, hash2,
+            "Same password should produce different hashes due to random salt"
+        );
     }
 
     #[test]
     fn test_verify_password_with_correct_password() {
         let password = "correct_password";
         let hash = User::hash_password(password);
-        
+
         let user = User {
             id: 1,
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
-        
+
         assert!(user.verify_password(password));
     }
 
@@ -151,28 +154,28 @@ mod tests {
     fn test_verify_password_with_incorrect_password() {
         let password = "correct_password";
         let hash = User::hash_password(password);
-        
+
         let user = User {
             id: 1,
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
-        
+
         assert!(!user.verify_password("wrong_password"));
     }
 
     #[test]
     fn test_verify_password_with_empty_password() {
         let hash = User::hash_password("");
-        
+
         let user = User {
             id: 1,
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
-        
+
         assert!(user.verify_password(""));
         assert!(!user.verify_password("something"));
     }
@@ -188,14 +191,14 @@ mod tests {
         let long_password = "a".repeat(1000);
         let hash = User::hash_password(&long_password);
         assert!(!hash.is_empty());
-        
+
         let user = User {
             id: 1,
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
-        
+
         assert!(user.verify_password(&long_password));
     }
 
@@ -203,14 +206,14 @@ mod tests {
     fn test_hash_unicode_password() {
         let unicode_password = "密码123🔒";
         let hash = User::hash_password(unicode_password);
-        
+
         let user = User {
             id: 1,
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
-        
+
         assert!(user.verify_password(unicode_password));
     }
 
@@ -218,14 +221,14 @@ mod tests {
     fn test_hash_special_characters_password() {
         let special_password = "p@ssw0rd!#$%^&*()_+-=[]{}|;':\",./<>?";
         let hash = User::hash_password(special_password);
-        
+
         let user = User {
             id: 1,
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
-        
+
         assert!(user.verify_password(special_password));
     }
 
@@ -233,14 +236,14 @@ mod tests {
     fn test_hash_whitespace_password() {
         let password_with_spaces = "password with spaces";
         let hash = User::hash_password(password_with_spaces);
-        
+
         let user = User {
             id: 1,
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
-        
+
         assert!(user.verify_password(password_with_spaces));
         assert!(!user.verify_password("passwordwithspaces"));
     }
@@ -253,7 +256,7 @@ mod tests {
             email: "test@example.com".to_string(),
             password_hash: "invalid_hash_format".to_string(),
         };
-        
+
         assert!(!user.verify_password("any_password"));
     }
 
@@ -266,9 +269,9 @@ mod tests {
             email: "test@example.com".to_string(),
             password_hash: hash.clone(),
         };
-        
+
         let json = serde_json::to_string(&user).expect("Failed to serialize user");
-        
+
         assert!(!json.contains("password_hash"));
         assert!(!json.contains(&hash));
         assert!(json.contains("testuser"));
@@ -279,7 +282,7 @@ mod tests {
     fn test_login_request_deserialization() {
         let json = r#"{"username": "john", "password": "secret123"}"#;
         let login_req: LoginRequest = serde_json::from_str(json).expect("Failed to deserialize");
-        
+
         assert_eq!(login_req.username, "john");
         assert_eq!(login_req.password, "secret123");
     }
@@ -288,7 +291,7 @@ mod tests {
     fn test_register_request_deserialization() {
         let json = r#"{"username": "john", "email": "john@example.com", "password": "secret123"}"#;
         let reg_req: RegisterRequest = serde_json::from_str(json).expect("Failed to deserialize");
-        
+
         assert_eq!(reg_req.username, "john");
         assert_eq!(reg_req.email, "john@example.com");
         assert_eq!(reg_req.password, "secret123");
@@ -301,9 +304,9 @@ mod tests {
             user_id: 42,
             username: "testuser".to_string(),
         };
-        
+
         let json = serde_json::to_string(&response).expect("Failed to serialize");
-        
+
         assert!(json.contains("jwt_token_here"));
         assert!(json.contains("42"));
         assert!(json.contains("testuser"));
@@ -314,7 +317,7 @@ mod tests {
         // Hash password
         let password = "my_secure_password";
         let hash = User::hash_password(password);
-        
+
         // Create user
         let user = User {
             id: 1,
@@ -322,25 +325,24 @@ mod tests {
             email: "test@example.com".to_string(),
             password_hash: hash,
         };
-        
+
         // Verify password
         assert!(user.verify_password(password));
-        
+
         // Create token
-        let token = crate::auth::jwt::create_token(&user.id.to_string())
-            .expect("Failed to create token");
-        
+        let token =
+            crate::auth::jwt::create_token(&user.id.to_string()).expect("Failed to create token");
+
         // Validate token
-        let claims = crate::auth::jwt::validate_token(&token)
-            .expect("Failed to validate token");
-        
+        let claims = crate::auth::jwt::validate_token(&token).expect("Failed to validate token");
+
         assert_eq!(claims.sub, "1");
     }
 
     #[test]
     fn test_hash_format_is_argon2() {
         let hash = User::hash_password("test");
-        
+
         // Argon2 encoded format starts with $argon2
         assert!(hash.starts_with("$argon2"));
     }

@@ -1,8 +1,7 @@
-/workspace/task-3/cto-parallel-test/target/debug/deps/cto_parallel_test-164b43219f703ec0.d: /workspace/task-3/cto-parallel-test/clippy.toml src/lib.rs src/auth/mod.rs src/auth/jwt.rs src/auth/models.rs Cargo.toml
+/workspace/task-3/cto-parallel-test/target/debug/deps/cto_parallel_test-164b43219f703ec0.d: src/lib.rs src/auth/mod.rs src/auth/jwt.rs src/auth/models.rs Cargo.toml
 
-/workspace/task-3/cto-parallel-test/target/debug/deps/libcto_parallel_test-164b43219f703ec0.rmeta: /workspace/task-3/cto-parallel-test/clippy.toml src/lib.rs src/auth/mod.rs src/auth/jwt.rs src/auth/models.rs Cargo.toml
+/workspace/task-3/cto-parallel-test/target/debug/deps/libcto_parallel_test-164b43219f703ec0.rmeta: src/lib.rs src/auth/mod.rs src/auth/jwt.rs src/auth/models.rs Cargo.toml
 
-/workspace/task-3/cto-parallel-test/clippy.toml:
 src/lib.rs:
 src/auth/mod.rs:
 src/auth/jwt.rs:

@@ -27,6 +27,10 @@ pub struct Claims {
 ///
 /// Returns an error if token encoding fails
 ///
+/// # Panics
+///
+/// Panics if the system time is before the UNIX epoch (extremely rare, only on system misconfiguration)
+///
 /// # Examples
 ///
 /// ```
@@ -45,8 +49,8 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 
     let claims = Claims {
         sub: user_id.to_owned(),
-        exp: expiration as usize,
-        iat: now as usize,
+        exp: usize::try_from(expiration).expect("Timestamp overflow"),
+        iat: usize::try_from(now).expect("Timestamp overflow"),
     };
 
     // Load JWT secret from environment variable, fallback for development
@@ -128,14 +132,14 @@ mod tests {
 
         assert_eq!(claims.sub, user_id);
         assert!(claims.exp > claims.iat);
-        
+
         // Verify expiration is approximately 24 hours in the future
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
         let expected_exp = now + 86400;
-        let diff = (claims.exp as i64 - expected_exp as i64).abs();
+        let diff = claims.exp.abs_diff(usize::try_from(expected_exp).unwrap());
         assert!(diff < 10); // Within 10 seconds tolerance
     }
 
@@ -162,7 +166,7 @@ mod tests {
         let token1 = create_token("123").expect("Failed to create token 1");
         sleep(Duration::from_secs(1)); // Ensure different timestamps (1 second)
         let token2 = create_token("123").expect("Failed to create token 2");
-        
+
         // Tokens should be different due to different timestamps
         assert_ne!(token1, token2);
     }
@@ -210,7 +214,7 @@ mod tests {
     fn test_token_expiration_set_correctly() {
         let token = create_token("123").expect("Failed to create token");
         let claims = validate_token(&token).expect("Failed to validate token");
-        
+
         // Verify expiration is 24 hours (86400 seconds) from issuance
         let expected_duration = 86400;
         let actual_duration = claims.exp - claims.iat;
@@ -221,10 +225,10 @@ mod tests {
     fn test_multiple_users_dont_interfere() {
         let token1 = create_token("user1").expect("Failed to create token 1");
         let token2 = create_token("user2").expect("Failed to create token 2");
-        
+
         let claims1 = validate_token(&token1).expect("Failed to validate token 1");
         let claims2 = validate_token(&token2).expect("Failed to validate token 2");
-        
+
         assert_eq!(claims1.sub, "user1");
         assert_eq!(claims2.sub, "user2");
         assert_ne!(token1, token2);
@@ -233,13 +237,13 @@ mod tests {
     #[test]
     fn test_tampered_token_rejected() {
         let token = create_token("123").expect("Failed to create token");
-        
+
         // Tamper with the token by changing a character
         let mut tampered = token.clone();
         if let Some(last_char) = tampered.pop() {
             tampered.push(if last_char == 'a' { 'b' } else { 'a' });
         }
-        
+
         let result = validate_token(&tampered);
         assert!(result.is_err());
     }
