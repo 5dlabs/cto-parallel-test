@@ -18,9 +18,9 @@ This document describes the architecture of a full-stack e-commerce application 
 ### Frontend
 - **Framework**: React 18.2.0
 - **Routing**: React Router DOM 6.14.2
-- **UI Library**: shadcn/ui (built on Radix UI)
+- **UI Library**: Material-UI (MUI) 5.14.0
 - **HTTP Client**: Axios 1.4.0
-- **Styling**: Tailwind CSS
+- **Styling**: Emotion (CSS-in-JS)
 
 ### Database
 - **RDBMS**: PostgreSQL
@@ -34,7 +34,7 @@ This document describes the architecture of a full-stack e-commerce application 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                         Frontend                             │
-│                  (React + shadcn/ui)                         │
+│                      (React + MUI)                           │
 │  ┌──────────┬──────────┬──────────┬──────────┬──────────┐  │
 │  │  Header  │  Product │   Cart   │  Login   │ Register │  │
 │  │          │   List   │          │          │          │  │
@@ -306,7 +306,7 @@ users (1) ──────< (N) carts
 - User interface for all application features
 - Client-side routing and navigation
 - API integration via Axios
-- Responsive design with shadcn/ui and Tailwind CSS
+- Responsive design with Material-UI
 
 **Key Components**:
 
@@ -321,8 +321,7 @@ users (1) ──────< (N) carts
 - **Register.js**: User registration form
 
 **Features**:
-- shadcn/ui components (built on Radix UI primitives)
-- Tailwind CSS for styling and responsive design
+- Material-UI theming and components
 - React Router for SPA navigation
 - Responsive grid layouts
 - Form validation

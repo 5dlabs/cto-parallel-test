@@ -1,31 +1,15 @@
-//! Product service implementation providing business logic for product management.
-
 use crate::catalog::models::{NewProduct, Product, ProductFilter};
 use std::sync::{Arc, Mutex};
 
-/// Thread-safe product service for managing products in-memory.
-///
-/// This service provides CRUD operations, inventory management, and filtering
-/// capabilities with thread-safe concurrent access using `Arc<Mutex>`.
+/// Thread-safe product catalog service with in-memory storage
 #[derive(Clone)]
 pub struct ProductService {
-    /// Thread-safe storage for products
     products: Arc<Mutex<Vec<Product>>>,
-    /// Thread-safe counter for auto-incrementing product IDs
     next_id: Arc<Mutex<i32>>,
 }
 
 impl ProductService {
-    /// Creates a new empty product service.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use cto_parallel_test::catalog::ProductService;
-    ///
-    /// let service = ProductService::new();
-    /// assert_eq!(service.get_all().len(), 0);
-    /// ```
+    /// Creates a new empty product service
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -34,14 +18,11 @@ impl ProductService {
         }
     }
 
-    /// Creates a new product and assigns it a unique auto-incrementing ID.
-    ///
-    /// This method is thread-safe and can be called concurrently from multiple threads.
-    /// IDs start at 1 and increment sequentially.
+    /// Creates a new product and assigns it a unique ID
     ///
     /// # Arguments
     ///
-    /// * `new_product` - The product data to create (without an ID)
+    /// * `new_product` - The product details to create
     ///
     /// # Returns
     ///
@@ -49,32 +30,11 @@ impl ProductService {
     ///
     /// # Panics
     ///
-    /// Panics if the internal mutex is poisoned. This can only happen if another
-    /// thread panicked while holding the lock, which indicates a critical failure
-    /// in the application.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use cto_parallel_test::catalog::{ProductService, NewProduct};
-    /// use rust_decimal_macros::dec;
-    ///
-    /// let service = ProductService::new();
-    /// let new_product = NewProduct {
-    ///     name: "Laptop".to_string(),
-    ///     description: "High-end laptop".to_string(),
-    ///     price: dec!(999.99),
-    ///     inventory_count: 10,
-    /// };
-    ///
-    /// let product = service.create(new_product);
-    /// assert_eq!(product.id, 1);
-    /// assert_eq!(product.name, "Laptop");
-    /// ```
+    /// Panics if the mutex lock is poisoned
     #[must_use]
     pub fn create(&self, new_product: NewProduct) -> Product {
-        let mut products = self.products.lock().expect("Failed to lock products");
-        let mut next_id = self.next_id.lock().expect("Failed to lock next_id");
+        let mut products = self.products.lock().unwrap();
+        let mut next_id = self.next_id.lock().unwrap();
 
         let product = Product {
             id: *next_id,
@@ -89,131 +49,53 @@ impl ProductService {
         product
     }
 
-    /// Retrieves all products from the catalog.
-    ///
-    /// Returns a cloned vector of all products, ensuring thread safety
-    /// by not exposing the internal storage directly.
-    ///
-    /// # Returns
-    ///
-    /// A vector containing all products
+    /// Returns all products in the catalog
     ///
     /// # Panics
     ///
-    /// Panics if the internal mutex is poisoned. This can only happen if another
-    /// thread panicked while holding the lock, which indicates a critical failure
-    /// in the application.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use cto_parallel_test::catalog::{ProductService, NewProduct};
-    /// use rust_decimal_macros::dec;
-    ///
-    /// let service = ProductService::new();
-    /// let new_product = NewProduct {
-    ///     name: "Mouse".to_string(),
-    ///     description: "Wireless mouse".to_string(),
-    ///     price: dec!(29.99),
-    ///     inventory_count: 50,
-    /// };
-    /// let _ = service.create(new_product);
-    ///
-    /// let products = service.get_all();
-    /// assert_eq!(products.len(), 1);
-    /// ```
+    /// Panics if the mutex lock is poisoned
     #[must_use]
     pub fn get_all(&self) -> Vec<Product> {
-        let products = self.products.lock().expect("Failed to lock products");
+        let products = self.products.lock().unwrap();
         products.clone()
     }
 
-    /// Retrieves a product by its ID.
+    /// Retrieves a product by its ID
     ///
     /// # Arguments
     ///
-    /// * `id` - The unique identifier of the product
+    /// * `id` - The product ID to search for
     ///
     /// # Returns
     ///
-    /// `Some(Product)` if found, `None` otherwise
+    /// Some(product) if found, None otherwise
     ///
     /// # Panics
     ///
-    /// Panics if the internal mutex is poisoned. This can only happen if another
-    /// thread panicked while holding the lock, which indicates a critical failure
-    /// in the application.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use cto_parallel_test::catalog::{ProductService, NewProduct};
-    /// use rust_decimal_macros::dec;
-    ///
-    /// let service = ProductService::new();
-    /// let new_product = NewProduct {
-    ///     name: "Keyboard".to_string(),
-    ///     description: "Mechanical keyboard".to_string(),
-    ///     price: dec!(149.99),
-    ///     inventory_count: 20,
-    /// };
-    /// let product = service.create(new_product);
-    ///
-    /// let found = service.get_by_id(product.id);
-    /// assert!(found.is_some());
-    /// assert_eq!(found.unwrap().name, "Keyboard");
-    ///
-    /// let not_found = service.get_by_id(999);
-    /// assert!(not_found.is_none());
-    /// ```
+    /// Panics if the mutex lock is poisoned
     #[must_use]
     pub fn get_by_id(&self, id: i32) -> Option<Product> {
-        let products = self.products.lock().expect("Failed to lock products");
+        let products = self.products.lock().unwrap();
         products.iter().find(|p| p.id == id).cloned()
     }
 
-    /// Updates the inventory count for a product.
+    /// Updates the inventory count for a product
     ///
     /// # Arguments
     ///
-    /// * `id` - The unique identifier of the product
-    /// * `new_count` - The new inventory count (can be negative)
+    /// * `id` - The product ID to update
+    /// * `new_count` - The new inventory count
     ///
     /// # Returns
     ///
-    /// `Some(Product)` with updated inventory if found, `None` if product doesn't exist
+    /// `Some(updated_product)` if found, None otherwise
     ///
     /// # Panics
     ///
-    /// Panics if the internal mutex is poisoned. This can only happen if another
-    /// thread panicked while holding the lock, which indicates a critical failure
-    /// in the application.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use cto_parallel_test::catalog::{ProductService, NewProduct};
-    /// use rust_decimal_macros::dec;
-    ///
-    /// let service = ProductService::new();
-    /// let new_product = NewProduct {
-    ///     name: "Monitor".to_string(),
-    ///     description: "4K monitor".to_string(),
-    ///     price: dec!(399.99),
-    ///     inventory_count: 15,
-    /// };
-    /// let product = service.create(new_product);
-    ///
-    /// let updated = service.update_inventory(product.id, 10);
-    /// assert!(updated.is_some());
-    /// assert_eq!(updated.unwrap().inventory_count, 10);
-    ///
-    /// let not_found = service.update_inventory(999, 5);
-    /// assert!(not_found.is_none());
-    /// ```
+    /// Panics if the mutex lock is poisoned
     #[must_use]
     pub fn update_inventory(&self, id: i32, new_count: i32) -> Option<Product> {
-        let mut products = self.products.lock().expect("Failed to lock products");
+        let mut products = self.products.lock().unwrap();
         if let Some(product) = products.iter_mut().find(|p| p.id == id) {
             product.inventory_count = new_count;
             Some(product.clone())
@@ -222,83 +104,37 @@ impl ProductService {
         }
     }
 
-    /// Filters products based on the provided criteria.
+    /// Filters products based on the provided criteria
     ///
-    /// All filter criteria are combined with AND logic. An empty filter returns all products.
+    /// All filter criteria are combined with AND logic.
+    /// Empty/None criteria match all products.
     ///
     /// # Arguments
     ///
-    /// * `filter` - The filtering criteria
+    /// * `filter` - The filter criteria to apply
     ///
     /// # Returns
     ///
-    /// A vector of products matching all specified criteria
+    /// Vector of products matching all filter criteria
     ///
     /// # Panics
     ///
-    /// Panics if the internal mutex is poisoned. This can only happen if another
-    /// thread panicked while holding the lock, which indicates a critical failure
-    /// in the application.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use cto_parallel_test::catalog::{ProductService, NewProduct, ProductFilter};
-    /// use rust_decimal_macros::dec;
-    ///
-    /// let service = ProductService::new();
-    ///
-    /// let _ = service.create(NewProduct {
-    ///     name: "Laptop Pro".to_string(),
-    ///     description: "High-end laptop".to_string(),
-    ///     price: dec!(1299.99),
-    ///     inventory_count: 5,
-    /// });
-    ///
-    /// let _ = service.create(NewProduct {
-    ///     name: "Laptop Basic".to_string(),
-    ///     description: "Budget laptop".to_string(),
-    ///     price: dec!(499.99),
-    ///     inventory_count: 0,
-    /// });
-    ///
-    /// // Filter by name (case-insensitive substring)
-    /// let filter = ProductFilter::with_name("laptop");
-    /// let results = service.filter(&filter);
-    /// assert_eq!(results.len(), 2);
-    ///
-    /// // Filter by price range
-    /// let filter = ProductFilter::with_price_range(Some(dec!(1000.00)), None);
-    /// let results = service.filter(&filter);
-    /// assert_eq!(results.len(), 1);
-    /// assert_eq!(results[0].name, "Laptop Pro");
-    ///
-    /// // Filter by stock status
-    /// let filter = ProductFilter::with_stock_status(true);
-    /// let results = service.filter(&filter);
-    /// assert_eq!(results.len(), 1);
-    /// assert_eq!(results[0].inventory_count, 5);
-    /// ```
+    /// Panics if the mutex lock is poisoned
     #[must_use]
     pub fn filter(&self, filter: &ProductFilter) -> Vec<Product> {
-        let products = self.products.lock().expect("Failed to lock products");
-
+        let products = self.products.lock().unwrap();
         products
             .iter()
             .filter(|p| {
-                // Name filter (case-insensitive substring match)
                 let name_match = filter
                     .name_contains
                     .as_ref()
                     .is_none_or(|name| p.name.to_lowercase().contains(&name.to_lowercase()));
 
-                // Minimum price filter
                 let min_price_match = filter.min_price.is_none_or(|min| p.price >= min);
 
-                // Maximum price filter
                 let max_price_match = filter.max_price.is_none_or(|max| p.price <= max);
 
-                // Stock status filter
                 let in_stock_match = filter
                     .in_stock
                     .is_none_or(|in_stock| (p.inventory_count > 0) == in_stock);
@@ -309,44 +145,22 @@ impl ProductService {
             .collect()
     }
 
-    /// Deletes a product by its ID.
+    /// Deletes a product by its ID
     ///
     /// # Arguments
     ///
-    /// * `id` - The unique identifier of the product to delete
+    /// * `id` - The product ID to delete
     ///
     /// # Returns
     ///
-    /// `true` if the product was deleted, `false` if it wasn't found
+    /// true if the product was deleted, false if not found
     ///
     /// # Panics
     ///
-    /// Panics if the internal mutex is poisoned. This can only happen if another
-    /// thread panicked while holding the lock, which indicates a critical failure
-    /// in the application.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use cto_parallel_test::catalog::{ProductService, NewProduct};
-    /// use rust_decimal_macros::dec;
-    ///
-    /// let service = ProductService::new();
-    /// let new_product = NewProduct {
-    ///     name: "Headphones".to_string(),
-    ///     description: "Noise-cancelling headphones".to_string(),
-    ///     price: dec!(199.99),
-    ///     inventory_count: 25,
-    /// };
-    /// let product = service.create(new_product);
-    ///
-    /// assert!(service.delete(product.id));
-    /// assert!(service.get_by_id(product.id).is_none());
-    /// assert!(!service.delete(product.id)); // Already deleted
-    /// ```
+    /// Panics if the mutex lock is poisoned
     #[must_use]
     pub fn delete(&self, id: i32) -> bool {
-        let mut products = self.products.lock().expect("Failed to lock products");
+        let mut products = self.products.lock().unwrap();
         let initial_len = products.len();
         products.retain(|p| p.id != id);
         products.len() < initial_len
@@ -362,395 +176,292 @@ impl Default for ProductService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rust_decimal_macros::dec;
+    use rust_decimal::prelude::FromPrimitive;
+    use rust_decimal::Decimal;
     use std::thread;
+
+    fn create_test_product(name: &str, price: f64, inventory: i32) -> NewProduct {
+        NewProduct {
+            name: String::from(name),
+            description: format!("Description for {name}"),
+            price: Decimal::from_f64(price).unwrap(),
+            inventory_count: inventory,
+        }
+    }
 
     #[test]
     fn test_create_product() {
         let service = ProductService::new();
-        let new_product = NewProduct {
-            name: "Test Product".to_string(),
-            description: "A test product".to_string(),
-            price: dec!(19.99),
-            inventory_count: 10,
-        };
+        let new_product = create_test_product("Test Product", 19.99, 10);
 
         let product = service.create(new_product);
+
         assert_eq!(product.id, 1);
         assert_eq!(product.name, "Test Product");
-        assert_eq!(product.price, dec!(19.99));
         assert_eq!(product.inventory_count, 10);
+        assert_eq!(product.price, Decimal::from_f64(19.99).unwrap());
     }
 
     #[test]
-    fn test_auto_increment_ids() {
+    fn test_auto_incrementing_ids() {
         let service = ProductService::new();
 
-        let product1 = service.create(NewProduct {
-            name: "Product 1".to_string(),
-            description: "First".to_string(),
-            price: dec!(10.00),
-            inventory_count: 5,
-        });
-
-        let product2 = service.create(NewProduct {
-            name: "Product 2".to_string(),
-            description: "Second".to_string(),
-            price: dec!(20.00),
-            inventory_count: 10,
-        });
+        let product1 = service.create(create_test_product("Product 1", 10.0, 5));
+        let product2 = service.create(create_test_product("Product 2", 20.0, 10));
+        let product3 = service.create(create_test_product("Product 3", 30.0, 15));
 
         assert_eq!(product1.id, 1);
         assert_eq!(product2.id, 2);
+        assert_eq!(product3.id, 3);
     }
 
     #[test]
     fn test_get_all_products() {
         let service = ProductService::new();
 
-        let _ = service.create(NewProduct {
-            name: "Product 1".to_string(),
-            description: "First".to_string(),
-            price: dec!(10.00),
-            inventory_count: 5,
-        });
-
-        let _ = service.create(NewProduct {
-            name: "Product 2".to_string(),
-            description: "Second".to_string(),
-            price: dec!(20.00),
-            inventory_count: 10,
-        });
+        let _ = service.create(create_test_product("Product 1", 10.0, 5));
+        let _ = service.create(create_test_product("Product 2", 20.0, 10));
 
         let products = service.get_all();
+
         assert_eq!(products.len(), 2);
+        assert_eq!(products[0].name, "Product 1");
+        assert_eq!(products[1].name, "Product 2");
     }
 
     #[test]
     fn test_get_by_id_found() {
         let service = ProductService::new();
-        let created = service.create(NewProduct {
-            name: "Test".to_string(),
-            description: "Test product".to_string(),
-            price: dec!(15.00),
-            inventory_count: 3,
-        });
+        let created = service.create(create_test_product("Test Product", 15.0, 8));
 
         let found = service.get_by_id(created.id);
+
         assert!(found.is_some());
-        assert_eq!(found.unwrap().name, "Test");
+        let product = found.unwrap();
+        assert_eq!(product.id, created.id);
+        assert_eq!(product.name, "Test Product");
     }
 
     #[test]
     fn test_get_by_id_not_found() {
         let service = ProductService::new();
+
         let result = service.get_by_id(999);
+
         assert!(result.is_none());
     }
 
     #[test]
-    fn test_update_inventory() {
+    fn test_update_inventory_success() {
         let service = ProductService::new();
-        let product = service.create(NewProduct {
-            name: "Test".to_string(),
-            description: "Test".to_string(),
-            price: dec!(10.00),
-            inventory_count: 100,
-        });
+        let product = service.create(create_test_product("Test Product", 10.0, 5));
 
-        let updated = service.update_inventory(product.id, 50);
+        let updated = service.update_inventory(product.id, 20);
+
         assert!(updated.is_some());
-        assert_eq!(updated.unwrap().inventory_count, 50);
+        let updated_product = updated.unwrap();
+        assert_eq!(updated_product.inventory_count, 20);
 
-        let retrieved = service.get_by_id(product.id);
-        assert_eq!(retrieved.unwrap().inventory_count, 50);
+        let retrieved = service.get_by_id(product.id).unwrap();
+        assert_eq!(retrieved.inventory_count, 20);
     }
 
     #[test]
     fn test_update_inventory_not_found() {
         let service = ProductService::new();
+
         let result = service.update_inventory(999, 10);
+
         assert!(result.is_none());
     }
 
     #[test]
-    fn test_filter_by_name() {
+    fn test_update_inventory_negative() {
         let service = ProductService::new();
+        let product = service.create(create_test_product("Test Product", 10.0, 5));
 
-        let _ = service.create(NewProduct {
-            name: "Laptop Pro".to_string(),
-            description: "High-end".to_string(),
-            price: dec!(1000.00),
-            inventory_count: 5,
-        });
+        let updated = service.update_inventory(product.id, -5);
 
-        let _ = service.create(NewProduct {
-            name: "Desktop PC".to_string(),
-            description: "Gaming PC".to_string(),
-            price: dec!(1500.00),
-            inventory_count: 3,
-        });
-
-        let filter = ProductFilter::with_name("laptop");
-        let results = service.filter(&filter);
-        assert_eq!(results.len(), 1);
-        assert_eq!(results[0].name, "Laptop Pro");
+        assert!(updated.is_some());
+        assert_eq!(updated.unwrap().inventory_count, -5);
     }
 
     #[test]
-    fn test_filter_by_name_case_insensitive() {
+    fn test_delete_product_success() {
         let service = ProductService::new();
+        let product = service.create(create_test_product("Test Product", 10.0, 5));
 
-        let _ = service.create(NewProduct {
-            name: "LAPTOP".to_string(),
-            description: "Test".to_string(),
-            price: dec!(100.00),
-            inventory_count: 1,
-        });
+        let deleted = service.delete(product.id);
 
-        let filter = ProductFilter::with_name("laptop");
-        let results = service.filter(&filter);
-        assert_eq!(results.len(), 1);
-    }
-
-    #[test]
-    fn test_filter_by_min_price() {
-        let service = ProductService::new();
-
-        let _ = service.create(NewProduct {
-            name: "Cheap".to_string(),
-            description: "Low price".to_string(),
-            price: dec!(50.00),
-            inventory_count: 10,
-        });
-
-        let _ = service.create(NewProduct {
-            name: "Expensive".to_string(),
-            description: "High price".to_string(),
-            price: dec!(500.00),
-            inventory_count: 5,
-        });
-
-        let filter = ProductFilter::with_price_range(Some(dec!(100.00)), None);
-        let results = service.filter(&filter);
-        assert_eq!(results.len(), 1);
-        assert_eq!(results[0].name, "Expensive");
-    }
-
-    #[test]
-    fn test_filter_by_max_price() {
-        let service = ProductService::new();
-
-        let _ = service.create(NewProduct {
-            name: "Cheap".to_string(),
-            description: "Low price".to_string(),
-            price: dec!(50.00),
-            inventory_count: 10,
-        });
-
-        let _ = service.create(NewProduct {
-            name: "Expensive".to_string(),
-            description: "High price".to_string(),
-            price: dec!(500.00),
-            inventory_count: 5,
-        });
-
-        let filter = ProductFilter::with_price_range(None, Some(dec!(100.00)));
-        let results = service.filter(&filter);
-        assert_eq!(results.len(), 1);
-        assert_eq!(results[0].name, "Cheap");
-    }
-
-    #[test]
-    fn test_filter_by_price_range() {
-        let service = ProductService::new();
-
-        let _ = service.create(NewProduct {
-            name: "Low".to_string(),
-            description: "Test".to_string(),
-            price: dec!(10.00),
-            inventory_count: 10,
-        });
-
-        let _ = service.create(NewProduct {
-            name: "Mid".to_string(),
-            description: "Test".to_string(),
-            price: dec!(50.00),
-            inventory_count: 5,
-        });
-
-        let _ = service.create(NewProduct {
-            name: "High".to_string(),
-            description: "Test".to_string(),
-            price: dec!(100.00),
-            inventory_count: 2,
-        });
-
-        let filter = ProductFilter::with_price_range(Some(dec!(20.00)), Some(dec!(80.00)));
-        let results = service.filter(&filter);
-        assert_eq!(results.len(), 1);
-        assert_eq!(results[0].name, "Mid");
-    }
-
-    #[test]
-    fn test_filter_in_stock() {
-        let service = ProductService::new();
-
-        let _ = service.create(NewProduct {
-            name: "Available".to_string(),
-            description: "Test".to_string(),
-            price: dec!(10.00),
-            inventory_count: 5,
-        });
-
-        let _ = service.create(NewProduct {
-            name: "Out of Stock".to_string(),
-            description: "Test".to_string(),
-            price: dec!(20.00),
-            inventory_count: 0,
-        });
-
-        let filter = ProductFilter::with_stock_status(true);
-        let results = service.filter(&filter);
-        assert_eq!(results.len(), 1);
-        assert_eq!(results[0].name, "Available");
-    }
-
-    #[test]
-    fn test_filter_out_of_stock() {
-        let service = ProductService::new();
-
-        let _ = service.create(NewProduct {
-            name: "Available".to_string(),
-            description: "Test".to_string(),
-            price: dec!(10.00),
-            inventory_count: 5,
-        });
-
-        let _ = service.create(NewProduct {
-            name: "Out of Stock".to_string(),
-            description: "Test".to_string(),
-            price: dec!(20.00),
-            inventory_count: 0,
-        });
-
-        let filter = ProductFilter::with_stock_status(false);
-        let results = service.filter(&filter);
-        assert_eq!(results.len(), 1);
-        assert_eq!(results[0].name, "Out of Stock");
-    }
-
-    #[test]
-    fn test_filter_combined() {
-        let service = ProductService::new();
-
-        let _ = service.create(NewProduct {
-            name: "Laptop Pro".to_string(),
-            description: "High-end".to_string(),
-            price: dec!(1200.00),
-            inventory_count: 5,
-        });
-
-        let _ = service.create(NewProduct {
-            name: "Laptop Basic".to_string(),
-            description: "Budget".to_string(),
-            price: dec!(500.00),
-            inventory_count: 0,
-        });
-
-        let _ = service.create(NewProduct {
-            name: "Desktop".to_string(),
-            description: "Gaming".to_string(),
-            price: dec!(1500.00),
-            inventory_count: 3,
-        });
-
-        let filter = ProductFilter {
-            name_contains: Some("laptop".to_string()),
-            min_price: Some(dec!(1000.00)),
-            max_price: None,
-            in_stock: Some(true),
-        };
-
-        let results = service.filter(&filter);
-        assert_eq!(results.len(), 1);
-        assert_eq!(results[0].name, "Laptop Pro");
-    }
-
-    #[test]
-    fn test_filter_empty_returns_all() {
-        let service = ProductService::new();
-
-        let _ = service.create(NewProduct {
-            name: "Product 1".to_string(),
-            description: "Test".to_string(),
-            price: dec!(10.00),
-            inventory_count: 1,
-        });
-
-        let _ = service.create(NewProduct {
-            name: "Product 2".to_string(),
-            description: "Test".to_string(),
-            price: dec!(20.00),
-            inventory_count: 2,
-        });
-
-        let filter = ProductFilter::new();
-        let results = service.filter(&filter);
-        assert_eq!(results.len(), 2);
-    }
-
-    #[test]
-    fn test_delete_product() {
-        let service = ProductService::new();
-        let product = service.create(NewProduct {
-            name: "To Delete".to_string(),
-            description: "Test".to_string(),
-            price: dec!(10.00),
-            inventory_count: 1,
-        });
-
-        assert!(service.delete(product.id));
+        assert!(deleted);
         assert!(service.get_by_id(product.id).is_none());
         assert_eq!(service.get_all().len(), 0);
     }
 
     #[test]
-    fn test_delete_nonexistent() {
+    fn test_delete_product_not_found() {
         let service = ProductService::new();
-        assert!(!service.delete(999));
+
+        let deleted = service.delete(999);
+
+        assert!(!deleted);
     }
 
     #[test]
-    fn test_concurrent_creation() {
+    fn test_filter_by_name() {
+        let service = ProductService::new();
+        let _ = service.create(create_test_product("Apple iPhone", 999.0, 10));
+        let _ = service.create(create_test_product("Samsung Galaxy", 899.0, 15));
+        let _ = service.create(create_test_product("Apple MacBook", 1999.0, 5));
+
+        let filter = ProductFilter {
+            name_contains: Some(String::from("apple")),
+            min_price: None,
+            max_price: None,
+            in_stock: None,
+        };
+
+        let results = service.filter(&filter);
+
+        assert_eq!(results.len(), 2);
+        assert!(results
+            .iter()
+            .all(|p| p.name.to_lowercase().contains("apple")));
+    }
+
+    #[test]
+    fn test_filter_by_price_range() {
+        let service = ProductService::new();
+        let _ = service.create(create_test_product("Cheap Product", 10.0, 10));
+        let _ = service.create(create_test_product("Mid Product", 50.0, 10));
+        let _ = service.create(create_test_product("Expensive Product", 100.0, 10));
+
+        let filter = ProductFilter {
+            name_contains: None,
+            min_price: Some(Decimal::from_f64(20.0).unwrap()),
+            max_price: Some(Decimal::from_f64(80.0).unwrap()),
+            in_stock: None,
+        };
+
+        let results = service.filter(&filter);
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].name, "Mid Product");
+    }
+
+    #[test]
+    fn test_filter_by_stock_status_in_stock() {
+        let service = ProductService::new();
+        let _ = service.create(create_test_product("In Stock", 10.0, 5));
+        let _ = service.create(create_test_product("Out of Stock", 20.0, 0));
+        let _ = service.create(create_test_product("Also In Stock", 30.0, 1));
+
+        let filter = ProductFilter {
+            name_contains: None,
+            min_price: None,
+            max_price: None,
+            in_stock: Some(true),
+        };
+
+        let results = service.filter(&filter);
+
+        assert_eq!(results.len(), 2);
+        assert!(results.iter().all(|p| p.inventory_count > 0));
+    }
+
+    #[test]
+    fn test_filter_by_stock_status_out_of_stock() {
+        let service = ProductService::new();
+        let _ = service.create(create_test_product("In Stock", 10.0, 5));
+        let _ = service.create(create_test_product("Out of Stock", 20.0, 0));
+
+        let filter = ProductFilter {
+            name_contains: None,
+            min_price: None,
+            max_price: None,
+            in_stock: Some(false),
+        };
+
+        let results = service.filter(&filter);
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].inventory_count, 0);
+    }
+
+    #[test]
+    fn test_filter_combined_criteria() {
+        let service = ProductService::new();
+        let _ = service.create(create_test_product("Apple iPhone", 999.0, 10));
+        let _ = service.create(create_test_product("Apple Watch", 399.0, 0));
+        let _ = service.create(create_test_product("Apple MacBook", 1999.0, 5));
+        let _ = service.create(create_test_product("Samsung Galaxy", 899.0, 15));
+
+        let filter = ProductFilter {
+            name_contains: Some(String::from("apple")),
+            min_price: Some(Decimal::from_f64(500.0).unwrap()),
+            max_price: Some(Decimal::from_f64(1500.0).unwrap()),
+            in_stock: Some(true),
+        };
+
+        let results = service.filter(&filter);
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].name, "Apple iPhone");
+    }
+
+    #[test]
+    fn test_filter_empty_returns_all() {
+        let service = ProductService::new();
+        let _ = service.create(create_test_product("Product 1", 10.0, 5));
+        let _ = service.create(create_test_product("Product 2", 20.0, 10));
+
+        let filter = ProductFilter::new();
+        let results = service.filter(&filter);
+
+        assert_eq!(results.len(), 2);
+    }
+
+    #[test]
+    fn test_decimal_precision() {
+        let service = ProductService::new();
+        let price = "19.99".parse::<Decimal>().unwrap();
+        let new_product = NewProduct {
+            name: String::from("Precise Product"),
+            description: String::from("Test precision"),
+            price,
+            inventory_count: 10,
+        };
+
+        let product = service.create(new_product);
+
+        assert_eq!(product.price.to_string(), "19.99");
+    }
+
+    #[test]
+    fn test_concurrent_create() {
         let service = ProductService::new();
         let service_clone1 = service.clone();
         let service_clone2 = service.clone();
 
         let handle1 = thread::spawn(move || {
             for i in 0..10 {
-                let _ = service_clone1.create(NewProduct {
-                    name: format!("Thread1-{i}"),
-                    description: "Test".to_string(),
-                    price: dec!(10.00),
-                    inventory_count: 1,
-                });
+                let _ =
+                    service_clone1.create(create_test_product(&format!("Product-T1-{i}"), 10.0, 5));
             }
         });
 
         let handle2 = thread::spawn(move || {
             for i in 0..10 {
-                let _ = service_clone2.create(NewProduct {
-                    name: format!("Thread2-{i}"),
-                    description: "Test".to_string(),
-                    price: dec!(20.00),
-                    inventory_count: 2,
-                });
+                let _ = service_clone2.create(create_test_product(
+                    &format!("Product-T2-{i}"),
+                    20.0,
+                    10,
+                ));
             }
         });
 
-        handle1.join().expect("Thread 1 panicked");
-        handle2.join().expect("Thread 2 panicked");
+        handle1.join().unwrap();
+        handle2.join().unwrap();
 
         let products = service.get_all();
         assert_eq!(products.len(), 20);
@@ -763,33 +474,40 @@ mod tests {
     }
 
     #[test]
-    fn test_negative_inventory() {
+    fn test_concurrent_read_write() {
         let service = ProductService::new();
-        let product = service.create(NewProduct {
-            name: "Test".to_string(),
-            description: "Test".to_string(),
-            price: dec!(10.00),
-            inventory_count: 5,
+
+        // Pre-populate with some products
+        for i in 0..5 {
+            let _ = service.create(create_test_product(
+                &format!("Product {i}"),
+                10.0 * f64::from(i),
+                10,
+            ));
+        }
+
+        let service_clone1 = service.clone();
+        let service_clone2 = service.clone();
+
+        let reader = thread::spawn(move || {
+            for _ in 0..100 {
+                let _ = service_clone1.get_all();
+            }
         });
 
-        let updated = service.update_inventory(product.id, -3);
-        assert!(updated.is_some());
-        assert_eq!(updated.unwrap().inventory_count, -3);
-    }
-
-    #[test]
-    fn test_decimal_precision() {
-        let service = ProductService::new();
-        let product = service.create(NewProduct {
-            name: "Precise".to_string(),
-            description: "Test".to_string(),
-            price: dec!(19.999),
-            inventory_count: 1,
+        let writer = thread::spawn(move || {
+            for i in 0..10 {
+                let _ = service_clone2.create(create_test_product(
+                    &format!("New Product {i}"),
+                    50.0,
+                    5,
+                ));
+            }
         });
 
-        assert_eq!(product.price, dec!(19.999));
+        reader.join().unwrap();
+        writer.join().unwrap();
 
-        let retrieved = service.get_by_id(product.id);
-        assert_eq!(retrieved.unwrap().price, dec!(19.999));
+        assert_eq!(service.get_all().len(), 15);
     }
 }

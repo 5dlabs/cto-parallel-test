@@ -1,40 +1,31 @@
-//! JWT token handling for authentication.
-
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// JWT Claims structure containing user identification and timing information.
+/// JWT Claims structure containing user information and expiration
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
-    /// Subject (user id)
+    /// Subject (user ID)
     pub sub: String,
     /// Expiration time (Unix timestamp)
-    pub exp: usize,
+    pub exp: u64,
     /// Issued at (Unix timestamp)
-    pub iat: usize,
+    pub iat: u64,
 }
 
-/// Creates a JWT token for the specified user ID.
-///
-/// The token expires after 24 hours.
+/// JWT secret key for signing and validation
+/// In production, this should come from environment variables
+const JWT_SECRET: &str = "your-secret-key-change-in-production";
+
+/// Creates a JWT token for the given user ID
 ///
 /// # Arguments
 ///
-/// * `user_id` - The user identifier to encode in the token
+/// * `user_id` - The user ID to encode in the token
 ///
 /// # Returns
 ///
-/// A JWT token string or an error if token creation fails
-///
-/// # Examples
-///
-/// ```
-/// use cto_parallel_test::auth::jwt::create_token;
-///
-/// let token = create_token("123").expect("Failed to create token");
-/// assert!(!token.is_empty());
-/// ```
+/// A Result containing the JWT token string or an error
 ///
 /// # Errors
 ///
@@ -42,37 +33,28 @@ pub struct Claims {
 ///
 /// # Panics
 ///
-/// Panics if system time is before UNIX epoch (extremely rare, system clock error)
-#[allow(clippy::disallowed_methods)] // JWT requires wall-clock time
-#[allow(clippy::cast_possible_truncation)] // usize sufficient for Unix timestamps
-pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
-    let expiration = SystemTime::now()
+/// Panics if system time is before `UNIX_EPOCH` (extremely rare, system clock issue)
+#[allow(clippy::disallowed_methods)] // JWT requires wall-clock time for exp/iat claims
+pub fn create_token(user_id: i32) -> Result<String, jsonwebtoken::errors::Error> {
+    let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")
-        .as_secs()
-        + 24 * 3600; // 24 hours from now
+        .as_secs();
 
     let claims = Claims {
-        sub: user_id.to_owned(),
-        exp: expiration as usize,
-        iat: SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards")
-            .as_secs() as usize,
+        sub: user_id.to_string(),
+        exp: now + 86400, // 24 hours
+        iat: now,
     };
-
-    // In production, load from environment variable
-    let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
 
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(secret.as_bytes()),
+        &EncodingKey::from_secret(JWT_SECRET.as_bytes()),
     )
 }
 
-/// Validates a JWT token and extracts the claims.
+/// Validates a JWT token and returns the claims
 ///
 /// # Arguments
 ///
@@ -80,29 +62,16 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 ///
 /// # Returns
 ///
-/// The decoded claims if the token is valid, or an error otherwise
-///
-/// # Examples
-///
-/// ```
-/// use cto_parallel_test::auth::jwt::{create_token, validate_token};
-///
-/// let token = create_token("123").unwrap();
-/// let claims = validate_token(&token).unwrap();
-/// assert_eq!(claims.sub, "123");
-/// ```
+/// A Result containing the decoded claims or an error
 ///
 /// # Errors
 ///
-/// Returns an error if the token is invalid, expired, or malformed
+/// Returns an error if token validation fails (expired, invalid signature, etc.)
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
-    let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
-
     let validation = Validation::default();
     let token_data = decode::<Claims>(
         token,
-        &DecodingKey::from_secret(secret.as_bytes()),
+        &DecodingKey::from_secret(JWT_SECRET.as_bytes()),
         &validation,
     )?;
 
@@ -115,46 +84,66 @@ mod tests {
 
     #[test]
     fn test_create_token() {
-        let user_id = "123";
-        let token = create_token(user_id);
+        let token = create_token(1);
         assert!(token.is_ok());
         assert!(!token.unwrap().is_empty());
     }
 
     #[test]
-    fn test_validate_token() {
-        let user_id = "123";
+    fn test_validate_token_success() {
+        let user_id = 42;
+        let token = create_token(user_id).unwrap();
+        let claims = validate_token(&token);
+
+        assert!(claims.is_ok());
+        let claims = claims.unwrap();
+        assert_eq!(claims.sub, user_id.to_string());
+    }
+
+    #[test]
+    fn test_validate_token_invalid() {
+        let result = validate_token("invalid.token.here");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_token_claims_contain_user_id() {
+        let user_id = 123;
         let token = create_token(user_id).unwrap();
         let claims = validate_token(&token).unwrap();
 
-        assert_eq!(claims.sub, user_id);
-        assert!(claims.exp > 0);
-        assert!(claims.iat > 0);
+        assert_eq!(claims.sub, "123");
     }
 
     #[test]
-    fn test_invalid_token() {
-        let invalid_token = "invalid.token.here";
-        assert!(validate_token(invalid_token).is_err());
-    }
-
-    #[test]
-    fn test_token_contains_user_id() {
-        let user_id = "456";
-        let token = create_token(user_id).unwrap();
+    fn test_token_expiration_set() {
+        let token = create_token(1).unwrap();
         let claims = validate_token(&token).unwrap();
-        assert_eq!(claims.sub, "456");
+
+        #[allow(clippy::disallowed_methods)] // Test needs wall-clock time to verify JWT claims
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        // Token should expire 24 hours from now (with some tolerance)
+        assert!(claims.exp > now);
+        assert!(claims.exp <= now + 86400);
     }
 
     #[test]
-    fn test_multiple_tokens() {
-        let token1 = create_token("1").unwrap();
-        let token2 = create_token("2").unwrap();
+    fn test_token_issued_at_set() {
+        let token = create_token(1).unwrap();
+        let claims = validate_token(&token).unwrap();
 
-        let claims1 = validate_token(&token1).unwrap();
-        let claims2 = validate_token(&token2).unwrap();
+        #[allow(clippy::disallowed_methods)] // Test needs wall-clock time to verify JWT claims
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
 
-        assert_eq!(claims1.sub, "1");
-        assert_eq!(claims2.sub, "2");
+        // Issued at should be close to now (within 5 seconds tolerance)
+        assert!(claims.iat <= now);
+        assert!(claims.iat >= now - 5);
     }
 }

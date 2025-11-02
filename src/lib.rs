@@ -1,15 +1,12 @@
-//! E-Commerce Application Library
+#![forbid(unsafe_code)]
+//! cto-parallel-test library crate
 //!
-//! This library provides the core functionality for an e-commerce application,
-//! including database schema, models, and business logic.
+//! Provides a thread-safe in-memory product catalog with CRUD,
+//! inventory management, and flexible filtering using Decimal prices.
+//! Also includes JWT authentication, shopping cart functionality,
+//! and HTTP API routes for cart operations.
 
 pub mod api;
 pub mod auth;
 pub mod cart;
 pub mod catalog;
-pub mod config;
-pub mod models;
-pub mod schema;
-
-// Re-export commonly used types
-pub use config::db::{establish_connection_pool, DbConnection, Pool};
