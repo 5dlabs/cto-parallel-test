@@ -1,34 +1,51 @@
-# Autonomous Agent Prompt: Frontend Components
+# Autonomous Agent Prompt: Shopping Cart API
 
 ## Mission
-Create a complete React frontend with shadcn/ui for an e-commerce application.
+Implement a complete shopping cart system with JWT-authenticated API endpoints, integrating with existing auth and catalog modules.
 
-## Steps
-1. Create `frontend/package.json` with all dependencies (Tailwind CSS, shadcn/ui)
-2. Initialize shadcn/ui with `npx shadcn@latest init`
-3. Add shadcn/ui components (button, card, badge, input, form, navigation-menu)
-4. Create `App.js` with routing
-5. Build Header and Footer components using shadcn/ui
-6. Implement all page components with Tailwind CSS styling
-7. Test that app runs without errors
+## Prerequisites
+- Task 3 complete (JWT validation available)
+- Task 4 complete (ProductService available)
 
-## Key Components
+## Implementation Steps
 
-**Header**: Navigation bar with cart badge
-**Footer**: Simple footer
-**HomePage**: Landing page
-**ProductList**: Product grid with cards
-**ProductDetail**: Single product view
-**Cart**: Shopping cart
-**Login/Register**: Auth forms
+1. **Create cart module** with service layer
+2. **Implement CartService** with thread-safe storage
+3. **Create API routes** with JWT authentication
+4. **Integrate services** in main.rs
+5. **Test** all cart operations
 
-## Success Validation
-```bash
-cd frontend
-npm install
-npm start
-# Navigate to http://localhost:3000
-# Test all routes
+## Key Implementation Details
+
+### JWT Extraction Pattern
+```rust
+fn extract_user_id(req: &HttpRequest) -> Result<i32, ()> {
+    if let Some(auth_header) = req.headers().get("Authorization") {
+        if let Ok(auth_str) = auth_header.to_str() {
+            if auth_str.starts_with("Bearer ") {
+                let token = &auth_str[7..];
+                if let Ok(claims) = validate_token(token) {
+                    return Ok(claims.sub.parse::<i32>().unwrap_or(0));
+                }
+            }
+        }
+    }
+    Err(())
+}
 ```
 
-All routes should be accessible and render without errors.
+### Inventory Validation
+Before adding items:
+```rust
+if product.inventory_count >= quantity {
+    // Add to cart
+} else {
+    // Return 400 Bad Request
+}
+```
+
+## Success Criteria
+- All endpoints return 401 without valid JWT
+- Items added correctly with quantity tracking
+- Inventory validated before adding
+- Cart operations isolated per user

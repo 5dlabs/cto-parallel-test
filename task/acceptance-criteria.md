@@ -1,40 +1,46 @@
-# Acceptance Criteria: Frontend Components
+# Acceptance Criteria: Shopping Cart API
 
-## Requirements
-- [ ] `package.json` with all React, Tailwind CSS, and shadcn/ui dependencies
-- [ ] `App.js` with routing configured
-- [ ] 8 components created in `components/` directory
-- [ ] All routes navigate correctly
-- [ ] shadcn/ui components render correctly
-- [ ] Tailwind CSS styles applied consistently
-- [ ] Responsive design works
-- [ ] `npm install` succeeds
-- [ ] `npm start` launches app
-- [ ] `npm run build` creates production build
-- [ ] No console errors in browser
+## Core Requirements
+- [ ] `src/cart/mod.rs` exports CartService
+- [ ] `src/cart/service.rs` implements all cart operations
+- [ ] `src/api/cart_routes.rs` implements all API endpoints
+- [ ] All endpoints require JWT authentication
+- [ ] Returns 401 for missing/invalid tokens
+- [ ] Inventory validated before adding items
+- [ ] Cart isolated per user (user A can't access user B's cart)
 
-## Component Checklist
-- [ ] Header with navigation
-- [ ] Footer
-- [ ] HomePage
-- [ ] ProductList
-- [ ] ProductDetail
-- [ ] Cart
-- [ ] Login
-- [ ] Register
+## API Endpoints
+- [ ] `GET /api/cart` - Get user's cart
+- [ ] `POST /api/cart/add` - Add item (with inventory check)
+- [ ] `DELETE /api/cart/remove/{id}` - Remove item
+- [ ] `POST /api/cart/clear` - Clear cart
 
-## Navigation Test
-- [ ] / → HomePage
-- [ ] /products → ProductList
-- [ ] /products/:id → ProductDetail
-- [ ] /cart → Cart
-- [ ] /login → Login
-- [ ] /register → Register
+## Testing
+```bash
+# With valid JWT
+TOKEN="valid_jwt_here"
 
-## Visual Validation
-- [ ] Header displays correctly
-- [ ] Footer at bottom of page
-- [ ] Product cards display in grid
-- [ ] Buttons and links styled with shadcn/ui and Tailwind CSS
-- [ ] Cart icon shows badge
-- [ ] Responsive on mobile (< 768px)
+# Get cart
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/cart
+
+# Add item
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"product_id":1,"quantity":2}' \
+  http://localhost:8080/api/cart/add
+
+# Remove item
+curl -X DELETE -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8080/api/cart/remove/1
+
+# Clear cart
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8080/api/cart/clear
+```
+
+## Validation
+- [ ] `cargo test` passes
+- [ ] Cart operations work with valid JWT
+- [ ] Returns 401 without JWT
+- [ ] Returns 400 for insufficient inventory
+- [ ] Returns 404 for invalid product_id

@@ -1,96 +1,150 @@
-# Task 6: Frontend Components
+# Task 5: Shopping Cart API
 
 ## Overview
-Build a React-based frontend with shadcn/ui for the e-commerce application, including all major UI components and routing.
+Implement shopping cart functionality with API endpoints, integrating user authentication and product catalog for a complete e-commerce cart experience.
 
 ## Context
-**Level 0 task** (no dependencies) - Can run in parallel with backend tasks. Creates the user interface independently of backend implementation.
+**Level 1 task** depending on Task 3 (Authentication) and Task 4 (Product Catalog). Combines JWT-based user isolation with product validation for a secure shopping cart.
 
 ## Objectives
-1. Set up React project with shadcn/ui and Tailwind CSS
-2. Implement routing with React Router
-3. Create Header, Footer, and layout components
-4. Build HomePage, ProductList, Cart, Login, and Register pages
-5. Establish component structure for future API integration
+1. Create CartService with thread-safe in-memory storage
+2. Implement cart CRUD operations (add, remove, clear, get)
+3. Build API routes with JWT authentication
+4. Integrate with Product Catalog for validation
+5. Handle inventory checking before adding items
 
 ## Dependencies
-None - Independent frontend task
+- **Task 3:** User Authentication (JWT validation)
+- **Task 4:** Product Catalog (product retrieval and validation)
 
 ## Implementation Plan
 
-### Step 1: Initialize Project Structure
-```bash
-cd frontend
-npm install
+### Step 1: Create Cart Service Module
+Create `src/cart/mod.rs`:
+```rust
+pub mod service;
+pub use self::service::{CartService, Cart, CartItem};
 ```
 
-Create `package.json` with dependencies:
-- react, react-dom (18.2.0)
-- react-router-dom (6.14.2)
-- tailwindcss, autoprefixer, postcss
-- axios (1.4.0)
-- @radix-ui/react-* components (installed via shadcn/ui)
-- class-variance-authority, clsx, tailwind-merge
+### Step 2: Implement Cart Data Structures
+Create `src/cart/service.rs` with models:
+```rust
+use serde::{Serialize, Deserialize};
+use rust_decimal::Decimal;
 
-### Step 2: Initialize shadcn/ui
-```bash
-cd frontend
-npx shadcn@latest init
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CartItem {
+    pub product_id: i32,
+    pub quantity: i32,
+    pub product_name: String,
+    pub unit_price: Decimal,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Cart {
+    pub id: i32,
+    pub user_id: i32,
+    pub items: Vec<CartItem>,
+}
 ```
 
-Configure shadcn/ui with:
-- TypeScript: No (using JavaScript)
-- Style: Default
-- Base color: Slate
-- CSS variables: Yes
+### Step 3: Implement CartService
+Add to `src/cart/service.rs`:
+```rust
+use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
+use crate::catalog::models::Product;
 
-### Step 3: Create App Shell
-`frontend/src/App.js` with:
-- Router configuration
-- Route definitions for all pages
-- Tailwind CSS global styles
+pub struct CartService {
+    carts: Arc<Mutex<HashMap<i32, Cart>>>,
+    next_id: Arc<Mutex<i32>>,
+}
 
-### Step 4: Add shadcn/ui Components
-Add required components:
-```bash
-npx shadcn@latest add button
-npx shadcn@latest add card
-npx shadcn@latest add badge
-npx shadcn@latest add input
-npx shadcn@latest add form
-npx shadcn@latest add navigation-menu
+impl CartService {
+    pub fn new() -> Self {
+        CartService {
+            carts: Arc::new(Mutex::new(HashMap::new())),
+            next_id: Arc::new(Mutex::new(1)),
+        }
+    }
+
+    pub fn get_or_create_cart(&self, user_id: i32) -> Cart {
+        // Implementation per task.txt
+    }
+
+    pub fn add_item(&self, user_id: i32, product: &Product, quantity: i32) -> Cart {
+        // Adds item or increments quantity if already in cart
+    }
+
+    pub fn remove_item(&self, user_id: i32, product_id: i32) -> Option<Cart> {
+        // Removes item from cart
+    }
+
+    pub fn get_cart(&self, user_id: i32) -> Option<Cart> {
+        // Retrieves user's cart
+    }
+
+    pub fn clear_cart(&self, user_id: i32) -> Option<Cart> {
+        // Empties cart
+    }
+}
 ```
 
-### Step 5: Build Layout Components
-- **Header.js**: Navigation header with links, cart badge, login button
-- **Footer.js**: Simple copyright footer
+### Step 4: Create Cart API Routes
+Create `src/api/cart_routes.rs`:
+```rust
+use actix_web::{web, HttpResponse, Responder, HttpRequest};
+use serde::Deserialize;
 
-### Step 6: Implement Page Components
-- **HomePage.js**: Landing page with call-to-action
-- **ProductList.js**: Grid of product cards
-- **ProductDetail.js**: Single product view
-- **Cart.js**: Shopping cart display
-- **Login.js**: Login form
-- **Register.js**: Registration form
+#[derive(Deserialize)]
+pub struct AddItemRequest {
+    pub product_id: i32,
+    pub quantity: i32,
+}
+
+pub fn configure_cart_routes(cfg: &mut web::ServiceConfig) {
+    cfg.route("", web::get().to(get_cart))
+       .route("/add", web::post().to(add_item))
+       .route("/remove/{product_id}", web::delete().to(remove_item))
+       .route("/clear", web::post().to(clear_cart));
+}
+
+// Handler functions with JWT extraction and validation
+```
+
+### Step 5: Integrate with Main App
+Update `src/main.rs`:
+```rust
+mod cart;
+use cart::CartService;
+
+// In HttpServer::new():
+let cart_service = web::Data::new(CartService::new());
+
+App::new()
+    .app_data(cart_service.clone())
+    .configure(api::configure_routes)
+```
+
+Update `src/api/mod.rs`:
+```rust
+pub mod cart_routes;
+```
 
 ## Testing Strategy
-```bash
-npm install
-npm start  # Verify app launches
-npm test   # Run React tests
-npm run build  # Verify production build
-```
+- Unit tests for CartService operations
+- Integration tests with JWT authentication
+- Test inventory validation
+- Test cart isolation per user
 
 ## Success Criteria
-- [ ] `npm install` completes without errors
-- [ ] `npm start` launches app on localhost:3000
-- [ ] All routes accessible via navigation
-- [ ] Components render without errors
-- [ ] Responsive design works on mobile/desktop
-- [ ] shadcn/ui components render correctly
-- [ ] Tailwind CSS styles applied consistently
+- [ ] Cart service thread-safe with Arc<Mutex>
+- [ ] All cart operations work correctly
+- [ ] JWT authentication required for all endpoints
+- [ ] Inventory checked before adding items
+- [ ] Cart properly isolated per user
 
 ## Files Created
-- `frontend/package.json`
-- `frontend/src/App.js`
-- `frontend/src/components/*.js` (8 components)
+- `src/cart/mod.rs`
+- `src/cart/service.rs`
+- `src/api/cart_routes.rs`
