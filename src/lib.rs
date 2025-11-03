@@ -6,6 +6,7 @@
 //! Also includes secure user authentication with JWT tokens and Argon2 password hashing.
 //! Database schema and ORM models for `PostgreSQL` with Diesel.
 
+pub mod api;
 pub mod auth;
 pub mod catalog;
 pub mod config;
