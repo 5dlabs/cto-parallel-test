@@ -4,7 +4,7 @@
 //! Provides a thread-safe in-memory product catalog with CRUD,
 //! inventory management, and flexible filtering using Decimal prices.
 //! Also includes secure user authentication with JWT tokens and Argon2 password hashing.
-//! Database schema and ORM models for PostgreSQL with Diesel.
+//! Database schema and ORM models for `PostgreSQL` with Diesel.
 
 pub mod auth;
 pub mod catalog;
