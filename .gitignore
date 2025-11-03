@@ -1,25 +1,28 @@
-# Hook files - never commit
-hooks/
-.hooks/
-**/hooks/
-
-# Build artifacts
+# Rust
 target/
 **/*.rs.bk
 *.pdb
+Cargo.lock
 
-# IDEs
+# Environment files
+.env
+.env.*
+.env.local
+.env.production
+!.env.example
+
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Environment
-.env
-.env.local
-.env.production
-
 # OS
 .DS_Store
 Thumbs.db
+
+# Hooks - never commit
+hooks/
+.hooks/
+**/hooks/
