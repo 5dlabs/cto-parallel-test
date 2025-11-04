@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 
 function Register() {
   const navigate = useNavigate();
@@ -12,7 +12,6 @@ function Register() {
     password: '',
     confirmPassword: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
@@ -21,7 +20,6 @@ function Register() {
       ...prev,
       [name]: value
     }));
-    // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -33,55 +31,57 @@ function Register() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (formData.username.length < 3) {
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    } else if (formData.username.length < 3) {
       newErrors.username = 'Username must be at least 3 characters';
     }
 
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
     }
 
-    if (formData.password.length < 6) {
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
+    const newErrors = validateForm();
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      console.log('Registration attempt:', formData);
-      // In a real app, this would register the user and redirect
-      navigate('/login');
-    }, 1000);
+    alert('Registration functionality will be implemented with backend API');
+    navigate('/login');
   };
 
   return (
-    <div className="container mx-auto px-4 py-16 flex justify-center">
-      <Card className="w-full max-w-md">
+    <div className="container mx-auto px-4 py-16">
+      <Card className="max-w-md mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl">Create Account</CardTitle>
+          <CardTitle className="text-2xl">Create an Account</CardTitle>
           <CardDescription>
             Sign up to start shopping with us
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="username" className="text-sm font-medium">
                 Username
@@ -90,10 +90,10 @@ function Register() {
                 id="username"
                 name="username"
                 type="text"
-                placeholder="johndoe"
+                placeholder="Choose a username"
                 value={formData.username}
                 onChange={handleChange}
-                required
+                className={errors.username ? 'border-destructive' : ''}
               />
               {errors.username && (
                 <p className="text-sm text-destructive">{errors.username}</p>
@@ -108,10 +108,10 @@ function Register() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="your.email@example.com"
+                placeholder="Enter your email"
                 value={formData.email}
                 onChange={handleChange}
-                required
+                className={errors.email ? 'border-destructive' : ''}
               />
               {errors.email && (
                 <p className="text-sm text-destructive">{errors.email}</p>
@@ -126,10 +126,10 @@ function Register() {
                 id="password"
                 name="password"
                 type="password"
-                placeholder="At least 6 characters"
+                placeholder="Create a password"
                 value={formData.password}
                 onChange={handleChange}
-                required
+                className={errors.password ? 'border-destructive' : ''}
               />
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>
@@ -144,53 +144,29 @@ function Register() {
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
-                placeholder="Re-enter your password"
+                placeholder="Confirm your password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                required
+                className={errors.confirmPassword ? 'border-destructive' : ''}
               />
               {errors.confirmPassword && (
                 <p className="text-sm text-destructive">{errors.confirmPassword}</p>
               )}
             </div>
 
-            <div className="flex items-start space-x-2 pt-2">
-              <input
-                type="checkbox"
-                id="terms"
-                className="mt-1 rounded border-input"
-                required
-              />
-              <label htmlFor="terms" className="text-sm text-muted-foreground">
-                I agree to the{' '}
-                <Link to="#" className="text-primary hover:underline">
-                  Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link to="#" className="text-primary hover:underline">
-                  Privacy Policy
-                </Link>
-              </label>
-            </div>
-          </CardContent>
-
-          <CardFooter className="flex flex-col space-y-4">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Creating account...' : 'Sign Up'}
+            <Button type="submit" className="w-full">
+              Create Account
             </Button>
-
-            <div className="text-sm text-center text-muted-foreground">
-              Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:underline">
-                Login
-              </Link>
-            </div>
-          </CardFooter>
-        </form>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <p className="text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <Link to="/login" className="text-primary hover:underline font-medium">
+              Sign in
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );

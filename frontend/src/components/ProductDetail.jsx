@@ -1,129 +1,191 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Card, CardContent } from './ui/card';
-import { ArrowLeft, Minus, Plus } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+
+const sampleProducts = [
+  {
+    id: 1,
+    name: 'Wireless Headphones',
+    description: 'Premium noise-canceling wireless headphones with superior sound quality',
+    price: 129.99,
+    inventory_count: 15,
+    features: ['Active Noise Cancellation', '30-hour battery life', 'Bluetooth 5.0', 'Foldable design']
+  },
+  {
+    id: 2,
+    name: 'Smart Watch',
+    description: 'Fitness tracking smartwatch with heart rate monitor',
+    price: 199.99,
+    inventory_count: 8,
+    features: ['Heart rate monitor', 'GPS tracking', 'Water resistant', '7-day battery life']
+  },
+  {
+    id: 3,
+    name: 'Laptop Stand',
+    description: 'Ergonomic aluminum laptop stand for better posture',
+    price: 49.99,
+    inventory_count: 25,
+    features: ['Aluminum construction', 'Adjustable height', 'Cable management', 'Non-slip pads']
+  },
+  {
+    id: 4,
+    name: 'Mechanical Keyboard',
+    description: 'RGB mechanical gaming keyboard with customizable keys',
+    price: 89.99,
+    inventory_count: 0,
+    features: ['Mechanical switches', 'RGB backlighting', 'Programmable keys', 'USB passthrough']
+  },
+  {
+    id: 5,
+    name: 'USB-C Hub',
+    description: '7-in-1 USB-C multiport adapter for laptops',
+    price: 39.99,
+    inventory_count: 30,
+    features: ['4K HDMI output', 'USB 3.0 ports', 'SD card reader', 'Power delivery']
+  },
+  {
+    id: 6,
+    name: 'Wireless Mouse',
+    description: 'Ergonomic wireless mouse with precision tracking',
+    price: 29.99,
+    inventory_count: 20,
+    features: ['Ergonomic design', '2400 DPI sensor', 'Long battery life', 'Silent clicks']
+  }
+];
 
 function ProductDetail() {
   const { id } = useParams();
+  const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
 
-  // Mock product data - would be fetched from API in a real app
-  const product = {
-    id: parseInt(id),
-    name: 'Wireless Headphones',
-    description: 'Premium noise-cancelling wireless headphones with superior sound quality and comfort. Features include active noise cancellation, 30-hour battery life, and premium audio drivers.',
-    price: 99.99,
-    inventory: 15,
-    image: 'https://via.placeholder.com/600x400?text=Wireless+Headphones',
-    features: [
-      'Active Noise Cancellation',
-      '30-hour battery life',
-      'Bluetooth 5.0 connectivity',
-      'Premium audio drivers',
-      'Comfortable ear cushions',
-      'Foldable design'
-    ]
-  };
+  useEffect(() => {
+    const foundProduct = sampleProducts.find(p => p.id === parseInt(id));
+    setProduct(foundProduct);
+  }, [id]);
 
-  const handleQuantityChange = (delta) => {
-    const newQuantity = quantity + delta;
-    if (newQuantity >= 1 && newQuantity <= product.inventory) {
-      setQuantity(newQuantity);
-    }
-  };
+  if (!product) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p>Product not found</p>
+        <Link to="/products">
+          <Button variant="outline" className="mt-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Products
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   const handleAddToCart = () => {
-    // This would add to cart in a real app
-    console.log(`Adding ${quantity} of product ${product.id} to cart`);
+    alert('Product added to cart (functionality to be implemented)');
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Link to="/products" className="inline-flex items-center text-primary hover:underline mb-6">
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Products
+      <Link to="/products">
+        <Button variant="outline" className="mb-6">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Products
+        </Button>
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Product Image */}
+      <div className="grid md:grid-cols-2 gap-8">
         <div>
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full rounded-lg shadow-lg"
-          />
-        </div>
-
-        {/* Product Info */}
-        <div>
-          <div className="mb-4">
-            <h1 className="text-4xl font-bold mb-2">{product.name}</h1>
-            {product.inventory < 10 && (
-              <Badge variant="destructive">Only {product.inventory} left in stock</Badge>
-            )}
-          </div>
-
-          <div className="text-3xl font-bold text-primary mb-6">
-            ${product.price.toFixed(2)}
-          </div>
-
-          <p className="text-lg text-muted-foreground mb-6">
-            {product.description}
-          </p>
-
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <h3 className="font-semibold mb-3">Key Features:</h3>
-              <ul className="space-y-2">
-                {product.features.map((feature, index) => (
-                  <li key={index} className="flex items-center">
-                    <span className="text-primary mr-2">✓</span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+          <Card>
+            <CardContent className="p-8">
+              <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                <p className="text-muted-foreground">Product Image</p>
+              </div>
             </CardContent>
           </Card>
+        </div>
 
-          {/* Quantity Selector */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium mb-2">Quantity</label>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleQuantityChange(-1)}
-                disabled={quantity <= 1}
+        <div>
+          <div className="mb-4">
+            <div className="flex items-start justify-between mb-2">
+              <h1 className="text-4xl font-bold">{product.name}</h1>
+              {product.inventory_count === 0 && (
+                <Badge variant="destructive">Out of Stock</Badge>
+              )}
+              {product.inventory_count > 0 && product.inventory_count < 10 && (
+                <Badge variant="secondary">Low Stock</Badge>
+              )}
+            </div>
+            <p className="text-xl text-muted-foreground mb-4">
+              {product.description}
+            </p>
+            <p className="text-4xl font-bold text-primary mb-4">
+              ${product.price.toFixed(2)}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {product.inventory_count > 0 
+                ? product.inventory_count + ' in stock'
+                : 'Currently unavailable'
+              }
+            </p>
+          </div>
+
+          {product.features && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Features</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc list-inside space-y-2">
+                  {product.features.map((feature, index) => (
+                    <li key={index} className="text-muted-foreground">{feature}</li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <label className="text-sm font-medium">Quantity:</label>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={product.inventory_count === 0}
+                >
+                  -
+                </Button>
+                <span className="w-12 text-center">{quantity}</span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setQuantity(Math.min(product.inventory_count, quantity + 1))}
+                  disabled={product.inventory_count === 0}
+                >
+                  +
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex space-x-4">
+              <Button 
+                className="flex-1" 
+                size="lg"
+                disabled={product.inventory_count === 0}
+                onClick={handleAddToCart}
               >
-                <Minus className="h-4 w-4" />
+                Add to Cart
               </Button>
-              <span className="text-xl font-semibold w-12 text-center">{quantity}</span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleQuantityChange(1)}
-                disabled={quantity >= product.inventory}
+              <Button 
+                variant="outline" 
+                size="lg"
+                disabled={product.inventory_count === 0}
               >
-                <Plus className="h-4 w-4" />
+                Buy Now
               </Button>
             </div>
           </div>
-
-          {/* Add to Cart Button */}
-          <Button
-            size="lg"
-            className="w-full mb-4"
-            onClick={handleAddToCart}
-            disabled={product.inventory === 0}
-          >
-            {product.inventory === 0 ? 'Out of Stock' : 'Add to Cart'}
-          </Button>
-
-          <p className="text-sm text-muted-foreground text-center">
-            Free shipping on orders over $100
-          </p>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/card';
+import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { ShoppingBag, Truck, Shield } from 'lucide-react';
 
 function HomePage() {
