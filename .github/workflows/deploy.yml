@@ -69,6 +69,3 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.sha }}
-          # Use GitHub Actions cache for Docker layers
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
