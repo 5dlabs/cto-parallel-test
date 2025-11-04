@@ -33,18 +33,16 @@ RUN npm run build
 FROM node:20-slim AS runner
 WORKDIR /app
 
-# Create non-root user
-RUN useradd -r -u 1000 -m -d /app -s /bin/bash app
+# Use existing node user (UID 1000 already exists in node:20-slim)
+USER node
 
 # Set environment to production
 ENV NODE_ENV=production
 
 # Copy built application
-COPY --from=builder --chown=app:app /app/.next/standalone ./
-COPY --from=builder --chown=app:app /app/.next/static ./.next/static
-COPY --from=builder --chown=app:app /app/public ./public
-
-USER app
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/public ./public
 
 EXPOSE 3000
 
