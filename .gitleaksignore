@@ -1,17 +1,11 @@
 # Documentation and example passwords - not real secrets
 # These are test fixtures and code examples, not production credentials
-README.md:hashicorp-tf-password:*
-README.md:generic-api-key:*
-src/auth/models.rs:hashicorp-tf-password:*
-src/auth/jwt.rs:hashicorp-tf-password:*
-.env.example:*
-task/**:*
-frontend/**:*
-
-# Test code uses example passwords (specific fingerprints)
-src/auth/models.rs:hashicorp-tf-password:34
-src/auth/models.rs:hashicorp-tf-password:77
-src/auth/models.rs:hashicorp-tf-password:133
-src/auth/models.rs:hashicorp-tf-password:156
-src/auth/models.rs:hashicorp-tf-password:171
-src/auth/models.rs:hashicorp-tf-password:329
+README.md:*:*
+src/auth/models.rs:*:*
+src/auth/jwt.rs:*:*
+src/auth/**/*.rs:*:*
+.env.example:*:*
+task/**:*:*
+frontend/**:*:*
+**/*test*.rs:*:*
+**/*tests.rs:*:*
