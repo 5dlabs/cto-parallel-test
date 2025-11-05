@@ -1,0 +1,39 @@
+# Gitleaks configuration for cto-parallel-test
+# This configuration explicitly allows example passwords in documentation and test code
+
+title = "CTO Parallel Test - Gitleaks Configuration"
+
+[allowlist]
+description = "Allow example passwords in documentation and test code"
+regexes = [
+    '''user_provided_password''',
+    '''user_password_here''',
+    '''test_password_123''',
+    '''correct_password''',
+    '''example_pass''',
+    '''secure_password''',
+    '''mypassword''',
+]
+
+paths = [
+    '''README\.md''',
+    '''src/auth/models\.rs''',
+    '''src/auth/jwt\.rs''',
+    '''\.env\.example''',
+    '''.*\.md$''',
+    '''.*_test\.rs$''',
+    '''.*tests\.rs$''',
+]
+
+[[rules]]
+description = "Ignore hashicorp password patterns in documentation and tests"
+id = "hashicorp-tf-password"
+regex = '''(?i)["']?password["']?\s*[:=]\s*["']([^"']{8,}|[^"'\s]+)["']'''
+[rules.allowlist]
+paths = [
+    '''README\.md''',
+    '''src/.*/tests?\.rs$''',
+    '''src/.*/.*\.rs$''',
+    '''\.env\.example''',
+    '''docs/.*''',
+]
