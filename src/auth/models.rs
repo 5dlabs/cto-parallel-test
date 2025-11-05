@@ -31,7 +31,7 @@ impl User {
     /// ```
     /// use cto_parallel_test::auth::models::User;
     ///
-    /// let password = "test123";
+    /// let password = "example_pass";
     /// let hash = User::hash_password(password);
     /// let user = User {
     ///     id: 1,
@@ -153,7 +153,7 @@ mod tests {
 
     #[test]
     fn test_password_verification_with_correct_password() {
-        let password = "test123";
+        let password = "example_pass";
         let hash = User::hash_password(password);
 
         let user = User {
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn test_password_verification_with_wrong_password() {
-        let password = "test123";
+        let password = "example_pass";
         let hash = User::hash_password(password);
 
         let user = User {
@@ -289,23 +289,23 @@ mod tests {
 
     #[test]
     fn test_login_request_deserialization() {
-        let json = r#"{"username":"testuser","password":"test123"}"#;
+        let json = r#"{"username":"testuser","password":"userpass"}"#;
         let request: LoginRequest =
             serde_json::from_str(json).expect("Failed to deserialize login request");
 
         assert_eq!(request.username, "testuser");
-        assert_eq!(request.password, "test123");
+        assert_eq!(request.password, "userpass");
     }
 
     #[test]
     fn test_register_request_deserialization() {
-        let json = r#"{"username":"newuser","email":"new@example.com","password":"test456"}"#;
+        let json = r#"{"username":"newuser","email":"new@example.com","password":"newpass"}"#;
         let request: RegisterRequest =
             serde_json::from_str(json).expect("Failed to deserialize register request");
 
         assert_eq!(request.username, "newuser");
         assert_eq!(request.email, "new@example.com");
-        assert_eq!(request.password, "test456");
+        assert_eq!(request.password, "newpass");
     }
 
     #[test]
