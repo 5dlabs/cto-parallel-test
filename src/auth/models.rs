@@ -272,14 +272,14 @@ mod tests {
             id: 1,
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
-            password_hash: "sensitive_hash_value".to_string(),
+            password_hash: "test_hash_abc123".to_string(),
         };
 
         let json = serde_json::to_string(&user).expect("Failed to serialize user");
 
         // Verify password_hash is not in JSON
         assert!(!json.contains("password_hash"));
-        assert!(!json.contains("sensitive_hash_value"));
+        assert!(!json.contains("test_hash_abc123"));
 
         // Verify other fields are present
         assert!(json.contains("testuser"));
@@ -289,23 +289,23 @@ mod tests {
 
     #[test]
     fn test_login_request_deserialization() {
-        let json = r#"{"username":"testuser","password":"testpass"}"#;
+        let json = r#"{"username":"testuser","password":"test123"}"#;
         let request: LoginRequest =
             serde_json::from_str(json).expect("Failed to deserialize login request");
 
         assert_eq!(request.username, "testuser");
-        assert_eq!(request.password, "testpass");
+        assert_eq!(request.password, "test123");
     }
 
     #[test]
     fn test_register_request_deserialization() {
-        let json = r#"{"username":"newuser","email":"new@example.com","password":"newpass"}"#;
+        let json = r#"{"username":"newuser","email":"new@example.com","password":"test456"}"#;
         let request: RegisterRequest =
             serde_json::from_str(json).expect("Failed to deserialize register request");
 
         assert_eq!(request.username, "newuser");
         assert_eq!(request.email, "new@example.com");
-        assert_eq!(request.password, "newpass");
+        assert_eq!(request.password, "test456");
     }
 
     #[test]
