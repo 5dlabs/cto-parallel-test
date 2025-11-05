@@ -301,8 +301,9 @@ mod tests {
     #[test]
     fn test_register_request_deserialization() {
         let test_credential = "test_register_value";
-        let json =
-            format!(r#"{{"username":"newuser","email":"new@example.com","password":"{test_credential}"}}"#);
+        let json = format!(
+            r#"{{"username":"newuser","email":"new@example.com","password":"{test_credential}"}}"#
+        );
         let request: RegisterRequest =
             serde_json::from_str(&json).expect("Failed to deserialize register request");
 
