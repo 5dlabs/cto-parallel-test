@@ -42,7 +42,7 @@ println!("Expires at: {}", claims.exp);
 use cto_parallel_test::auth::models::User;
 
 // Hash a password (do this during registration)
-let password = "user_provided_password";
+let password = "example_pass";  // User's actual password in production
 let password_hash = User::hash_password(password);
 
 // Create a user with the hashed password

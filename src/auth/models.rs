@@ -326,7 +326,7 @@ mod tests {
     #[test]
     fn test_complete_auth_flow() {
         // Hash password
-        let password = "mypassword";
+        let password = "example_pass";
         let hash = User::hash_password(password);
 
         // Create user
