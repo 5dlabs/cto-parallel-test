@@ -1,8 +1,8 @@
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
-/// Full product entity with all fields including ID
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Represents a product in the catalog
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Product {
     pub id: i32,
     pub name: String,
@@ -11,7 +11,7 @@ pub struct Product {
     pub inventory_count: i32,
 }
 
-/// Product creation DTO without ID (auto-generated)
+/// Data transfer object for creating a new product
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewProduct {
     pub name: String,
@@ -20,8 +20,8 @@ pub struct NewProduct {
     pub inventory_count: i32,
 }
 
-/// Filter criteria for product search
-#[derive(Debug, Serialize, Deserialize)]
+/// Filter criteria for searching products
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct ProductFilter {
     pub name_contains: Option<String>,
     pub min_price: Option<Decimal>,
@@ -30,20 +30,9 @@ pub struct ProductFilter {
 }
 
 impl ProductFilter {
-    /// Create a new empty filter (no filtering applied)
+    /// Creates a new empty filter
     #[must_use]
     pub fn new() -> Self {
-        ProductFilter {
-            name_contains: None,
-            min_price: None,
-            max_price: None,
-            in_stock: None,
-        }
-    }
-}
-
-impl Default for ProductFilter {
-    fn default() -> Self {
-        Self::new()
+        Self::default()
     }
 }
