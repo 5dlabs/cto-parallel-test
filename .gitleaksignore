@@ -1,0 +1,12 @@
+# Documentation and example passwords - not real secrets
+# These are test fixtures and code examples, not production credentials
+README.md:hashicorp-tf-password:*
+src/auth/models.rs:hashicorp-tf-password:*
+src/auth/jwt.rs:hashicorp-tf-password:*
+.env.example:*
+
+# Test code uses example passwords
+src/auth/models.rs:*:133
+src/auth/models.rs:*:156
+src/auth/models.rs:*:34
+src/auth/models.rs:*:77
