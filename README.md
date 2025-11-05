@@ -68,7 +68,7 @@ if user.verify_password(password) {
 Set the `JWT_SECRET` environment variable in production:
 
 ```bash
-export JWT_SECRET="your_secure_random_secret_key_minimum_32_characters_long"
+export JWT_SECRET="PUT_YOUR_SECRET_HERE"
 ```
 
 **Generate a secure secret:**
