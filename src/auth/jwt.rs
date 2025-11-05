@@ -1,4 +1,12 @@
-// JWT tokens require real system time for expiration - cannot use Clock abstraction
+//! JWT token creation and validation
+//!
+//! # Security Note
+//! This module requires `SystemTime::now()` for RFC 7519 (JWT) compliance.
+//! JWT tokens must use real UNIX timestamps for `exp` and `iat` claims to ensure
+//! interoperability with other JWT implementations and security best practices.
+//! Mocking system time would break token validation across systems.
+
+// Allow SystemTime::now() for JWT RFC 7519 compliance - JWT requires real timestamps
 #![allow(clippy::disallowed_methods)]
 
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
@@ -8,8 +16,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     pub sub: String, // Subject (user id)
-    pub exp: usize,  // Expiration time
-    pub iat: usize,  // Issued at
+    pub exp: u64,    // Expiration time (UNIX timestamp)
+    pub iat: u64,    // Issued at (UNIX timestamp)
 }
 
 /// Create a JWT token for a user ID with 24-hour expiration
@@ -33,7 +41,6 @@ pub struct Claims {
 /// let token = create_token("123").expect("Failed to create token");
 /// assert!(!token.is_empty());
 /// ```
-#[allow(clippy::cast_possible_truncation)] // JWT timestamps are u64, but Claims uses usize for compatibility
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -44,8 +51,8 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 
     let claims = Claims {
         sub: user_id.to_owned(),
-        exp: expiration as usize,
-        iat: now as usize,
+        exp: expiration,
+        iat: now,
     };
 
     // In production, load from environment variable
@@ -119,7 +126,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
     fn test_token_expiration_is_24_hours() {
         let token = create_token("123").expect("Failed to create token");
         let claims = validate_token(&token).expect("Failed to validate token");
@@ -127,10 +133,10 @@ mod tests {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("Time went backwards")
-            .as_secs() as usize;
+            .as_secs();
 
         let expected_exp = now + 86400; // 24 hours in seconds
-        let time_diff = (claims.exp as i64 - expected_exp as i64).abs();
+        let time_diff = claims.exp.abs_diff(expected_exp);
 
         // Allow 10 seconds of difference for test execution time
         assert!(time_diff < 10);
