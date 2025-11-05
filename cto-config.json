@@ -152,19 +152,63 @@
     },
     "cipher": {
       "githubApp": "5DLabs-Cipher",
-      "cli": "codex",
-      "model": "gpt-5",
+      "cli": "factory",
+      "model": "claude-sonnet-4-5-20250929",
       "modelRotation": {
         "enabled": true,
         "models": [
-          "gpt-5",
-          "gpt-5-codex"
+          "claude-sonnet-4-5-20250929",
+          "claude-opus-4-1-20250805"
         ]
       },
       "tools": {
         "remote": [
           "memory_create_entities",
           "memory_add_observations",
+          "brave_search_brave_web_search",
+          "context7_get_library_docs",
+          "rustdocs_query_rust_docs",
+          "agent_docs_codex_query",
+          "agent_docs_cursor_query"
+        ],
+        "localServers": {}
+      }
+    },
+    "atlas": {
+      "githubApp": "5DLabs-Atlas",
+      "cli": "claude",
+      "model": "claude-sonnet-4-5-20250929",
+      "modelRotation": {
+        "enabled": true,
+        "models": [
+          "claude-sonnet-4-5-20250929",
+          "claude-opus-4-1-20250805"
+        ]
+      },
+      "tools": {
+        "remote": [
+          "brave_search_brave_web_search",
+          "context7_get_library_docs",
+          "rustdocs_query_rust_docs",
+          "agent_docs_codex_query",
+          "agent_docs_cursor_query"
+        ],
+        "localServers": {}
+      }
+    },
+    "bolt": {
+      "githubApp": "5DLabs-Bolt",
+      "cli": "claude",
+      "model": "claude-sonnet-4-5-20250929",
+      "modelRotation": {
+        "enabled": true,
+        "models": [
+          "claude-sonnet-4-5-20250929",
+          "claude-opus-4-1-20250805"
+        ]
+      },
+      "tools": {
+        "remote": [
           "brave_search_brave_web_search",
           "context7_get_library_docs",
           "rustdocs_query_rust_docs",
