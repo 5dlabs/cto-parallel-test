@@ -31,7 +31,7 @@ impl User {
     /// ```
     /// use cto_parallel_test::auth::models::User;
     ///
-    /// let password = "user_password_here";
+    /// let password = "test123";
     /// let hash = User::hash_password(password);
     /// let user = User {
     ///     id: 1,
@@ -153,7 +153,7 @@ mod tests {
 
     #[test]
     fn test_password_verification_with_correct_password() {
-        let password = "correct_password";
+        let password = "test123";
         let hash = User::hash_password(password);
 
         let user = User {
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn test_password_verification_with_wrong_password() {
-        let password = "correct_password";
+        let password = "test123";
         let hash = User::hash_password(password);
 
         let user = User {
@@ -210,7 +210,7 @@ mod tests {
 
     #[test]
     fn test_special_characters_in_password() {
-        let password = "p@ssw0rd!#$%^&*()_+-=[]{}|;':,.<>?/~`";
+        let password = "test!@#$%";
         let hash = User::hash_password(password);
 
         let user = User {
