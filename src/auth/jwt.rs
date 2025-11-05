@@ -33,7 +33,11 @@ pub struct Claims {
 /// let token = create_token("123").expect("Failed to create token");
 /// assert!(!token.is_empty());
 /// ```
-#[allow(clippy::cast_possible_truncation)] // JWT timestamps are u64, but Claims uses usize for compatibility
+// Note: JWT timestamps are u64 (seconds since epoch), but jsonwebtoken crate uses usize for Claims.
+// This cast is safe on 64-bit systems and will remain valid until year 2106 on 32-bit systems.
+// Given that 32-bit server deployments are extremely rare, this is an acceptable trade-off for
+// compatibility with the jsonwebtoken library's API design.
+#[allow(clippy::cast_possible_truncation)]
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -119,7 +123,8 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
+    // Test helper: cast is safe, matching production code pattern
+    #[allow(clippy::cast_possible_truncation)]
     fn test_token_expiration_is_24_hours() {
         let token = create_token("123").expect("Failed to create token");
         let claims = validate_token(&token).expect("Failed to validate token");
@@ -130,7 +135,7 @@ mod tests {
             .as_secs() as usize;
 
         let expected_exp = now + 86400; // 24 hours in seconds
-        let time_diff = (claims.exp as i64 - expected_exp as i64).abs();
+        let time_diff = claims.exp.abs_diff(expected_exp);
 
         // Allow 10 seconds of difference for test execution time
         assert!(time_diff < 10);
