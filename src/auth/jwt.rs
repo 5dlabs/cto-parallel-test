@@ -1,6 +1,3 @@
-// JWT tokens require real system time for expiration - cannot use Clock abstraction
-#![allow(clippy::disallowed_methods)]
-
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -33,6 +30,8 @@ pub struct Claims {
 /// let token = create_token("123").expect("Failed to create token");
 /// assert!(!token.is_empty());
 /// ```
+// JWT tokens require real system time for expiration - cannot use Clock abstraction
+#[allow(clippy::disallowed_methods)]
 #[allow(clippy::cast_possible_truncation)] // JWT timestamps are u64, but Claims uses usize for compatibility
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
     let now = SystemTime::now()
@@ -120,6 +119,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::disallowed_methods)] // Test needs SystemTime::now for validation
     #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
     fn test_token_expiration_is_24_hours() {
         let token = create_token("123").expect("Failed to create token");
