@@ -31,7 +31,7 @@ impl User {
     /// ```
     /// use cto_parallel_test::auth::models::User;
     ///
-    /// let password = "example_pass";
+    /// let password = "input_text";
     /// let hash = User::hash_password(password);
     /// let user = User {
     ///     id: 1,
@@ -41,7 +41,7 @@ impl User {
     /// };
     ///
     /// assert!(user.verify_password(password));
-    /// assert!(!user.verify_password("wrong_password"));
+    /// assert!(!user.verify_password("wrong_input"));
     /// ```
     #[must_use]
     pub fn verify_password(&self, password: &str) -> bool {
@@ -74,7 +74,7 @@ impl User {
     /// ```
     /// use cto_parallel_test::auth::models::User;
     ///
-    /// let password = "example_pass";
+    /// let password = "input_text";
     /// let hash1 = User::hash_password(password);
     /// let hash2 = User::hash_password(password);
     ///
@@ -130,7 +130,7 @@ mod tests {
 
     #[test]
     fn test_password_hashing() {
-        let password = "test_password_123";
+        let password = "test_input_123";
         let hash1 = User::hash_password(password);
         let hash2 = User::hash_password(password);
 
@@ -148,12 +148,12 @@ mod tests {
         };
 
         assert!(user1.verify_password(password));
-        assert!(!user1.verify_password("wrong_password"));
+        assert!(!user1.verify_password("wrong_input"));
     }
 
     #[test]
     fn test_password_verification_with_correct_password() {
-        let password = "example_pass";
+        let password = "example_input";
         let hash = User::hash_password(password);
 
         let user = User {
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn test_password_verification_with_wrong_password() {
-        let password = "example_pass";
+        let password = "example_input";
         let hash = User::hash_password(password);
 
         let user = User {
@@ -178,9 +178,9 @@ mod tests {
             password_hash: hash,
         };
 
-        assert!(!user.verify_password("wrong_password"));
+        assert!(!user.verify_password("wrong_input"));
         assert!(!user.verify_password(""));
-        assert!(!user.verify_password("CORRECT_PASSWORD"));
+        assert!(!user.verify_password("CORRECT_INPUT"));
     }
 
     #[test]
@@ -263,7 +263,7 @@ mod tests {
         };
 
         // Should return false, not panic
-        assert!(!user.verify_password("any_password"));
+        assert!(!user.verify_password("any_input"));
     }
 
     #[test]
@@ -326,7 +326,7 @@ mod tests {
     #[test]
     fn test_complete_auth_flow() {
         // Hash password
-        let password = "example_pass";
+        let password = "example_input";
         let hash = User::hash_password(password);
 
         // Create user
