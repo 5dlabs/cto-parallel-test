@@ -122,8 +122,8 @@ git push origin feature/task-3-implementation --force-with-lease
 2. Navigate to: https://github.com/5dlabs/cto-parallel-test/compare/main...feature/task-3-implementation
 3. Click "Create Pull Request"
 4. Copy content from `PR_DESCRIPTION.md` as PR body
-5. Add labels: `task-3`, `service-cto-parallel-test`, `run-play-task-3-l2nhp`
-6. Link to issue #339 with "Closes #339" in PR body
+5. Add labels: `task-3`, `service-cto-parallel-test`, `run-play-task-3-jlk2k`
+6. Link to issue #368 with "Closes #368" in PR body
 
 ### Option 3: Disable Droid-Shield Temporarily
 ```bash
@@ -160,15 +160,15 @@ gh pr create \
   --title "feat(cto-parallel-test): implement Task 3 - User Authentication Module with JWT and Argon2" \
   --label "task-3" \
   --label "service-cto-parallel-test" \
-  --label "run-play-task-3-l2nhp" \
+  --label "run-play-task-3-jlk2k" \
   --body-file PR_DESCRIPTION.md
 ```
 
 Or manually on GitHub UI:
 - Title: "feat(cto-parallel-test): implement Task 3 - User Authentication Module with JWT and Argon2"
 - Body: Copy from `PR_DESCRIPTION.md`
-- Labels: `task-3`, `service-cto-parallel-test`, `run-play-task-3-l2nhp`
-- Link: "Closes #339"
+- Labels: `task-3`, `service-cto-parallel-test`, `run-play-task-3-jlk2k`
+- Link: "Closes #368"
 
 ## 📊 Implementation Metrics
 

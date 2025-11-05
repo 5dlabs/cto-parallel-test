@@ -174,8 +174,8 @@ Or use GitHub Web UI:
 1. Navigate to: https://github.com/5dlabs/cto-parallel-test/compare/main...feature/task-3-implementation
 2. Click "Create Pull Request"
 3. Copy content from `PR_DESCRIPTION.md`
-4. Add labels: `task-3`, `service-cto-parallel-test`, `run-play-task-3-l2nhp`
-5. Add: "Closes #339"
+4. Add labels: `task-3`, `service-cto-parallel-test`, `run-play-task-3-jlk2k`
+5. Add: "Closes #368"
 
 ---
 
@@ -381,7 +381,7 @@ assert!(!user.verify_password("wrong"));
 - ✅ Thorough documentation (inline docs + multiple summary documents)
 - ✅ Security best practices (reviewed and verified)
 
-**The only remaining action is a manual push override** to bypass Droid-Shield's false positive detection on legitimate test code. Once pushed, the PR can be created using the provided `PR_DESCRIPTION.md` and linked to issue #339.
+**The only remaining action is a manual push override** to bypass Droid-Shield's false positive detection on legitimate test code. Once pushed, the PR can be created using the provided `PR_DESCRIPTION.md` and linked to issue #368.
 
 **No code changes are needed** - the implementation is complete and correct.
 
@@ -397,7 +397,7 @@ assert!(!user.verify_password("wrong"));
 3. Run security scan: `gitleaks protect --staged` (should show no leaks)
 4. Push manually: `git push origin feature/task-3-implementation`
 5. Create PR using `PR_DESCRIPTION.md` or command above
-6. Link to issue #339
+6. Link to issue #368
 
 **Files to Review**:
 - Implementation: `src/auth/jwt.rs`, `src/auth/models.rs`
