@@ -5,6 +5,8 @@ README.md:generic-api-key:*
 src/auth/models.rs:hashicorp-tf-password:*
 src/auth/jwt.rs:hashicorp-tf-password:*
 .env.example:*
+task/**:*
+frontend/**:*
 
 # Test code uses example passwords (specific fingerprints)
 src/auth/models.rs:hashicorp-tf-password:34
