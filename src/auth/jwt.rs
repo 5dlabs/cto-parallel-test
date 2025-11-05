@@ -99,6 +99,7 @@ pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error
 #[cfg(test)]
 mod tests {
     use super::*;
+    use jsonwebtoken::{encode, errors::ErrorKind, EncodingKey, Header};
 
     #[test]
     fn test_jwt_creation_and_validation() {
@@ -140,6 +141,73 @@ mod tests {
     fn test_invalid_token() {
         let invalid_token = "invalid.token.here";
         assert!(validate_token(invalid_token).is_err());
+    }
+
+    #[test]
+    fn test_expired_token_is_rejected() {
+        let secret = std::env::var("JWT_SECRET")
+            .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+
+        let claims = Claims {
+            sub: "expired_user".to_string(),
+            exp: 0,
+            iat: 0,
+        };
+
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(secret.as_bytes()),
+        )
+        .expect("Failed to encode expired token");
+
+        let err = validate_token(&token).expect_err("Expired token should be rejected");
+        assert!(matches!(err.kind(), ErrorKind::ExpiredSignature));
+    }
+
+    #[test]
+    fn test_token_signed_with_different_secret_is_rejected() {
+        let claims = Claims {
+            sub: "user_789".to_string(),
+            exp: usize::MAX / 2,
+            iat: 0,
+        };
+
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(b"different_secret_key"),
+        )
+        .expect("Failed to encode token with alternate secret");
+
+        let err = validate_token(&token)
+            .expect_err("Token signed with different secret should be rejected");
+        assert!(matches!(
+            err.kind(),
+            ErrorKind::InvalidSignature | ErrorKind::InvalidToken
+        ));
+    }
+
+    #[test]
+    fn test_tampered_token_is_rejected() {
+        let token = create_token("123").expect("Failed to create token");
+        let parts: Vec<&str> = token.split('.').collect();
+        assert_eq!(parts.len(), 3);
+
+        let mut signature = parts[2].to_string();
+        let last_char = signature
+            .pop()
+            .expect("JWT signature segment should not be empty");
+        let replacement = if last_char == 'A' { 'B' } else { 'A' };
+        signature.push(replacement);
+
+        let tampered_token = format!("{}.{}.{}", parts[0], parts[1], signature);
+
+        let err = validate_token(&tampered_token).expect_err("Tampered token should be rejected");
+        assert!(matches!(
+            err.kind(),
+            ErrorKind::InvalidSignature | ErrorKind::InvalidToken
+        ));
     }
 
     #[test]
