@@ -3,67 +3,67 @@ import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-
-const sampleProducts = [
-  {
-    id: 1,
-    name: 'Wireless Headphones',
-    description: 'Premium noise-canceling wireless headphones',
-    price: 129.99,
-    inventory_count: 15
-  },
-  {
-    id: 2,
-    name: 'Smart Watch',
-    description: 'Fitness tracking smartwatch with heart rate monitor',
-    price: 199.99,
-    inventory_count: 8
-  },
-  {
-    id: 3,
-    name: 'Laptop Stand',
-    description: 'Ergonomic aluminum laptop stand',
-    price: 49.99,
-    inventory_count: 25
-  },
-  {
-    id: 4,
-    name: 'Mechanical Keyboard',
-    description: 'RGB mechanical gaming keyboard',
-    price: 89.99,
-    inventory_count: 0
-  },
-  {
-    id: 5,
-    name: 'USB-C Hub',
-    description: '7-in-1 USB-C multiport adapter',
-    price: 39.99,
-    inventory_count: 30
-  },
-  {
-    id: 6,
-    name: 'Wireless Mouse',
-    description: 'Ergonomic wireless mouse with precision tracking',
-    price: 29.99,
-    inventory_count: 20
-  }
-];
+import { productAPI } from '../services/api';
 
 function ProductList() {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    setProducts(sampleProducts);
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await productAPI.getAll();
+        setProducts(response.data);
+      } catch (err) {
+        console.error('Failed to fetch products:', err);
+        setError('Failed to load products. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   const formatPrice = (price) => price.toFixed(2);
 
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <p className="text-xl">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <p className="text-xl text-destructive">{error}</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold mb-8">Our Products</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
+
+      {products.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-xl text-muted-foreground">No products available at the moment.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map((product) => (
           <Card key={product.id} className="flex flex-col">
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -103,7 +103,8 @@ function ProductList() {
             </CardFooter>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

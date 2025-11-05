@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { authAPI } from '../services/api';
 
 function Register() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ function Register() {
     confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,17 +60,34 @@ function Register() {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validateForm();
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    alert('Registration functionality will be implemented with backend API');
-    navigate('/login');
+    try {
+      setIsSubmitting(true);
+      await authAPI.register(formData.username, formData.email, formData.password);
+
+      // Registration successful, navigate to login
+      alert('Registration successful! Please login with your credentials.');
+      navigate('/login');
+    } catch (err) {
+      console.error('Registration failed:', err);
+      if (err.response?.status === 409) {
+        setErrors({ username: 'Username or email already exists' });
+      } else if (err.response?.data?.message) {
+        setErrors({ username: err.response.data.message });
+      } else {
+        setErrors({ username: 'Registration failed. Please try again.' });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -154,8 +173,8 @@ function Register() {
               )}
             </div>
 
-            <Button type="submit" className="w-full">
-              Create Account
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
         </CardContent>

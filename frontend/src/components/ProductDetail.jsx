@@ -1,75 +1,71 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ArrowLeft } from 'lucide-react';
-
-const sampleProducts = [
-  {
-    id: 1,
-    name: 'Wireless Headphones',
-    description: 'Premium noise-canceling wireless headphones with superior sound quality',
-    price: 129.99,
-    inventory_count: 15,
-    features: ['Active Noise Cancellation', '30-hour battery life', 'Bluetooth 5.0', 'Foldable design']
-  },
-  {
-    id: 2,
-    name: 'Smart Watch',
-    description: 'Fitness tracking smartwatch with heart rate monitor',
-    price: 199.99,
-    inventory_count: 8,
-    features: ['Heart rate monitor', 'GPS tracking', 'Water resistant', '7-day battery life']
-  },
-  {
-    id: 3,
-    name: 'Laptop Stand',
-    description: 'Ergonomic aluminum laptop stand for better posture',
-    price: 49.99,
-    inventory_count: 25,
-    features: ['Aluminum construction', 'Adjustable height', 'Cable management', 'Non-slip pads']
-  },
-  {
-    id: 4,
-    name: 'Mechanical Keyboard',
-    description: 'RGB mechanical gaming keyboard with customizable keys',
-    price: 89.99,
-    inventory_count: 0,
-    features: ['Mechanical switches', 'RGB backlighting', 'Programmable keys', 'USB passthrough']
-  },
-  {
-    id: 5,
-    name: 'USB-C Hub',
-    description: '7-in-1 USB-C multiport adapter for laptops',
-    price: 39.99,
-    inventory_count: 30,
-    features: ['4K HDMI output', 'USB 3.0 ports', 'SD card reader', 'Power delivery']
-  },
-  {
-    id: 6,
-    name: 'Wireless Mouse',
-    description: 'Ergonomic wireless mouse with precision tracking',
-    price: 29.99,
-    inventory_count: 20,
-    features: ['Ergonomic design', '2400 DPI sensor', 'Long battery life', 'Silent clicks']
-  }
-];
+import { productAPI, cartAPI } from '../services/api';
 
 function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
-    const foundProduct = sampleProducts.find(p => p.id === parseInt(id));
-    setProduct(foundProduct);
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await productAPI.getById(id);
+        setProduct(response.data);
+      } catch (err) {
+        console.error('Failed to fetch product:', err);
+        setError('Failed to load product details.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
   }, [id]);
 
-  if (!product) {
+  const handleAddToCart = async () => {
+    try {
+      setAddingToCart(true);
+      await cartAPI.addItem(product.id, quantity);
+      alert('Product added to cart successfully!');
+      navigate('/cart');
+    } catch (err) {
+      console.error('Failed to add to cart:', err);
+      if (err.response?.status === 401) {
+        alert('Please login to add items to cart');
+        navigate('/login');
+      } else {
+        alert('Failed to add product to cart. Please try again.');
+      }
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <p>Product not found</p>
+        <div className="text-center">
+          <p className="text-xl">Loading product details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-xl text-destructive mb-4">{error || 'Product not found'}</p>
         <Link to="/products">
           <Button variant="outline" className="mt-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -79,10 +75,6 @@ function ProductDetail() {
       </div>
     );
   }
-
-  const handleAddToCart = () => {
-    alert('Product added to cart (functionality to be implemented)');
-  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -169,16 +161,16 @@ function ProductDetail() {
             </div>
 
             <div className="flex space-x-4">
-              <Button 
-                className="flex-1" 
+              <Button
+                className="flex-1"
                 size="lg"
-                disabled={product.inventory_count === 0}
+                disabled={product.inventory_count === 0 || addingToCart}
                 onClick={handleAddToCart}
               >
-                Add to Cart
+                {addingToCart ? 'Adding...' : 'Add to Cart'}
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="lg"
                 disabled={product.inventory_count === 0}
               >

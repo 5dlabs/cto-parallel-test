@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { authAPI } from '../services/api';
 
 function Login() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ function Login() {
     password: ''
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,17 +39,38 @@ function Login() {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validateForm();
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    alert('Login functionality will be implemented with backend API');
-    navigate('/');
+    try {
+      setIsSubmitting(true);
+      const response = await authAPI.login(formData.username, formData.password);
+
+      // Store auth token and user info
+      localStorage.setItem('auth_token', response.data.token);
+      localStorage.setItem('user', JSON.stringify({
+        id: response.data.user_id,
+        username: response.data.username
+      }));
+
+      // Navigate to home page
+      navigate('/');
+    } catch (err) {
+      console.error('Login failed:', err);
+      if (err.response?.status === 401) {
+        setErrors({ password: 'Invalid username or password' });
+      } else {
+        setErrors({ password: 'Login failed. Please try again.' });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -105,8 +128,8 @@ function Login() {
               )}
             </div>
 
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
         </CardContent>
