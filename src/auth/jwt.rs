@@ -133,9 +133,34 @@ pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error
 #[cfg(test)]
 mod tests {
     use super::*;
+    use jsonwebtoken::errors::ErrorKind;
+    use jsonwebtoken::{encode, EncodingKey, Header};
+    use std::sync::{LazyLock, Mutex, MutexGuard, PoisonError};
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    static ENV_MUTEX: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
+
+    struct EnvGuard {
+        _guard: MutexGuard<'static, ()>,
+    }
+
+    impl EnvGuard {
+        fn new() -> Self {
+            let guard = ENV_MUTEX.lock().unwrap_or_else(PoisonError::into_inner);
+            std::env::remove_var("JWT_SECRET");
+            Self { _guard: guard }
+        }
+    }
+
+    impl Drop for EnvGuard {
+        fn drop(&mut self) {
+            std::env::remove_var("JWT_SECRET");
+        }
+    }
 
     #[test]
     fn test_token_creation() {
+        let _env_guard = EnvGuard::new();
         let user_id = "test_user_123";
         let token = create_token(user_id).expect("Failed to create token");
 
@@ -153,6 +178,7 @@ mod tests {
 
     #[test]
     fn test_token_validation_success() {
+        let _env_guard = EnvGuard::new();
         let user_id = "test_user_456";
         let token = create_token(user_id).expect("Failed to create token");
 
@@ -178,6 +204,7 @@ mod tests {
 
     #[test]
     fn test_invalid_token_rejected() {
+        let _env_guard = EnvGuard::new();
         let invalid_token = "invalid.token.here";
         let result = validate_token(invalid_token);
 
@@ -185,7 +212,39 @@ mod tests {
     }
 
     #[test]
+    fn test_expired_token_rejected() {
+        let _env_guard = EnvGuard::new();
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("System time is before Unix epoch")
+            .as_secs();
+
+        let claims = Claims {
+            sub: "expired_user".to_string(),
+            exp: usize::try_from(now.saturating_sub(120)).expect("Timestamp overflow"),
+            iat: usize::try_from(now.saturating_sub(240)).expect("Timestamp overflow"),
+        };
+
+        let secret = std::env::var("JWT_SECRET")
+            .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(secret.as_bytes()),
+        )
+        .expect("Failed to encode expired token");
+
+        let err = validate_token(&token).expect_err("Expired token should be rejected");
+        assert!(
+            matches!(err.kind(), ErrorKind::ExpiredSignature),
+            "Expected expired signature error but got {err:?}"
+        );
+    }
+
+    #[test]
     fn test_tampered_token_rejected() {
+        let _env_guard = EnvGuard::new();
         let user_id = "test_user_789";
         let token = create_token(user_id).expect("Failed to create token");
 
@@ -200,7 +259,39 @@ mod tests {
     }
 
     #[test]
+    fn test_token_rejected_with_wrong_secret() {
+        let _env_guard = EnvGuard::new();
+
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("System time is before Unix epoch")
+            .as_secs();
+
+        let claims = Claims {
+            sub: "user_env_secret".to_string(),
+            exp: usize::try_from(now.checked_add(3600).expect("Timestamp overflow"))
+                .expect("Timestamp overflow"),
+            iat: usize::try_from(now).expect("Timestamp overflow"),
+        };
+
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(b"alternate_secret_for_test"),
+        )
+        .expect("Failed to sign token with alternate secret");
+
+        let result = validate_token(&token);
+
+        assert!(
+            result.is_err(),
+            "Token signed with a different secret should be rejected"
+        );
+    }
+
+    #[test]
     fn test_different_users_have_different_tokens() {
+        let _env_guard = EnvGuard::new();
         let token1 = create_token("user_1").expect("Failed to create token 1");
         let token2 = create_token("user_2").expect("Failed to create token 2");
 
@@ -212,6 +303,7 @@ mod tests {
 
     #[test]
     fn test_same_user_different_timestamps() {
+        let _env_guard = EnvGuard::new();
         let user_id = "test_user_same";
         let token1 = create_token(user_id).expect("Failed to create token 1");
 
@@ -234,6 +326,7 @@ mod tests {
 
     #[test]
     fn test_claims_fields() {
+        let _env_guard = EnvGuard::new();
         let user_id = "claims_test_user";
         let token = create_token(user_id).expect("Failed to create token");
         let claims = validate_token(&token).expect("Failed to validate token");
@@ -256,6 +349,7 @@ mod tests {
 
     #[test]
     fn test_empty_user_id() {
+        let _env_guard = EnvGuard::new();
         let token = create_token("").expect("Failed to create token with empty user ID");
         let claims = validate_token(&token).expect("Failed to validate token");
 
@@ -264,6 +358,7 @@ mod tests {
 
     #[test]
     fn test_special_characters_in_user_id() {
+        let _env_guard = EnvGuard::new();
         let user_id = "user@example.com|123!#$%";
         let token = create_token(user_id).expect("Failed to create token with special characters");
         let claims = validate_token(&token).expect("Failed to validate token");

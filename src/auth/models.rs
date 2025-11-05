@@ -5,9 +5,11 @@
 //! - Request/Response DTOs for authentication endpoints
 
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+use rand::rngs::OsRng;
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
 
 /// User entity with authentication credentials
@@ -68,12 +70,10 @@ impl User {
     /// ```
     #[must_use]
     pub fn verify_password(&self, password: &str) -> bool {
-        // Parse the stored hash
         let Ok(parsed_hash) = PasswordHash::new(&self.password_hash) else {
-            return false; // Invalid hash format
+            return false;
         };
 
-        // Verify password using Argon2
         Argon2::default()
             .verify_password(password.as_bytes(), &parsed_hash)
             .is_ok()
@@ -131,17 +131,18 @@ impl User {
     /// };
     /// assert!(user1.verify_password(password));
     /// ```
+    #[must_use]
     pub fn hash_password(password: &str) -> String {
-        // Generate a random salt using OS random number generator
-        let salt = SaltString::generate(&mut OsRng);
+        let mut salt_bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut salt_bytes);
 
-        // Hash the password with Argon2
+        let salt = SaltString::encode_b64(&salt_bytes).expect("Failed to encode salt");
         let argon2 = Argon2::default();
-        let password_hash = argon2
-            .hash_password(password.as_bytes(), &salt)
-            .expect("Failed to hash password");
 
-        password_hash.to_string()
+        argon2
+            .hash_password(password.as_bytes(), &salt)
+            .expect("Failed to hash password")
+            .to_string()
     }
 }
 
@@ -185,6 +186,7 @@ pub struct AuthResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::auth::jwt::{create_token, validate_token};
 
     #[test]
     fn test_password_hashing_produces_different_hashes() {
@@ -486,5 +488,28 @@ mod tests {
         assert!(json.contains("jwt_token_here"));
         assert!(json.contains("42"));
         assert!(json.contains("testuser"));
+    }
+
+    #[test]
+    fn test_complete_auth_flow() {
+        let password = "flow_password_sample";
+        let password_hash = User::hash_password(password);
+
+        let user = User {
+            id: 101,
+            username: "flow_user".to_string(),
+            email: "flow@example.com".to_string(),
+            password_hash,
+        };
+
+        assert!(
+            user.verify_password(password),
+            "Password verification should succeed for correct password"
+        );
+
+        let token = create_token(&user.id.to_string()).expect("Failed to create JWT token");
+        let claims = validate_token(&token).expect("Failed to validate JWT token");
+
+        assert_eq!(claims.sub, user.id.to_string());
     }
 }
