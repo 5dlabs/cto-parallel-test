@@ -290,7 +290,7 @@ mod tests {
     #[test]
     fn test_login_request_deserialization() {
         let pw = format!("{}pass", "user");
-        let json = format!(r#"{{"username":"testuser","password":"{}"}}"#, pw);
+        let json = format!(r#"{{"username":"testuser","password":"{pw}"}}"#);
         let request: LoginRequest =
             serde_json::from_str(&json).expect("Failed to deserialize login request");
 
@@ -301,7 +301,7 @@ mod tests {
     #[test]
     fn test_register_request_deserialization() {
         let pw = format!("{}pass", "new");
-        let json = format!(r#"{{"username":"newuser","email":"new@example.com","password":"{}"}}"#, pw);
+        let json = format!(r#"{{"username":"newuser","email":"new@example.com","password":"{pw}"}}"#);
         let request: RegisterRequest =
             serde_json::from_str(&json).expect("Failed to deserialize register request");
 
