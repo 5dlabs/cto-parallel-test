@@ -1,11 +1,22 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { useCart } from '../context/CartContext';
+import { authApi } from '../services/api';
 
 function Header() {
-  const cartItemCount = 0; // This will be managed by state/context in the future
+  const { cartItemCount } = useCart();
+  const navigate = useNavigate();
+  const isAuthenticated = !!localStorage.getItem('authToken');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  const handleLogout = () => {
+    authApi.logout();
+    navigate('/login');
+    window.location.reload(); // Refresh to clear cart state
+  };
 
   return (
     <header className="border-b">
@@ -31,7 +42,7 @@ function Header() {
                 <ShoppingCart className="h-5 w-5" />
               </Button>
               {cartItemCount > 0 && (
-                <Badge 
+                <Badge
                   className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0"
                   variant="destructive"
                 >
@@ -39,12 +50,25 @@ function Header() {
                 </Badge>
               )}
             </Link>
-            <Link to="/login">
-              <Button variant="ghost">Login</Button>
-            </Link>
-            <Link to="/register">
-              <Button>Sign Up</Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <span className="text-sm text-muted-foreground hidden md:inline">
+                  {user.username}
+                </span>
+                <Button variant="ghost" onClick={handleLogout} size="icon" title="Logout">
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost">Login</Button>
+                </Link>
+                <Link to="/register">
+                  <Button>Sign Up</Button>
+                </Link>
+              </>
+            )}
           </div>
         </nav>
       </div>

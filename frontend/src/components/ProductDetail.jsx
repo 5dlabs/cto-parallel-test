@@ -1,88 +1,85 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ArrowLeft } from 'lucide-react';
-
-const sampleProducts = [
-  {
-    id: 1,
-    name: 'Wireless Headphones',
-    description: 'Premium noise-canceling wireless headphones with superior sound quality',
-    price: 129.99,
-    inventory_count: 15,
-    features: ['Active Noise Cancellation', '30-hour battery life', 'Bluetooth 5.0', 'Foldable design']
-  },
-  {
-    id: 2,
-    name: 'Smart Watch',
-    description: 'Fitness tracking smartwatch with heart rate monitor',
-    price: 199.99,
-    inventory_count: 8,
-    features: ['Heart rate monitor', 'GPS tracking', 'Water resistant', '7-day battery life']
-  },
-  {
-    id: 3,
-    name: 'Laptop Stand',
-    description: 'Ergonomic aluminum laptop stand for better posture',
-    price: 49.99,
-    inventory_count: 25,
-    features: ['Aluminum construction', 'Adjustable height', 'Cable management', 'Non-slip pads']
-  },
-  {
-    id: 4,
-    name: 'Mechanical Keyboard',
-    description: 'RGB mechanical gaming keyboard with customizable keys',
-    price: 89.99,
-    inventory_count: 0,
-    features: ['Mechanical switches', 'RGB backlighting', 'Programmable keys', 'USB passthrough']
-  },
-  {
-    id: 5,
-    name: 'USB-C Hub',
-    description: '7-in-1 USB-C multiport adapter for laptops',
-    price: 39.99,
-    inventory_count: 30,
-    features: ['4K HDMI output', 'USB 3.0 ports', 'SD card reader', 'Power delivery']
-  },
-  {
-    id: 6,
-    name: 'Wireless Mouse',
-    description: 'Ergonomic wireless mouse with precision tracking',
-    price: 29.99,
-    inventory_count: 20,
-    features: ['Ergonomic design', '2400 DPI sensor', 'Long battery life', 'Silent clicks']
-  }
-];
+import { productsApi, cartApi } from '../services/api';
+import { useCart } from '../context/CartContext';
 
 function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const { refreshCart } = useCart();
 
   useEffect(() => {
-    const foundProduct = sampleProducts.find(p => p.id === parseInt(id));
-    setProduct(foundProduct);
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await productsApi.getById(id);
+        setProduct(response.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load product');
+        console.error('Error fetching product:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
   }, [id]);
 
-  if (!product) {
+  const handleAddToCart = async () => {
+    try {
+      setAddingToCart(true);
+      await cartApi.addItem(product.id, quantity);
+      refreshCart(); // Update header cart count
+      alert('Product added to cart successfully!');
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || 'Failed to add item to cart';
+      alert(errorMsg);
+      console.error('Error adding to cart:', err);
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    await handleAddToCart();
+    navigate('/cart');
+  };
+
+  if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <p>Product not found</p>
-        <Link to="/products">
-          <Button variant="outline" className="mt-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Products
-          </Button>
-        </Link>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <p className="text-lg text-muted-foreground">Loading product...</p>
+        </div>
       </div>
     );
   }
 
-  const handleAddToCart = () => {
-    alert('Product added to cart (functionality to be implemented)');
-  };
+  if (error || !product) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col justify-center items-center min-h-[400px] space-y-4">
+          <p className="text-lg text-destructive">{error || 'Product not found'}</p>
+          <Link to="/products">
+            <Button variant="outline">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Products
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -119,7 +116,7 @@ function ProductDetail() {
               {product.description}
             </p>
             <p className="text-4xl font-bold text-primary mb-4">
-              ${product.price.toFixed(2)}
+              ${typeof product.price === 'string' ? parseFloat(product.price).toFixed(2) : product.price.toFixed(2)}
             </p>
             <p className="text-sm text-muted-foreground">
               {product.inventory_count > 0 
@@ -169,18 +166,19 @@ function ProductDetail() {
             </div>
 
             <div className="flex space-x-4">
-              <Button 
-                className="flex-1" 
+              <Button
+                className="flex-1"
                 size="lg"
-                disabled={product.inventory_count === 0}
+                disabled={product.inventory_count === 0 || addingToCart}
                 onClick={handleAddToCart}
               >
-                Add to Cart
+                {addingToCart ? 'Adding...' : 'Add to Cart'}
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="lg"
-                disabled={product.inventory_count === 0}
+                disabled={product.inventory_count === 0 || addingToCart}
+                onClick={handleBuyNow}
               >
                 Buy Now
               </Button>

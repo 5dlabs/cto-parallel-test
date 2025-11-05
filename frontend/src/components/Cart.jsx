@@ -1,48 +1,98 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { cartApi } from '../services/api';
+import { useCart } from '../context/CartContext';
 
 function Cart() {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      productId: 1,
-      name: 'Wireless Headphones',
-      price: 129.99,
-      quantity: 2
-    },
-    {
-      id: 2,
-      productId: 3,
-      name: 'Laptop Stand',
-      price: 49.99,
-      quantity: 1
-    }
-  ]);
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { refreshCart } = useCart();
 
-  const updateQuantity = (id, delta) => {
-    setCartItems(items =>
-      items.map(item =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
-      )
-    );
+  useEffect(() => {
+    fetchCart();
+  }, []);
+
+  const fetchCart = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await cartApi.get();
+      setCartItems(response.data.items || []);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load cart');
+      console.error('Error fetching cart:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const removeItem = (id) => {
-    setCartItems(items => items.filter(item => item.id !== id));
+  const updateQuantity = async (productId, newQuantity) => {
+    if (newQuantity < 1) return;
+
+    try {
+      await cartApi.updateQuantity(productId, newQuantity);
+      setCartItems(items =>
+        items.map(item =>
+          item.product_id === productId
+            ? { ...item, quantity: newQuantity }
+            : item
+        )
+      );
+      refreshCart(); // Update header cart count
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update quantity');
+      console.error('Error updating quantity:', err);
+    }
+  };
+
+  const removeItem = async (productId) => {
+    try {
+      await cartApi.removeItem(productId);
+      setCartItems(items => items.filter(item => item.product_id !== productId));
+      refreshCart(); // Update header cart count
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to remove item');
+      console.error('Error removing item:', err);
+    }
   };
 
   const calculateSubtotal = () => {
-    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    return cartItems.reduce((sum, item) => {
+      const price = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
+      return sum + (price * item.quantity);
+    }, 0);
   };
 
   const subtotal = calculateSubtotal();
   const tax = subtotal * 0.08;
   const total = subtotal + tax;
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <p className="text-lg text-muted-foreground">Loading cart...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <Card className="max-w-md mx-auto text-center">
+          <CardContent className="py-16">
+            <p className="text-lg text-destructive mb-4">{error}</p>
+            <Button onClick={fetchCart}>Retry</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -78,14 +128,14 @@ function Cart() {
                   </div>
 
                   <div className="flex-grow">
-                    <Link 
-                      to={'/products/' + item.productId}
+                    <Link
+                      to={'/products/' + item.product_id}
                       className="text-xl font-semibold hover:text-primary transition-colors"
                     >
                       {item.name}
                     </Link>
                     <p className="text-lg text-primary font-semibold mt-1">
-                      ${item.price.toFixed(2)}
+                      ${typeof item.price === 'string' ? parseFloat(item.price).toFixed(2) : item.price.toFixed(2)}
                     </p>
                   </div>
 
@@ -93,7 +143,7 @@ function Cart() {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => updateQuantity(item.id, -1)}
+                      onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
@@ -103,7 +153,7 @@ function Cart() {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => updateQuantity(item.id, 1)}
+                      onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -111,14 +161,14 @@ function Cart() {
 
                   <div className="text-right min-w-24">
                     <p className="text-xl font-bold">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ${(typeof item.price === 'string' ? parseFloat(item.price) * item.quantity : item.price * item.quantity).toFixed(2)}
                     </p>
                   </div>
 
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeItem(item.product_id)}
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-5 w-5" />

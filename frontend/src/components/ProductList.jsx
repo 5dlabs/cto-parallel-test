@@ -3,67 +3,70 @@ import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-
-const sampleProducts = [
-  {
-    id: 1,
-    name: 'Wireless Headphones',
-    description: 'Premium noise-canceling wireless headphones',
-    price: 129.99,
-    inventory_count: 15
-  },
-  {
-    id: 2,
-    name: 'Smart Watch',
-    description: 'Fitness tracking smartwatch with heart rate monitor',
-    price: 199.99,
-    inventory_count: 8
-  },
-  {
-    id: 3,
-    name: 'Laptop Stand',
-    description: 'Ergonomic aluminum laptop stand',
-    price: 49.99,
-    inventory_count: 25
-  },
-  {
-    id: 4,
-    name: 'Mechanical Keyboard',
-    description: 'RGB mechanical gaming keyboard',
-    price: 89.99,
-    inventory_count: 0
-  },
-  {
-    id: 5,
-    name: 'USB-C Hub',
-    description: '7-in-1 USB-C multiport adapter',
-    price: 39.99,
-    inventory_count: 30
-  },
-  {
-    id: 6,
-    name: 'Wireless Mouse',
-    description: 'Ergonomic wireless mouse with precision tracking',
-    price: 29.99,
-    inventory_count: 20
-  }
-];
+import { productsApi } from '../services/api';
 
 function ProductList() {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    setProducts(sampleProducts);
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await productsApi.getAll();
+        setProducts(response.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load products');
+        console.error('Error fetching products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
-  const formatPrice = (price) => price.toFixed(2);
+  const formatPrice = (price) => {
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    return numPrice.toFixed(2);
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold mb-8">Our Products</h1>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <p className="text-lg text-muted-foreground">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold mb-8">Our Products</h1>
+        <div className="flex flex-col justify-center items-center min-h-[400px] space-y-4">
+          <p className="text-lg text-destructive">{error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold mb-8">Our Products</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
+
+      {products.length === 0 ? (
+        <div className="flex justify-center items-center min-h-[400px]">
+          <p className="text-lg text-muted-foreground">No products available</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map((product) => (
           <Card key={product.id} className="flex flex-col">
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -102,8 +105,9 @@ function ProductList() {
               </Button>
             </CardFooter>
           </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

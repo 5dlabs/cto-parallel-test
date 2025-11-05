@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { authApi } from '../services/api';
 
 function Register() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ function Register() {
     confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,17 +60,30 @@ function Register() {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validateForm();
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    alert('Registration functionality will be implemented with backend API');
-    navigate('/login');
+    try {
+      setLoading(true);
+      const { confirmPassword, ...registrationData } = formData;
+      await authApi.register(registrationData);
+
+      // Navigate to login page on success
+      alert('Registration successful! Please log in.');
+      navigate('/login');
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || 'Registration failed. Please try again.';
+      setErrors({ general: errorMsg });
+      console.error('Registration error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,6 +97,11 @@ function Register() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {errors.general && (
+              <div className="p-3 bg-destructive/10 border border-destructive rounded-md">
+                <p className="text-sm text-destructive">{errors.general}</p>
+              </div>
+            )}
             <div className="space-y-2">
               <label htmlFor="username" className="text-sm font-medium">
                 Username
@@ -154,8 +174,8 @@ function Register() {
               )}
             </div>
 
-            <Button type="submit" className="w-full">
-              Create Account
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
         </CardContent>
