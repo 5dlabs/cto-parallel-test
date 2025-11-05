@@ -1,0 +1,5 @@
+/workspace/5dlabs-cto-parallel-test/target/debug/deps/simple_asn1-d169bbc2de32652a.d: /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simple_asn1-0.6.3/src/lib.rs
+
+/workspace/5dlabs-cto-parallel-test/target/debug/deps/libsimple_asn1-d169bbc2de32652a.rmeta: /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simple_asn1-0.6.3/src/lib.rs
+
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/simple_asn1-0.6.3/src/lib.rs:

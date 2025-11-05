@@ -1,0 +1,1 @@
+/workspace/5dlabs-cto-parallel-test/target/debug/ecommerce_api: /workspace/5dlabs-cto-parallel-test/src/config/db.rs /workspace/5dlabs-cto-parallel-test/src/config/mod.rs /workspace/5dlabs-cto-parallel-test/src/lib.rs /workspace/5dlabs-cto-parallel-test/src/main.rs /workspace/5dlabs-cto-parallel-test/src/models.rs /workspace/5dlabs-cto-parallel-test/src/schema.rs
