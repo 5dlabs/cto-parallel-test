@@ -1,0 +1,30 @@
+name: Deploy
+on:
+  push:
+    branches: [main, develop, feature/*, feat/*, fix/*]
+
+jobs:
+  build-lib:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: . -> target
+          shared-key: rust-cache-deploy
+
+      - name: Build library in release mode
+        run: cargo build --release --lib
+
+      - name: Run tests in release mode
+        run: cargo test --release --all-features
+
+      - name: Generate documentation
+        run: cargo doc --no-deps --all-features
