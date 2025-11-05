@@ -12,7 +12,7 @@ FROM base AS deps
 WORKDIR /app
 
 # Copy package files
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile --prod=false
@@ -25,7 +25,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy application source
-COPY frontend/ ./
+COPY . ./
 
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
