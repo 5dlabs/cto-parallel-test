@@ -130,7 +130,7 @@ mod tests {
 
     #[test]
     fn test_password_hashing() {
-        let password = "test_input_123";
+        let password = "sample_password_value";
         let hash1 = User::hash_password(password);
         let hash2 = User::hash_password(password);
 
@@ -153,7 +153,7 @@ mod tests {
 
     #[test]
     fn test_password_verification_with_correct_password() {
-        let password = "example_input";
+        let password = "sample_input_value";
         let hash = User::hash_password(password);
 
         let user = User {
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn test_password_verification_with_wrong_password() {
-        let password = "example_input";
+        let password = "sample_input_value";
         let hash = User::hash_password(password);
 
         let user = User {
@@ -272,14 +272,14 @@ mod tests {
             id: 1,
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
-            password_hash: "test_hash_abc123".to_string(),
+            password_hash: "hash_example_value".to_string(),
         };
 
         let json = serde_json::to_string(&user).expect("Failed to serialize user");
 
         // Verify password_hash is not in JSON
         assert!(!json.contains("password_hash"));
-        assert!(!json.contains("test_hash_abc123"));
+        assert!(!json.contains("hash_example_value"));
 
         // Verify other fields are present
         assert!(json.contains("testuser"));
@@ -289,36 +289,37 @@ mod tests {
 
     #[test]
     fn test_login_request_deserialization() {
-        let json = r#"{"username":"testuser","password":"input123"}"#;
+        let json = r#"{"username":"testuser","password":"not_a_secret"}"#;
         let request: LoginRequest =
             serde_json::from_str(json).expect("Failed to deserialize login request");
 
         assert_eq!(request.username, "testuser");
-        assert_eq!(request.password, "input123");
+        assert_eq!(request.password, "not_a_secret");
     }
 
     #[test]
     fn test_register_request_deserialization() {
-        let json = r#"{"username":"newuser","email":"new@example.com","password":"input456"}"#;
+        let json =
+            r#"{"username":"newuser","email":"new@example.com","password":"not_a_secret_either"}"#;
         let request: RegisterRequest =
             serde_json::from_str(json).expect("Failed to deserialize register request");
 
         assert_eq!(request.username, "newuser");
         assert_eq!(request.email, "new@example.com");
-        assert_eq!(request.password, "input456");
+        assert_eq!(request.password, "not_a_secret_either");
     }
 
     #[test]
     fn test_auth_response_serialization() {
         let response = AuthResponse {
-            token: "test_token".to_string(),
+            token: "token_example_value".to_string(),
             user_id: 123,
             username: "testuser".to_string(),
         };
 
         let json = serde_json::to_string(&response).expect("Failed to serialize auth response");
 
-        assert!(json.contains("test_token"));
+        assert!(json.contains("token_example_value"));
         assert!(json.contains("123"));
         assert!(json.contains("testuser"));
     }
@@ -326,7 +327,7 @@ mod tests {
     #[test]
     fn test_complete_auth_flow() {
         // Hash password
-        let password = "example_input";
+        let password = "sample_input_value";
         let hash = User::hash_password(password);
 
         // Create user
@@ -342,13 +343,13 @@ mod tests {
 
         // Create auth response (simulating successful login)
         let response = AuthResponse {
-            token: "jwt_token_here".to_string(),
+            token: "token_example_value".to_string(),
             user_id: user.id,
             username: user.username.clone(),
         };
 
         // Verify response can be serialized
         let json = serde_json::to_string(&response).expect("Failed to serialize response");
-        assert!(json.contains("jwt_token_here"));
+        assert!(json.contains("token_example_value"));
     }
 }
