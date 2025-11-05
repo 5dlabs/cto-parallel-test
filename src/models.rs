@@ -1,12 +1,10 @@
-// Diesel schema and prelude wildcard imports are idiomatic for ORM models
-#![allow(clippy::wildcard_imports)]
-
-use crate::schema::*;
+use crate::schema::{cart_items, carts, products, users};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Queryable, Identifiable, Serialize, Deserialize)]
+/// User entity representing a registered user in the system.
+#[derive(Queryable, Identifiable, Serialize, Deserialize, Debug, Clone)]
 #[diesel(table_name = users)]
 pub struct User {
     pub id: i32,
@@ -16,7 +14,8 @@ pub struct User {
     pub created_at: NaiveDateTime,
 }
 
-#[derive(Insertable, Deserialize)]
+/// `NewUser` struct for inserting new users into the database.
+#[derive(Insertable, Deserialize, Debug)]
 #[diesel(table_name = users)]
 pub struct NewUser {
     pub username: String,
@@ -24,7 +23,8 @@ pub struct NewUser {
     pub password_hash: String,
 }
 
-#[derive(Queryable, Identifiable, Serialize, Deserialize)]
+/// Product entity representing an item in the catalog.
+#[derive(Queryable, Identifiable, Serialize, Deserialize, Debug, Clone)]
 #[diesel(table_name = products)]
 pub struct Product {
     pub id: i32,
@@ -34,7 +34,8 @@ pub struct Product {
     pub inventory_count: i32,
 }
 
-#[derive(Insertable, Deserialize)]
+/// `NewProduct` struct for inserting new products into the database.
+#[derive(Insertable, Deserialize, Debug)]
 #[diesel(table_name = products)]
 pub struct NewProduct {
     pub name: String,
@@ -43,7 +44,8 @@ pub struct NewProduct {
     pub inventory_count: i32,
 }
 
-#[derive(Queryable, Identifiable, Associations, Serialize, Deserialize)]
+/// Cart entity representing a user's shopping cart.
+#[derive(Queryable, Identifiable, Associations, Serialize, Deserialize, Debug, Clone)]
 #[diesel(belongs_to(User))]
 #[diesel(table_name = carts)]
 pub struct Cart {
@@ -52,13 +54,15 @@ pub struct Cart {
     pub created_at: NaiveDateTime,
 }
 
-#[derive(Insertable)]
+/// `NewCart` struct for creating new shopping carts.
+#[derive(Insertable, Debug)]
 #[diesel(table_name = carts)]
 pub struct NewCart {
     pub user_id: i32,
 }
 
-#[derive(Queryable, Identifiable, Associations, Serialize, Deserialize)]
+/// `CartItem` entity representing an item in a shopping cart.
+#[derive(Queryable, Identifiable, Associations, Serialize, Deserialize, Debug, Clone)]
 #[diesel(belongs_to(Cart))]
 #[diesel(belongs_to(Product))]
 #[diesel(table_name = cart_items)]
@@ -69,7 +73,8 @@ pub struct CartItem {
     pub quantity: i32,
 }
 
-#[derive(Insertable)]
+/// `NewCartItem` struct for adding items to a cart.
+#[derive(Insertable, Debug)]
 #[diesel(table_name = cart_items)]
 pub struct NewCartItem {
     pub cart_id: i32,

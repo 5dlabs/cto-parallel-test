@@ -10,8 +10,17 @@ pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 ///
 /// # Panics
 ///
-/// Panics if the `DATABASE_URL` environment variable is not set or if the connection pool
-/// cannot be created.
+/// This function will panic if:
+/// - The `DATABASE_URL` environment variable is not set
+/// - The connection pool cannot be created
+///
+/// # Examples
+///
+/// ```no_run
+/// use ecommerce_api::config::db::establish_connection_pool;
+///
+/// let pool = establish_connection_pool();
+/// ```
 #[must_use]
 pub fn establish_connection_pool() -> Pool {
     dotenv().ok();

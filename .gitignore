@@ -1,2 +1,22 @@
-/target
+# Rust
+/target/
+Cargo.lock
+
+# Environment
 .env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Hook files
+hooks/
+.hooks/
+**/hooks/

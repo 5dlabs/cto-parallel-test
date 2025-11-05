@@ -20,6 +20,7 @@ diesel::table! {
 diesel::table! {
     products (id) {
         id -> Int4,
+        #[max_length = 255]
         name -> Varchar,
         description -> Nullable<Text>,
         price -> Numeric,
@@ -30,8 +31,11 @@ diesel::table! {
 diesel::table! {
     users (id) {
         id -> Int4,
+        #[max_length = 255]
         username -> Varchar,
+        #[max_length = 255]
         email -> Varchar,
+        #[max_length = 255]
         password_hash -> Varchar,
         created_at -> Timestamp,
     }
