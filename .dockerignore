@@ -1,0 +1,36 @@
+# Git files
+.git
+.gitignore
+
+# Rust build artifacts
+target/
+**/*.rs.bk
+Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.*
+
+# CI/CD files
+.github/
+
+# Documentation
+*.md
+CLAUDE.md
+coding-guidelines.md
+github-guidelines.md
+task/
+
+# Test files
+tests/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
