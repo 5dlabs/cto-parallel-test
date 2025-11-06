@@ -1,0 +1,53 @@
+# Gitleaks configuration for cto-parallel-test
+# This file configures what should be scanned and what should be allowed
+
+[allowlist]
+description = "Allowlist for test files and known false positives"
+
+# Allow specific test passwords by stopwords
+stopwords = [
+    "testpass123",
+    "testpass456", 
+    "testpass789",
+    "TestPass123",
+    "samepass",
+    "flow_password_sample",
+    "test_secret_key_change_in_production",
+    "jwt_token_here",
+    "test123",
+    "test456",
+    "testkey",
+    "test with spaces",
+    "testwithspaces",
+    "testpass123",
+    "WrongPassword",
+    "wrongval",
+    "not_empty",
+    "anyval",
+    "newval",
+    "t3st!#$%^&*()_+-={}[]|:;<>?,./~`",
+    "тест密码🔒",
+    "SecureP@ssw0rd",
+    "TestCaseSensitive",
+    "testcasesensitive",
+    "TESTCASESENSITIVE",
+    "CaseSensitive123",
+    "casesensitive123",
+    "CASESENSITIVE123"
+]
+
+# Allow test code patterns that contain test credentials
+regexes = [
+    '''#\[cfg\(test\)\]''',
+    '''mod tests''',
+    '''src/auth/.*\.rs''',
+]
+
+# Allow test files by path
+paths = [
+    '''/tests/''',
+    '''_test\.rs$''',
+    '''tests\.rs$''',
+    '''src/auth/models\.rs''',
+    '''src/auth/jwt\.rs''',
+]
