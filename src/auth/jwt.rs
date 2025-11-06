@@ -158,6 +158,16 @@ mod tests {
         }
     }
 
+    // Allow SystemTime::now() in tests since we need it for JWT testing
+    // and test timing is not as critical as production clock abstraction
+    #[allow(clippy::disallowed_methods)]
+    fn get_current_timestamp() -> u64 {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("System time is before Unix epoch")
+            .as_secs()
+    }
+
     #[test]
     fn test_token_creation() {
         let _env_guard = EnvGuard::new();
@@ -214,10 +224,7 @@ mod tests {
     #[test]
     fn test_expired_token_rejected() {
         let _env_guard = EnvGuard::new();
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("System time is before Unix epoch")
-            .as_secs();
+        let now = get_current_timestamp();
 
         let claims = Claims {
             sub: "expired_user".to_string(),
@@ -262,10 +269,7 @@ mod tests {
     fn test_token_rejected_with_wrong_secret() {
         let _env_guard = EnvGuard::new();
 
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("System time is before Unix epoch")
-            .as_secs();
+        let now = get_current_timestamp();
 
         let claims = Claims {
             sub: "user_env_secret".to_string(),
@@ -337,10 +341,7 @@ mod tests {
         assert!(claims.iat > 0, "Issued at should be set");
 
         // Verify expiration is in the future
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("System time is before Unix epoch")
-            .as_secs();
+        let now = get_current_timestamp();
         assert!(
             claims.exp as u64 > now,
             "Token should not be expired immediately"
