@@ -5,7 +5,7 @@
 /// to prevent CI failures when database is not available.
 #[cfg(test)]
 mod database_tests {
-    use ecommerce_api::config::db::establish_connection_pool;
+    use cto_parallel_test::config::db::establish_connection_pool;
 
     #[test]
     #[ignore = "requires PostgreSQL instance"]
