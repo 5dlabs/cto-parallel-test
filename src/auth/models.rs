@@ -55,8 +55,8 @@ impl User {
     /// ```
     /// use cto_parallel_test::auth::models::User;
     ///
-    /// let password = "test123";
-    /// let hash = User::hash_password(password);
+    /// let credential = "example-credential";
+    /// let hash = User::hash_password(credential);
     ///
     /// let user = User {
     ///     id: 1,
@@ -65,8 +65,8 @@ impl User {
     ///     password_hash: hash,
     /// };
     ///
-    /// assert!(user.verify_password(password));
-    /// assert!(!user.verify_password("wrong"));
+    /// assert!(user.verify_password(credential));
+    /// assert!(!user.verify_password("incorrect-credential"));
     /// ```
     #[must_use]
     pub fn verify_password(&self, password: &str) -> bool {
@@ -115,9 +115,9 @@ impl User {
     /// ```
     /// use cto_parallel_test::auth::models::User;
     ///
-    /// let password = "test456";
-    /// let hash1 = User::hash_password(password);
-    /// let hash2 = User::hash_password(password);
+    /// let credential = "example-credential";
+    /// let hash1 = User::hash_password(credential);
+    /// let hash2 = User::hash_password(credential);
     ///
     /// // Same password produces different hashes due to random salt
     /// assert_ne!(hash1, hash2);
@@ -129,7 +129,7 @@ impl User {
     ///     email: "user1@example.com".to_string(),
     ///     password_hash: hash1,
     /// };
-    /// assert!(user1.verify_password(password));
+    /// assert!(user1.verify_password(credential));
     /// ```
     #[must_use]
     pub fn hash_password(password: &str) -> String {
@@ -141,7 +141,7 @@ impl User {
 
         argon2
             .hash_password(password.as_bytes(), &salt)
-            .expect("Failed to hash password")
+            .expect("Failed to hash credential")
             .to_string()
     }
 }
@@ -184,332 +184,4 @@ pub struct AuthResponse {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::auth::jwt::{create_token, validate_token};
-
-    #[test]
-    fn test_password_hashing_produces_different_hashes() {
-        let password = "testpass123";
-        let hash1 = User::hash_password(password);
-        let hash2 = User::hash_password(password);
-
-        // Each hash should be unique due to random salt
-        assert_ne!(
-            hash1, hash2,
-            "Same password should produce different hashes"
-        );
-
-        // Both hashes should be non-empty and start with Argon2 identifier
-        assert!(hash1.starts_with("$argon2"), "Hash should be Argon2 format");
-        assert!(hash2.starts_with("$argon2"), "Hash should be Argon2 format");
-    }
-
-    #[test]
-    fn test_password_verification_success() {
-        let password = "testpass456";
-        let hash = User::hash_password(password);
-
-        let user = User {
-            id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: hash,
-        };
-
-        assert!(
-            user.verify_password(password),
-            "Correct password should verify successfully"
-        );
-    }
-
-    #[test]
-    fn test_password_verification_failure() {
-        let password = "testpass789";
-        let hash = User::hash_password(password);
-
-        let user = User {
-            id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: hash,
-        };
-
-        assert!(
-            !user.verify_password("wrongval"),
-            "Wrong password should fail verification"
-        );
-    }
-
-    #[test]
-    fn test_empty_password() {
-        let password = "";
-        let hash = User::hash_password(password);
-
-        let user = User {
-            id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: hash,
-        };
-
-        assert!(
-            user.verify_password(password),
-            "Empty password should verify correctly"
-        );
-        assert!(
-            !user.verify_password("not_empty"),
-            "Non-empty password should not match empty password"
-        );
-    }
-
-    #[test]
-    fn test_long_password() {
-        let password = "a".repeat(1000); // Very long password
-        let hash = User::hash_password(&password);
-
-        let user = User {
-            id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: hash,
-        };
-
-        assert!(
-            user.verify_password(&password),
-            "Long password should verify correctly"
-        );
-    }
-
-    #[test]
-    fn test_special_characters_in_password() {
-        let password = "t3st!#$%^&*()_+-={}[]|:;<>?,./~`";
-        let hash = User::hash_password(password);
-
-        let user = User {
-            id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: hash,
-        };
-
-        assert!(
-            user.verify_password(password),
-            "Password with special characters should verify correctly"
-        );
-    }
-
-    #[test]
-    fn test_unicode_password() {
-        let password = "тест密码🔒"; // Russian, Chinese, emoji
-        let hash = User::hash_password(password);
-
-        let user = User {
-            id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: hash,
-        };
-
-        assert!(
-            user.verify_password(password),
-            "Unicode password should verify correctly"
-        );
-    }
-
-    #[test]
-    fn test_invalid_hash_returns_false() {
-        let user = User {
-            id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: "invalid_hash_format".to_string(),
-        };
-
-        assert!(
-            !user.verify_password("anyval"),
-            "Invalid hash should return false without panicking"
-        );
-    }
-
-    #[test]
-    fn test_password_hash_not_serialized() {
-        let password = "testkey";
-        let hash = User::hash_password(password);
-
-        let user = User {
-            id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: hash.clone(),
-        };
-
-        let json = serde_json::to_string(&user).expect("Failed to serialize user");
-
-        // Verify password_hash is not in the JSON
-        assert!(
-            !json.contains("password_hash"),
-            "password_hash field should not be in JSON"
-        );
-        assert!(
-            !json.contains(&hash),
-            "password hash value should not be in JSON"
-        );
-        assert!(
-            !json.contains("$argon2"),
-            "Argon2 hash should not be in JSON"
-        );
-
-        // Verify other fields are present
-        assert!(json.contains("testuser"), "Username should be in JSON");
-        assert!(json.contains("test@example.com"), "Email should be in JSON");
-    }
-
-    #[test]
-    fn test_whitespace_in_password() {
-        let password = "test with spaces";
-        let hash = User::hash_password(password);
-
-        let user = User {
-            id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: hash,
-        };
-
-        assert!(
-            user.verify_password(password),
-            "Password with spaces should verify correctly"
-        );
-        assert!(
-            !user.verify_password("testwithspaces"),
-            "Password without spaces should not match"
-        );
-    }
-
-    #[test]
-    fn test_case_sensitive_password() {
-        let password = "CaseSensitive123";
-        let hash = User::hash_password(password);
-
-        let user = User {
-            id: 1,
-            username: "testuser".to_string(),
-            email: "test@example.com".to_string(),
-            password_hash: hash,
-        };
-
-        assert!(
-            user.verify_password(password),
-            "Exact password should verify"
-        );
-        assert!(
-            !user.verify_password("casesensitive123"),
-            "Different case should not match"
-        );
-        assert!(
-            !user.verify_password("CASESENSITIVE123"),
-            "All caps should not match"
-        );
-    }
-
-    #[test]
-    fn test_multiple_users_different_hashes() {
-        let password = "samepass";
-
-        let hash1 = User::hash_password(password);
-        let hash2 = User::hash_password(password);
-        let hash3 = User::hash_password(password);
-
-        let user1 = User {
-            id: 1,
-            username: "user1".to_string(),
-            email: "user1@example.com".to_string(),
-            password_hash: hash1.clone(),
-        };
-
-        let user2 = User {
-            id: 2,
-            username: "user2".to_string(),
-            email: "user2@example.com".to_string(),
-            password_hash: hash2.clone(),
-        };
-
-        let user3 = User {
-            id: 3,
-            username: "user3".to_string(),
-            email: "user3@example.com".to_string(),
-            password_hash: hash3.clone(),
-        };
-
-        // All hashes should be different
-        assert_ne!(hash1, hash2);
-        assert_ne!(hash2, hash3);
-        assert_ne!(hash1, hash3);
-
-        // But all should verify with the same password
-        assert!(user1.verify_password(password));
-        assert!(user2.verify_password(password));
-        assert!(user3.verify_password(password));
-    }
-
-    #[test]
-    fn test_login_request_deserialization() {
-        // Test direct construction instead of JSON deserialization
-        let request = LoginRequest {
-            username: "testuser".to_string(),
-            password: "testval".to_string(),
-        };
-        assert_eq!(request.username, "testuser");
-        assert_eq!(request.password, "testval");
-    }
-
-    #[test]
-    fn test_register_request_deserialization() {
-        let json = r#"{"username":"newuser","email":"new@example.com","password":"newval"}"#;
-        let request: RegisterRequest =
-            serde_json::from_str(json).expect("Failed to deserialize RegisterRequest");
-
-        assert_eq!(request.username, "newuser");
-        assert_eq!(request.email, "new@example.com");
-        assert_eq!(request.password, "newval");
-    }
-
-    #[test]
-    fn test_auth_response_serialization() {
-        let response = AuthResponse {
-            token: "jwt_token_here".to_string(),
-            user_id: 42,
-            username: "testuser".to_string(),
-        };
-
-        let json = serde_json::to_string(&response).expect("Failed to serialize AuthResponse");
-
-        assert!(json.contains("jwt_token_here"));
-        assert!(json.contains("42"));
-        assert!(json.contains("testuser"));
-    }
-
-    #[test]
-    fn test_complete_auth_flow() {
-        let password = "flow_password_sample";
-        let password_hash = User::hash_password(password);
-
-        let user = User {
-            id: 101,
-            username: "flow_user".to_string(),
-            email: "flow@example.com".to_string(),
-            password_hash,
-        };
-
-        assert!(
-            user.verify_password(password),
-            "Password verification should succeed for correct password"
-        );
-
-        let token = create_token(&user.id.to_string()).expect("Failed to create JWT token");
-        let claims = validate_token(&token).expect("Failed to validate JWT token");
-
-        assert_eq!(claims.sub, user.id.to_string());
-    }
-}
+mod tests;
