@@ -21,3 +21,10 @@ docs/.taskmaster/tasks/task_007.txt:hashicorp-tf-password:444
 
 # Build artifacts (not committed)
 target/debug/deps/libpem-1eb845fecc285f96.rmeta:private-key:28
+target/debug/deps/libpem-0b4755308d4af3d9.rmeta:private-key:51
+
+# Task documentation files with example code
+task/task.md:generic-api-key:259
+task/task.md:hashicorp-tf-password:271
+task/task.xml:hashicorp-tf-password:608
+task/prompt.md:hashicorp-tf-password:190
