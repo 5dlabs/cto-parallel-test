@@ -26,6 +26,9 @@ RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Ensure public directory exists
+RUN mkdir -p /app/public
+
 RUN pnpm build
 
 # Production image, copy all the files and run next
@@ -39,7 +42,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+# Copy public directory
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Set the correct permission for prerender cache
 RUN mkdir .next
