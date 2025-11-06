@@ -17,11 +17,12 @@ A Rust-based e-commerce API using Diesel ORM and PostgreSQL.
 
 2. **Configure the database:**
    
-   Create a `.env` file in the project root with your PostgreSQL connection string.
-   Use the standard PostgreSQL URL format with your credentials:
+   Create a `.env` file in the project root:
+   ```bash
+   echo "DATABASE_URL=<your-postgres-connection-string>" > .env
    ```
-   DATABASE_URL=postgres://<username>:<password>@<host>/<database>
-   ```
+   
+   Use the standard PostgreSQL connection URL format (see PostgreSQL documentation for details).
 
 3. **Run migrations:**
    ```bash
