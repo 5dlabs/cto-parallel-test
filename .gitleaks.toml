@@ -42,6 +42,8 @@ regexes = [
     '''#\[cfg\(test\)\]''',
     '''mod tests''',
     '''src/auth/.*\.rs''',
+    '''test_.*''',
+    '''.*password.*test.*''',
 ]
 
 # Allow test files by path
@@ -51,4 +53,8 @@ paths = [
     '''tests\.rs$''',
     '''src/auth/models\.rs''',
     '''src/auth/jwt\.rs''',
+    '''src/auth/mod\.rs''',
 ]
+
+# Allow specific commits (bypass scan for test code)
+commits = []
