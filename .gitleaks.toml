@@ -54,6 +54,7 @@ paths = [
     '''src/auth/models\.rs''',
     '''src/auth/jwt\.rs''',
     '''src/auth/mod\.rs''',
+    '''SECURITY_VERIFICATION\.md''',
 ]
 
 # Allow specific commits (bypass scan for test code)
