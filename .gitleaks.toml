@@ -24,7 +24,17 @@ stopwords = [
     "wrongval",
     "not_empty",
     "anyval",
-    "newval"
+    "newval",
+    "testval",
+    "t3st!#$%^&*()_+-={}[]|:;<>?,./~`",
+    "тест密码🔒",
+    "SecureP@ssw0rd",
+    "TestCaseSensitive",
+    "testcasesensitive",
+    "TESTCASESENSITIVE",
+    "CaseSensitive123",
+    "casesensitive123",
+    "CASESENSITIVE123"
 ]
 
 # Allow test code patterns that contain test credentials
