@@ -3,9 +3,9 @@
 //! This module provides functions to create and validate JWT tokens for authentication.
 //! Tokens expire after 24 hours and include standard JWT claims (sub, exp, iat).
 
+use super::clock::{Clock, SystemClock};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 /// JWT Claims structure containing standard token claims
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -18,7 +18,7 @@ pub struct Claims {
     pub iat: usize,
 }
 
-/// Creates a JWT token for the given user ID
+/// Creates a JWT token for the given user ID using the default system clock
 ///
 /// # Arguments
 ///
@@ -32,10 +32,6 @@ pub struct Claims {
 ///
 /// Returns an error if token encoding fails (rare, usually indicates invalid secret)
 ///
-/// # Panics
-///
-/// Panics if system time is before Unix epoch (extremely unlikely in practice)
-///
 /// # Example
 ///
 /// ```
@@ -44,11 +40,41 @@ pub struct Claims {
 /// let token = create_token("123").expect("Failed to create token");
 /// ```
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards")
-        .as_secs();
+    create_token_with_clock(user_id, &SystemClock)
+}
 
+/// Creates a JWT token for the given user ID using a custom clock (for testing)
+///
+/// # Arguments
+///
+/// * `user_id` - The user ID to include in the token's subject claim
+/// * `clock` - Clock implementation for obtaining current time
+///
+/// # Returns
+///
+/// * `Result<String, jsonwebtoken::errors::Error>` - The encoded JWT token or an error
+///
+/// # Errors
+///
+/// Returns an error if token encoding fails (rare, usually indicates invalid secret)
+///
+/// # Panics
+///
+/// Panics if the timestamp is too large to fit in usize (extremely unlikely on 64-bit systems)
+///
+/// # Example
+///
+/// ```
+/// use cto_parallel_test::auth::{jwt::create_token_with_clock, SystemClock};
+///
+/// let clock = SystemClock;
+/// let token = create_token_with_clock("123", &clock).expect("Failed to create token");
+/// ```
+pub fn create_token_with_clock(
+    user_id: &str,
+    clock: &impl Clock,
+) -> Result<String, jsonwebtoken::errors::Error> {
+    let now = clock.now();
     let expiration = now + 24 * 3600; // 24 hours from now
 
     let claims = Claims {
@@ -144,26 +170,28 @@ mod tests {
 
     #[test]
     fn test_token_expiration_is_24_hours() {
-        let user_id = "123";
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+        use super::super::clock::test_helpers::MockClock;
 
-        let token = create_token(user_id).expect("Failed to create token");
+        let user_id = "123";
+        // Use a future timestamp to avoid expiration during validation
+        let now = 2_000_000_000_u64; // Fixed timestamp for testing (around 2033)
+        let clock = MockClock::new(now);
+
+        let token = create_token_with_clock(user_id, &clock).expect("Failed to create token");
         let claims = validate_token(&token).expect("Failed to validate token");
 
         let expected_exp = now + 86400; // 24 hours in seconds
 
-        // Calculate the difference using saturating operations to avoid overflow
-        let exp_diff = if claims.exp >= usize::try_from(expected_exp).unwrap() {
-            claims.exp - usize::try_from(expected_exp).unwrap()
-        } else {
-            usize::try_from(expected_exp).unwrap() - claims.exp
-        };
-
-        // Allow 10 seconds of variance for test execution time
-        assert!(exp_diff < 10, "Token expiration not set to 24 hours");
+        assert_eq!(
+            claims.exp,
+            usize::try_from(expected_exp).unwrap(),
+            "Token expiration not set to 24 hours"
+        );
+        assert_eq!(
+            claims.iat,
+            usize::try_from(now).unwrap(),
+            "Token issued at time incorrect"
+        );
     }
 
     #[test]
