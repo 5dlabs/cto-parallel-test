@@ -1,0 +1,38 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo lock file (for libraries, typically not committed; for binaries, usually committed)
+# We keep Cargo.lock since it already exists in the repo
+# Cargo.lock
+
+# Environment files - never commit
+.env
+.env.local
+.env.*.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Hook files - never commit
+hooks/
+.hooks/
+**/hooks/
+
+# Backup files
+*.bak
+*.orig
+
+# Test coverage reports
+/coverage/
+*.profraw
+*.profdata
+
+# Documentation build artifacts
+/target/doc/
