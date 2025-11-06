@@ -1,0 +1,23 @@
+# Gitleaks ignore file for legitimate test/example secrets
+# See: https://github.com/gitleaks/gitleaks#gitleaksignore
+
+# Example environment file (placeholder values only)
+.env.example:hashicorp-tf-password:4
+
+# Test fixtures in auth module (not real secrets)
+src/auth/models.rs:hashicorp-tf-password:150
+src/auth/models.rs:hashicorp-tf-password:160
+src/auth/models.rs:hashicorp-tf-password:175
+
+# Documentation files with code examples
+docs/.taskmaster/docs/task-3/task.md:hashicorp-tf-password:271
+docs/.taskmaster/docs/task-3/task.md:generic-api-key:259
+docs/.taskmaster/docs/task-3/prompt.md:hashicorp-tf-password:190
+docs/.taskmaster/docs/task-3/task.xml:hashicorp-tf-password:608
+docs/.taskmaster/docs/task-7/task.txt:hashicorp-tf-password:191
+docs/.taskmaster/docs/task-7/task.txt:hashicorp-tf-password:444
+docs/.taskmaster/tasks/task_007.txt:hashicorp-tf-password:192
+docs/.taskmaster/tasks/task_007.txt:hashicorp-tf-password:444
+
+# Build artifacts (not committed)
+target/debug/deps/libpem-1eb845fecc285f96.rmeta:private-key:28
