@@ -1,12 +1,19 @@
+/// Database connection pooling configuration
+///
+/// This module provides connection pool management for `PostgreSQL` using Diesel ORM.
+/// It uses r2d2 for efficient connection pooling.
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
 use dotenv::dotenv;
 use std::env;
 
+/// Type alias for the database connection pool
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
+
+/// Type alias for a pooled database connection
 pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
-/// Establishes a connection pool to the `PostgreSQL` database.
+/// Establishes a connection pool to the `PostgreSQL` database
 ///
 /// # Panics
 ///
@@ -17,7 +24,7 @@ pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 /// # Examples
 ///
 /// ```no_run
-/// use ecommerce_api::config::db::establish_connection_pool;
+/// use cto_parallel_test::config::db::establish_connection_pool;
 ///
 /// let pool = establish_connection_pool();
 /// ```

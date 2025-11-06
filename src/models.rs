@@ -1,83 +1,130 @@
-use crate::schema::{cart_items, carts, products, users};
+/// Database ORM models for the e-commerce system
+///
+/// This module contains all the database models and their associated types.
+/// Models are defined using Diesel's derive macros for seamless ORM integration.
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// User entity representing a registered user in the system.
+// ============================================================================
+// User Models
+// ============================================================================
+
+/// User model representing a registered user in the system
 #[derive(Queryable, Identifiable, Serialize, Deserialize, Debug, Clone)]
-#[diesel(table_name = users)]
+#[diesel(table_name = crate::schema::users)]
 pub struct User {
+    /// Unique user identifier
     pub id: i32,
+    /// Username (must be unique)
     pub username: String,
+    /// Email address (must be unique)
     pub email: String,
+    /// Hashed password
     pub password_hash: String,
+    /// Account creation timestamp
     pub created_at: NaiveDateTime,
 }
 
-/// `NewUser` struct for inserting new users into the database.
+/// Insertable user model for creating new users
 #[derive(Insertable, Deserialize, Debug)]
-#[diesel(table_name = users)]
+#[diesel(table_name = crate::schema::users)]
 pub struct NewUser {
+    /// Username for the new user
     pub username: String,
+    /// Email address for the new user
     pub email: String,
+    /// Hashed password for the new user
     pub password_hash: String,
 }
 
-/// Product entity representing an item in the catalog.
+// ============================================================================
+// Product Models
+// ============================================================================
+
+/// Product model representing an item in the catalog
 #[derive(Queryable, Identifiable, Serialize, Deserialize, Debug, Clone)]
-#[diesel(table_name = products)]
+#[diesel(table_name = crate::schema::products)]
 pub struct Product {
+    /// Unique product identifier
     pub id: i32,
+    /// Product name
     pub name: String,
+    /// Product description
     pub description: Option<String>,
+    /// Product price (using `bigdecimal::BigDecimal` for precision)
     pub price: bigdecimal::BigDecimal,
+    /// Current inventory count
     pub inventory_count: i32,
 }
 
-/// `NewProduct` struct for inserting new products into the database.
+/// Insertable product model for creating new products
 #[derive(Insertable, Deserialize, Debug)]
-#[diesel(table_name = products)]
+#[diesel(table_name = crate::schema::products)]
 pub struct NewProduct {
+    /// Name of the new product
     pub name: String,
+    /// Description of the new product
     pub description: Option<String>,
+    /// Price of the new product
     pub price: bigdecimal::BigDecimal,
+    /// Initial inventory count
     pub inventory_count: i32,
 }
 
-/// Cart entity representing a user's shopping cart.
+// ============================================================================
+// Cart Models
+// ============================================================================
+
+/// Cart model representing a user's shopping cart
 #[derive(Queryable, Identifiable, Associations, Serialize, Deserialize, Debug, Clone)]
 #[diesel(belongs_to(User))]
-#[diesel(table_name = carts)]
+#[diesel(table_name = crate::schema::carts)]
 pub struct Cart {
+    /// Unique cart identifier
     pub id: i32,
+    /// ID of the user who owns this cart
     pub user_id: i32,
+    /// Cart creation timestamp
     pub created_at: NaiveDateTime,
 }
 
-/// `NewCart` struct for creating new shopping carts.
+/// Insertable cart model for creating new carts
 #[derive(Insertable, Debug)]
-#[diesel(table_name = carts)]
+#[diesel(table_name = crate::schema::carts)]
 pub struct NewCart {
+    /// ID of the user who will own this cart
     pub user_id: i32,
 }
 
-/// `CartItem` entity representing an item in a shopping cart.
+// ============================================================================
+// Cart Item Models
+// ============================================================================
+
+/// Cart item model representing a product in a shopping cart
 #[derive(Queryable, Identifiable, Associations, Serialize, Deserialize, Debug, Clone)]
 #[diesel(belongs_to(Cart))]
 #[diesel(belongs_to(Product))]
-#[diesel(table_name = cart_items)]
+#[diesel(table_name = crate::schema::cart_items)]
 pub struct CartItem {
+    /// Unique cart item identifier
     pub id: i32,
+    /// ID of the cart this item belongs to
     pub cart_id: i32,
+    /// ID of the product in this cart item
     pub product_id: i32,
+    /// Quantity of the product
     pub quantity: i32,
 }
 
-/// `NewCartItem` struct for adding items to a cart.
+/// Insertable cart item model for adding items to a cart
 #[derive(Insertable, Debug)]
-#[diesel(table_name = cart_items)]
+#[diesel(table_name = crate::schema::cart_items)]
 pub struct NewCartItem {
+    /// ID of the cart to add this item to
     pub cart_id: i32,
+    /// ID of the product to add
     pub product_id: i32,
+    /// Quantity of the product to add
     pub quantity: i32,
 }
