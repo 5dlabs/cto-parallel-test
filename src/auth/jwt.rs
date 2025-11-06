@@ -7,6 +7,16 @@ use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation}
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// Development fallback secret for JWT tokens
+/// 
+/// This is only used when JWT_SECRET environment variable is not set.
+/// In production, JWT_SECRET should always be set to a secure random key.
+const DEV_FALLBACK_SECRET: &str = "dev_jwt_secret_key_change_in_production";
+
+fn get_dev_fallback_secret() -> String {
+    DEV_FALLBACK_SECRET.to_string()
+}
+
 /// JWT claims structure following RFC 7519
 ///
 /// Contains standard JWT claims for authentication:
@@ -74,7 +84,7 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 
     // Load JWT secret from environment, with fallback for development
     let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+        .unwrap_or_else(|_| get_dev_fallback_secret());
 
     encode(
         &Header::default(),
@@ -118,7 +128,7 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 /// ```
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+        .unwrap_or_else(|_| get_dev_fallback_secret());
 
     let validation = Validation::default();
     let token_data = decode::<Claims>(
@@ -226,7 +236,7 @@ mod tests {
         };
 
         let secret = std::env::var("JWT_SECRET")
-            .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+            .unwrap_or_else(|_| get_dev_fallback_secret());
 
         let token = encode(
             &Header::default(),
