@@ -18,40 +18,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 🚀 Build with ULTRA-FAST caching mechanisms
-      - name: Build binary
-        env:
-          # Use sccache for compiler-level caching (pre-installed on k8s-runner)
-          RUSTC_WRAPPER: sccache
-          # Build to persistent cache directory for multi-run speed
-          CARGO_TARGET_DIR: $HOME/cache/target
-          # Optimize for speed
-          CARGO_INCREMENTAL: 0
-          CARGO_NET_GIT_FETCH_WITH_CLI: true
-          CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
-        run: |
-          # Install sccache if not available (ubuntu-22.04 doesn't have it pre-installed)
-          if ! command -v sccache &> /dev/null; then
-            echo "Installing sccache..."
-            cargo install sccache --locked
-          fi
+      # Set up Rust toolchain
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
 
-          # Pre-warm sccache
-          sccache --start-server || true
-          echo "📊 Initial sccache stats:"
-          sccache --show-stats || echo "sccache stats not available"
+      # Use Rust cache for faster builds
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: . -> target
+          shared-key: rust-cache-deploy
 
-          # Build with persistent cache directory
-          mkdir -p $HOME/cache/target
-          cargo build --release --lib
-
-          # Show cache hit rates
-          echo "📊 Final sccache stats:"
-          sccache --show-stats || echo "sccache stats not available"
-
-          # Copy from cache dir to workspace (Note: this is a library, so no binary)
-          # For now, we'll just verify the build succeeded
-          ls -lh $HOME/cache/target/release/ || ls -lh target/release/
+      # 🚀 Build with optimized settings
+      - name: Build library
+        run: cargo build --release --lib
 
       - uses: docker/setup-buildx-action@v3
         with:
