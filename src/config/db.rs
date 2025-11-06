@@ -17,7 +17,7 @@ pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 /// # Examples
 ///
 /// ```no_run
-/// use ecommerce_api::config::db::establish_connection_pool;
+/// use cto_parallel_test::config::db::establish_connection_pool;
 ///
 /// let pool = establish_connection_pool();
 /// ```
