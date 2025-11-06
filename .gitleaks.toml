@@ -57,6 +57,7 @@ paths = [
     '''src/auth/mod\.rs''',
     '''SECURITY_VERIFICATION\.md''',
     '''\.env\.example$''',
+    '''docs/AUTHENTICATION\.md''',
 ]
 
 # Allow specific commits (bypass scan for test code)
