@@ -3,6 +3,7 @@
 //! Provides functions for creating and validating JSON Web Tokens (JWT)
 //! with 24-hour expiration using configurable secret keys.
 
+use jsonwebtoken::errors::{Error, ErrorKind};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -15,6 +16,59 @@ const DEV_FALLBACK_SECRET: &str = "dev_jwt_secret_key_change_in_production";
 
 fn get_dev_fallback_secret() -> String {
     DEV_FALLBACK_SECRET.to_string()
+}
+
+/// Abstraction over time source to improve testability and satisfy clippy `disallowed_methods` rule.
+pub trait Clock: Send + Sync {
+    /// Returns current time as `SystemTime`.
+    fn now(&self) -> SystemTime;
+}
+
+/// Real clock implementation that delegates to the system clock.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct SystemClock;
+
+impl Clock for SystemClock {
+    #[allow(clippy::disallowed_methods)] // Allowed in the single location responsible for wall-clock time
+    fn now(&self) -> SystemTime {
+        SystemTime::now()
+    }
+}
+
+fn unix_timestamp_seconds(clock: &dyn Clock) -> Result<u64, Error> {
+    let duration_since_epoch = clock
+        .now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|_| Error::from(ErrorKind::InvalidToken))?;
+    Ok(duration_since_epoch.as_secs())
+}
+
+fn convert_timestamp(value: u64) -> Result<usize, Error> {
+    usize::try_from(value).map_err(|_| Error::from(ErrorKind::InvalidToken))
+}
+
+fn create_claims_with_clock(user_id: &str, clock: &dyn Clock) -> Result<Claims, Error> {
+    let issued_at = unix_timestamp_seconds(clock)?;
+    let expiration = issued_at
+        .checked_add(24 * 3600)
+        .ok_or_else(|| Error::from(ErrorKind::InvalidToken))?;
+
+    Ok(Claims {
+        sub: user_id.to_owned(),
+        exp: convert_timestamp(expiration)?,
+        iat: convert_timestamp(issued_at)?,
+    })
+}
+
+fn create_token_with_clock(clock: &dyn Clock, user_id: &str) -> Result<String, Error> {
+    let claims = create_claims_with_clock(user_id, clock)?;
+    let secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| get_dev_fallback_secret());
+
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret.as_bytes()),
+    )
 }
 
 /// JWT claims structure following RFC 7519
@@ -46,12 +100,13 @@ pub struct Claims {
 /// # Errors
 ///
 /// Returns an error if token encoding fails (extremely rare, would indicate
-/// a critical system issue).
+/// a critical system issue) or if the system clock produces an invalid
+/// timestamp (before Unix epoch or exceeding platform bounds).
 ///
 /// # Panics
 ///
-/// Panics if the system time is before the Unix epoch (January 1, 1970) or if
-/// timestamp conversion to `usize` fails (would only occur on systems with
+/// Returns an error if the system time is before the Unix epoch (January 1, 1970)
+/// or if timestamp conversion to `usize` fails (would only occur on systems with
 /// 32-bit `usize` in the distant future, year 2038+).
 ///
 /// # Security
@@ -68,28 +123,8 @@ pub struct Claims {
 /// let token = create_token("user_123").expect("Failed to create token");
 /// assert!(!token.is_empty());
 /// ```
-#[allow(clippy::disallowed_methods)] // SystemTime::now() is acceptable for JWT exp/iat claims
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("System time is before Unix epoch");
-
-    let expiration = now.as_secs() + 24 * 3600; // 24 hours from now
-
-    let claims = Claims {
-        sub: user_id.to_owned(),
-        exp: usize::try_from(expiration).expect("Expiration timestamp too large"),
-        iat: usize::try_from(now.as_secs()).expect("Current timestamp too large"),
-    };
-
-    // Load JWT secret from environment, with fallback for development
-    let secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| get_dev_fallback_secret());
-
-    encode(
-        &Header::default(),
-        &claims,
-        &EncodingKey::from_secret(secret.as_bytes()),
-    )
+    create_token_with_clock(&SystemClock, user_id)
 }
 
 /// Validate a JWT token and extract claims
@@ -144,7 +179,7 @@ mod tests {
     use jsonwebtoken::errors::ErrorKind;
     use jsonwebtoken::{encode, EncodingKey, Header};
     use std::sync::{LazyLock, Mutex, MutexGuard, PoisonError};
-    use std::time::{SystemTime, UNIX_EPOCH};
+    use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
     static ENV_MUTEX: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
@@ -310,24 +345,43 @@ mod tests {
         );
     }
 
+    #[derive(Clone)]
+    struct FixedClock {
+        instant: SystemTime,
+    }
+
+    impl FixedClock {
+        fn new(instant: SystemTime) -> Self {
+            Self { instant }
+        }
+    }
+
+    impl Clock for FixedClock {
+        fn now(&self) -> SystemTime {
+            self.instant
+        }
+    }
+
     #[test]
     fn test_same_user_different_timestamps() {
         let _env_guard = EnvGuard::new();
         let user_id = "test_user_same";
-        let token1 = create_token(user_id).expect("Failed to create token 1");
 
-        // Delay to ensure different timestamp (at least 1 second since tokens use second precision)
-        std::thread::sleep(std::time::Duration::from_secs(1));
+        let system_clock = SystemClock;
+        let base_time = system_clock.now();
+        let token1 = create_token_with_clock(&FixedClock::new(base_time), user_id)
+            .expect("Failed to create token 1");
+        let token2 = create_token_with_clock(
+            &FixedClock::new(base_time + Duration::from_secs(1)),
+            user_id,
+        )
+        .expect("Failed to create token 2");
 
-        let token2 = create_token(user_id).expect("Failed to create token 2");
-
-        // Tokens should be different due to different timestamps
         assert_ne!(
             token1, token2,
             "Same user at different times should have different tokens"
         );
 
-        // But both should validate and have the same user ID
         let claims1 = validate_token(&token1).expect("Failed to validate token 1");
         let claims2 = validate_token(&token2).expect("Failed to validate token 2");
         assert_eq!(claims1.sub, claims2.sub);
