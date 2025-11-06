@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Development fallback secret for JWT tokens
-/// 
-/// This is only used when JWT_SECRET environment variable is not set.
-/// In production, JWT_SECRET should always be set to a secure random key.
+///
+/// This is only used when `JWT_SECRET` environment variable is not set.
+/// In production, `JWT_SECRET` should always be set to a secure random key.
 const DEV_FALLBACK_SECRET: &str = "dev_jwt_secret_key_change_in_production";
 
 fn get_dev_fallback_secret() -> String {
@@ -83,8 +83,7 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
     };
 
     // Load JWT secret from environment, with fallback for development
-    let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| get_dev_fallback_secret());
+    let secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| get_dev_fallback_secret());
 
     encode(
         &Header::default(),
@@ -127,8 +126,7 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 /// assert_eq!(claims.sub, "user_123");
 /// ```
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
-    let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| get_dev_fallback_secret());
+    let secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| get_dev_fallback_secret());
 
     let validation = Validation::default();
     let token_data = decode::<Claims>(
@@ -222,6 +220,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::disallowed_methods)] // SystemTime::now() is acceptable in tests
     fn test_expired_token_rejected() {
         let _env_guard = EnvGuard::new();
         let now = SystemTime::now()
@@ -235,8 +234,7 @@ mod tests {
             iat: usize::try_from(now.saturating_sub(240)).expect("Timestamp overflow"),
         };
 
-        let secret = std::env::var("JWT_SECRET")
-            .unwrap_or_else(|_| get_dev_fallback_secret());
+        let secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| get_dev_fallback_secret());
 
         let token = encode(
             &Header::default(),
@@ -269,6 +267,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::disallowed_methods)] // SystemTime::now() is acceptable in tests
     fn test_token_rejected_with_wrong_secret() {
         let _env_guard = EnvGuard::new();
 
@@ -335,6 +334,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::disallowed_methods)] // SystemTime::now() is acceptable in tests
     fn test_claims_fields() {
         let _env_guard = EnvGuard::new();
         let user_id = "claims_test_user";
