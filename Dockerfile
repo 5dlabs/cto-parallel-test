@@ -2,7 +2,7 @@
 # This builds the library and creates a minimal runtime image
 
 # Build stage
-FROM rust:1.83-bookworm as builder
+FROM rust:1.83-bookworm AS builder
 
 WORKDIR /build
 
@@ -34,7 +34,7 @@ WORKDIR /app
 
 # Copy built library from builder stage
 COPY --from=builder /build/target/release/libcto_parallel_test.rlib /app/
-COPY --from=builder /build/target/release/libcto_parallel_test.so /app/ 2>/dev/null || true
+# Note: .so file only exists for cdylib crate-type, we're a regular lib (rlib)
 
 # Set ownership
 RUN chown -R app:app /app
