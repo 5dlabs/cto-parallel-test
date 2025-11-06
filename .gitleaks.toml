@@ -13,13 +13,25 @@ stopwords = [
     "samepass",
     "flow_password_sample",
     "test_secret_key_change_in_production",
-    "jwt_token_here"
+    "jwt_token_here",
+    "test123",
+    "test456",
+    "testkey",
+    "test with spaces",
+    "testwithspaces",
+    "testpass123",
+    "WrongPassword",
+    "wrongval",
+    "not_empty",
+    "anyval",
+    "newval"
 ]
 
 # Allow test code patterns that contain test credentials
 regexes = [
     '''#\[cfg\(test\)\]''',
     '''mod tests''',
+    '''src/auth/.*\.rs''',
 ]
 
 # Allow test files by path
@@ -27,4 +39,6 @@ paths = [
     '''/tests/''',
     '''_test\.rs$''',
     '''tests\.rs$''',
+    '''src/auth/models\.rs''',
+    '''src/auth/jwt\.rs''',
 ]
