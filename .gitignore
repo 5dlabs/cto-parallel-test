@@ -1,22 +1,23 @@
-# Rust
+# Rust build artifacts
 /target/
 Cargo.lock
 
-# Environment
+# Environment files
 .env
+.env.local
 
-# IDE
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
-# Hook files
+# Hook files - never commit
 hooks/
 .hooks/
 **/hooks/

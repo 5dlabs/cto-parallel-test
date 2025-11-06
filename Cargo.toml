@@ -1,5 +1,5 @@
 [package]
-name = "ecommerce_api"
+name = "ecommerce-api"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,6 +8,14 @@ diesel = { version = "2.1.0", features = ["postgres", "r2d2", "chrono", "numeric
 r2d2 = "0.8.10"
 dotenv = "0.15.0"
 chrono = { version = "0.4", features = ["serde"] }
+bigdecimal = { version = "0.4", features = ["serde"] }
+rust_decimal = { version = "1.30", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-bigdecimal = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+rust_decimal_macros = "1.30"
+
+[lib]
+name = "ecommerce_api"
+path = "src/lib.rs"
