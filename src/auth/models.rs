@@ -110,7 +110,7 @@ impl User {
 }
 
 /// Request body for user login
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct LoginRequest {
     /// Username for authentication
     pub username: String,
@@ -119,7 +119,7 @@ pub struct LoginRequest {
 }
 
 /// Request body for user registration
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct RegisterRequest {
     /// Desired username
     pub username: String,
@@ -130,7 +130,7 @@ pub struct RegisterRequest {
 }
 
 /// Response body for successful authentication
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AuthResponse {
     /// JWT token for subsequent requests
     pub token: String,
