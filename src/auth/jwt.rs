@@ -4,6 +4,7 @@
 //! Tokens expire after 24 hours and include standard JWT claims (sub, exp, iat).
 
 use super::clock::{Clock, SystemClock};
+use jsonwebtoken::errors::{Error, ErrorKind};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
@@ -26,7 +27,7 @@ pub struct Claims {
 ///
 /// # Returns
 ///
-/// * `Result<String, jsonwebtoken::errors::Error>` - The encoded JWT token or an error
+/// * `Result<String, Error>` - The encoded JWT token or an error
 ///
 /// # Errors
 ///
@@ -39,7 +40,7 @@ pub struct Claims {
 ///
 /// let token = create_token("123").expect("Failed to create token");
 /// ```
-pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
+pub fn create_token(user_id: &str) -> Result<String, Error> {
     create_token_with_clock(user_id, &SystemClock)
 }
 
@@ -52,15 +53,12 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 ///
 /// # Returns
 ///
-/// * `Result<String, jsonwebtoken::errors::Error>` - The encoded JWT token or an error
+/// * `Result<String, Error>` - The encoded JWT token or an error
 ///
 /// # Errors
 ///
 /// Returns an error if token encoding fails (rare, usually indicates invalid secret)
-///
-/// # Panics
-///
-/// Panics if the timestamp is too large to fit in usize (extremely unlikely on 64-bit systems)
+/// or when time calculations overflow or are otherwise invalid.
 ///
 /// # Example
 ///
@@ -70,17 +68,20 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 /// let clock = SystemClock;
 /// let token = create_token_with_clock("123", &clock).expect("Failed to create token");
 /// ```
-pub fn create_token_with_clock(
-    user_id: &str,
-    clock: &impl Clock,
-) -> Result<String, jsonwebtoken::errors::Error> {
-    let now = clock.now();
-    let expiration = now + 24 * 3600; // 24 hours from now
+pub fn create_token_with_clock(user_id: &str, clock: &impl Clock) -> Result<String, Error> {
+    const TOKEN_TTL_SECS: u64 = 24 * 60 * 60;
+
+    let now = clock
+        .now()
+        .map_err(|_| Error::from(ErrorKind::InvalidToken))?;
+    let expiration = now
+        .checked_add(TOKEN_TTL_SECS)
+        .ok_or_else(|| Error::from(ErrorKind::InvalidToken))?;
 
     let claims = Claims {
         sub: user_id.to_owned(),
-        exp: usize::try_from(expiration).expect("Timestamp too large for usize"),
-        iat: usize::try_from(now).expect("Timestamp too large for usize"),
+        exp: usize::try_from(expiration).map_err(|_| Error::from(ErrorKind::InvalidToken))?,
+        iat: usize::try_from(now).map_err(|_| Error::from(ErrorKind::InvalidToken))?,
     };
 
     // Load JWT secret from environment variable with fallback for development
@@ -102,7 +103,7 @@ pub fn create_token_with_clock(
 ///
 /// # Returns
 ///
-/// * `Result<Claims, jsonwebtoken::errors::Error>` - The decoded claims or an error
+/// * `Result<Claims, Error>` - The decoded claims or an error
 ///
 /// # Errors
 ///
@@ -121,7 +122,7 @@ pub fn create_token_with_clock(
 /// let claims = validate_token(&token).expect("Failed to validate token");
 /// assert_eq!(claims.sub, "123");
 /// ```
-pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
+pub fn validate_token(token: &str) -> Result<Claims, Error> {
     let secret = std::env::var("JWT_SECRET")
         .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
 
@@ -199,6 +200,52 @@ mod tests {
         let invalid_token = "invalid.token.here";
         let result = validate_token(invalid_token);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_clock_error_propagates() {
+        use super::super::clock::Clock;
+        use std::time::{Duration, SystemTimeError, UNIX_EPOCH};
+
+        struct FailingClock;
+
+        impl Clock for FailingClock {
+            fn now(&self) -> Result<u64, SystemTimeError> {
+                let err = UNIX_EPOCH
+                    .duration_since(UNIX_EPOCH + Duration::from_secs(1))
+                    .expect_err("expected time error");
+                Err(err)
+            }
+        }
+
+        let result = create_token_with_clock("123", &FailingClock);
+        assert!(result.is_err());
+        let err = result.expect_err("expected clock failure");
+        assert!(matches!(err.kind(), ErrorKind::InvalidToken));
+    }
+
+    #[test]
+    fn test_expired_token_rejected() {
+        use jsonwebtoken::errors::ErrorKind;
+
+        let claims = Claims {
+            sub: "123".to_string(),
+            exp: 1, // Clearly expired relative to current time
+            iat: 0,
+        };
+
+        let secret = "test_secret_key_change_in_production";
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(secret.as_bytes()),
+        )
+        .expect("failed to encode token");
+
+        let result = validate_token(&token);
+        assert!(result.is_err());
+        let err = result.expect_err("token should be expired");
+        assert!(matches!(err.kind(), ErrorKind::ExpiredSignature));
     }
 
     #[test]

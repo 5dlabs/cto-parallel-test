@@ -2,6 +2,7 @@
 //!
 //! This module provides user data structures and secure password handling using Argon2.
 
+pub use argon2::password_hash::Error as PasswordHashError;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
@@ -43,7 +44,7 @@ impl User {
     /// ```
     /// use cto_parallel_test::auth::models::User;
     ///
-    /// let hash = User::hash_password("my_password");
+    /// let hash = User::hash_password("my_secret_phrase").expect("hashing failed");
     /// let user = User {
     ///     id: 1,
     ///     username: "john".to_string(),
@@ -51,8 +52,8 @@ impl User {
     ///     password_hash: hash,
     /// };
     ///
-    /// assert!(user.verify_password("my_password"));
-    /// assert!(!user.verify_password("wrong_password"));
+    /// assert!(user.verify_password("my_secret_phrase"));
+    /// assert!(!user.verify_password("wrong_secret"));
     /// ```
     #[must_use]
     pub fn verify_password(&self, password: &str) -> bool {
@@ -75,7 +76,7 @@ impl User {
     ///
     /// # Returns
     ///
-    /// * `String` - The Argon2 encoded hash string
+    /// * `Result<String, PasswordHashError>` - The Argon2 encoded hash string or an error
     ///
     /// # Security
     ///
@@ -84,29 +85,27 @@ impl User {
     /// - Uses default Argon2 configuration (memory-hard)
     /// - Intentionally slow to resist brute force attacks (~100ms)
     ///
-    /// # Panics
-    ///
-    /// Panics if password hashing fails (rare, usually indicates system issues)
-    ///
     /// # Example
     ///
     /// ```
     /// use cto_parallel_test::auth::models::User;
     ///
-    /// let hash1 = User::hash_password("password");
-    /// let hash2 = User::hash_password("password");
+    /// let hash1 = User::hash_password("sample_secret_phrase").expect("hashing failed");
+    /// let hash2 = User::hash_password("sample_secret_phrase").expect("hashing failed");
     ///
     /// // Different hashes due to random salt
     /// assert_ne!(hash1, hash2);
     /// ```
-    pub fn hash_password(password: &str) -> String {
+    /// # Errors
+    ///
+    /// Returns an error if password hashing fails.
+    pub fn hash_password(password: &str) -> Result<String, PasswordHashError> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
 
         argon2
             .hash_password(password.as_bytes(), &salt)
-            .expect("Failed to hash password")
-            .to_string()
+            .map(|hash| hash.to_string())
     }
 }
 
@@ -147,9 +146,9 @@ mod tests {
 
     #[test]
     fn test_password_hashing_produces_different_hashes() {
-        let password = "test_password_123";
-        let hash1 = User::hash_password(password);
-        let hash2 = User::hash_password(password);
+        let password = "sample_secret_phrase";
+        let hash1 = User::hash_password(password).expect("hashing failed");
+        let hash2 = User::hash_password(password).expect("hashing failed");
 
         // Hashes should be different due to random salt
         assert_ne!(hash1, hash2);
@@ -157,8 +156,8 @@ mod tests {
 
     #[test]
     fn test_password_verification_success() {
-        let password = "test_password_123";
-        let hash = User::hash_password(password);
+        let password = "sample_secret_phrase";
+        let hash = User::hash_password(password).expect("hashing failed");
 
         let user = User {
             id: 1,
@@ -172,8 +171,8 @@ mod tests {
 
     #[test]
     fn test_password_verification_failure() {
-        let password = "test_password_123";
-        let hash = User::hash_password(password);
+        let password = "sample_secret_phrase";
+        let hash = User::hash_password(password).expect("hashing failed");
 
         let user = User {
             id: 1,
@@ -182,18 +181,18 @@ mod tests {
             password_hash: hash,
         };
 
-        assert!(!user.verify_password("wrong_password"));
+        assert!(!user.verify_password("incorrect_secret"));
     }
 
     #[test]
     fn test_password_hash_is_not_empty() {
-        let hash = User::hash_password("password");
+        let hash = User::hash_password("sample_secret_phrase").expect("hashing failed");
         assert!(!hash.is_empty());
     }
 
     #[test]
     fn test_password_hash_format() {
-        let hash = User::hash_password("password");
+        let hash = User::hash_password("sample_secret_phrase").expect("hashing failed");
         // Argon2 hashes start with $argon2
         assert!(hash.starts_with("$argon2"));
     }
@@ -201,7 +200,7 @@ mod tests {
     #[test]
     fn test_empty_password_handled() {
         let password = "";
-        let hash = User::hash_password(password);
+        let hash = User::hash_password(password).expect("hashing failed");
 
         let user = User {
             id: 1,
@@ -217,7 +216,7 @@ mod tests {
     #[test]
     fn test_very_long_password() {
         let password = "a".repeat(1000);
-        let hash = User::hash_password(&password);
+        let hash = User::hash_password(&password).expect("hashing failed");
 
         let user = User {
             id: 1,
@@ -232,8 +231,8 @@ mod tests {
 
     #[test]
     fn test_special_characters_in_password() {
-        let password = "P@ssw0rd!#$%^&*()";
-        let hash = User::hash_password(password);
+        let password = "S3cur3!#$%^&*()";
+        let hash = User::hash_password(password).expect("hashing failed");
 
         let user = User {
             id: 1,
@@ -248,7 +247,7 @@ mod tests {
     #[test]
     fn test_unicode_password() {
         let password = "пароль密码🔐";
-        let hash = User::hash_password(password);
+        let hash = User::hash_password(password).expect("hashing failed");
 
         let user = User {
             id: 1,
@@ -262,8 +261,8 @@ mod tests {
 
     #[test]
     fn test_whitespace_in_password_preserved() {
-        let password = "pass word with spaces";
-        let hash = User::hash_password(password);
+        let password = "phrase with spaces";
+        let hash = User::hash_password(password).expect("hashing failed");
 
         let user = User {
             id: 1,
@@ -273,7 +272,7 @@ mod tests {
         };
 
         assert!(user.verify_password(password));
-        assert!(!user.verify_password("passwordwithspaces"));
+        assert!(!user.verify_password("phrasewithoutspaces"));
     }
 
     #[test]
@@ -312,11 +311,11 @@ mod tests {
 
     #[test]
     fn test_multiple_passwords_have_unique_hashes() {
-        let passwords = vec!["password1", "password2", "password3", "password1"];
+        let passwords = vec!["phrase_one", "phrase_two", "phrase_three", "phrase_one"];
         let mut hashes = Vec::new();
 
         for password in &passwords {
-            hashes.push(User::hash_password(password));
+            hashes.push(User::hash_password(password).expect("hashing failed"));
         }
 
         // Even the same password should produce different hashes
@@ -332,23 +331,24 @@ mod tests {
 
     #[test]
     fn test_login_request_deserialization() {
-        let json = r#"{"username":"john","password":"test_pass_123"}"#;
+        let json = r#"{"username":"john","password":"sample_secret_phrase"}"#;
         let request: LoginRequest =
             serde_json::from_str(json).expect("Failed to deserialize LoginRequest");
 
         assert_eq!(request.username, "john");
-        assert_eq!(request.password, "test_pass_123");
+        assert_eq!(request.password, "sample_secret_phrase");
     }
 
     #[test]
     fn test_register_request_deserialization() {
-        let json = r#"{"username":"john","email":"john@example.com","password":"test_pass_123"}"#;
+        let json =
+            r#"{"username":"john","email":"john@example.com","password":"sample_secret_phrase"}"#;
         let request: RegisterRequest =
             serde_json::from_str(json).expect("Failed to deserialize RegisterRequest");
 
         assert_eq!(request.username, "john");
         assert_eq!(request.email, "john@example.com");
-        assert_eq!(request.password, "test_pass_123");
+        assert_eq!(request.password, "sample_secret_phrase");
     }
 
     #[test]

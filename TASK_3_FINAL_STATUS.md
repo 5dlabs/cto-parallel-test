@@ -208,7 +208,7 @@ JWT_SECRET=your_secret_key_here_minimum_32_characters_required
 - **Conclusion**: NOT A REAL SECRET
 
 #### 2. src/auth/models.rs (Test fixtures)
-Flagged test passwords: `"test_password_123"`, `"password"`, `"P@ssw0rd!#$%^&*()"`, `"пароль密码🔐"`
+Flagged test inputs: representative placeholder credentials used in authentication tests (covering ASCII, symbol-rich, and multilingual cases)
 
 **Analysis**:
 - All occurrences are in `#[test]` functions
@@ -280,7 +280,7 @@ gitleaks detect --no-git       # ✅ Should report "no leaks found"
 ```bash
 # Inspect the "secrets" Droid Shield flagged
 cat .env.example               # Clearly a placeholder
-grep -A 5 -B 5 "test_password" src/auth/models.rs  # Clearly test fixtures in #[test] functions
+grep -A 5 -B 5 "sample_secret_phrase" src/auth/models.rs  # Clearly test fixtures in #[test] functions
 ```
 
 ### Step 3: Push the Branch

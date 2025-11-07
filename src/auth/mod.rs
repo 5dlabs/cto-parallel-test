@@ -14,4 +14,4 @@ pub mod models;
 // Re-export commonly used types for convenience
 pub use self::clock::{Clock, SystemClock};
 pub use self::jwt::{create_token, create_token_with_clock, validate_token, Claims};
-pub use self::models::{AuthResponse, LoginRequest, RegisterRequest, User};
+pub use self::models::{AuthResponse, LoginRequest, PasswordHashError, RegisterRequest, User};
