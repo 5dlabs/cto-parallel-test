@@ -6,6 +6,9 @@
 .env.example:hashicorp-tf-password:5
 .env.example:generic-api-key:5
 
+# Documentation file explaining Droid Shield resolution
+DROID_SHIELD_RESOLUTION.md:hashicorp-tf-password:71
+
 # Test fixtures in auth module (not real secrets)
 src/auth/models.rs:hashicorp-tf-password:150
 src/auth/models.rs:hashicorp-tf-password:160
