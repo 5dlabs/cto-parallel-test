@@ -1,5 +1,6 @@
+---
 name: Continuous Integration
-on:
+'on':
   push:
     branches: [main, feature/*, feat/*, fix/*]
   pull_request:
@@ -26,7 +27,9 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Clippy with pedantic lints
-        run: cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic
+        run: |
+          cargo clippy --workspace --all-targets --all-features \
+            -- -D warnings -W clippy::pedantic
 
   test-rust:
     runs-on: ubuntu-22.04

@@ -1,5 +1,6 @@
+---
 name: Deploy
-on:
+'on':
   push:
     branches: [main, develop, feature/*, feat/*, fix/*]
 
