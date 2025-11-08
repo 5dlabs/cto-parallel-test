@@ -1,0 +1,46 @@
+# Git files
+.git
+.gitignore
+
+# Rust build artifacts
+target/
+**/*.rs.bk
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation
+*.md
+LICENSE
+CLAUDE.md
+coding-guidelines.md
+github-guidelines.md
+
+# Task files
+task/
+
+# Environment files
+.env
+.env.*
+
+# CI files
+.github/
+
+# Test files
+tests/
+
+# Configuration that shouldn't be in image
+clippy.toml
+rustfmt.toml
+diesel.toml
+
+# Dependencies
+Cargo.lock
+
+# MCP config
+.mcp.json
+client-config.json
