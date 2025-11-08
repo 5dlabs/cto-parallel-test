@@ -14,20 +14,24 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
   })
+  const [error, setError] = useState<string | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     })
+    // Clear error when user starts typing
+    if (error) {
+      setError(null)
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // Handle registration logic here - will be integrated with backend API later
     if (formData.password !== formData.confirmPassword) {
-      // TODO: Replace alert with proper error handling UI
-      alert("Passwords don't match!")
+      setError("Passwords don't match. Please ensure both passwords are identical.")
       return
     }
     // TODO: Integrate with backend API endpoint
@@ -46,6 +50,11 @@ export default function RegisterPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-md" role="alert">
+                {error}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <Input
