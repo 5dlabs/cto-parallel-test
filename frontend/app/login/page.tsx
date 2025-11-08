@@ -14,7 +14,9 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // Handle login logic here - will be integrated with backend API later
-    console.log("Login attempt:", { email, password })
+    // TODO: Integrate with backend API endpoint
+    // Note: Credentials should be sent securely via HTTPS to backend
+    // Never log passwords in production
   }
 
   return (

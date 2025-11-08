@@ -20,10 +20,13 @@ function Register() {
     e.preventDefault();
     // Handle registration logic here - will be integrated with backend API later
     if (formData.password !== formData.confirmPassword) {
+      // TODO: Replace alert with proper error handling UI
       alert("Passwords don't match!");
       return;
     }
-    console.log('Registration attempt:', formData);
+    // TODO: Integrate with backend API endpoint
+    // Note: User data should be sent securely via HTTPS to backend
+    // Never log passwords or sensitive user data in production
   };
 
   return (
