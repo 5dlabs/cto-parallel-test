@@ -4,7 +4,7 @@
 /// It uses r2d2 for efficient connection pooling.
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use std::env;
 
 /// Type alias for the database connection pool
