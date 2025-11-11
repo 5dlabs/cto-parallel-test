@@ -37,6 +37,7 @@ pub struct Claims {
 ///
 /// ```
 /// use cto_parallel_test::auth::jwt::create_token;
+/// std::env::set_var("JWT_SECRET", "test_secret_key_change_in_production");
 ///
 /// let token = create_token("123").expect("Failed to create token");
 /// ```
@@ -64,6 +65,7 @@ pub fn create_token(user_id: &str) -> Result<String, Error> {
 ///
 /// ```
 /// use cto_parallel_test::auth::{jwt::create_token_with_clock, SystemClock};
+/// std::env::set_var("JWT_SECRET", "test_secret_key_change_in_production");
 ///
 /// let clock = SystemClock;
 /// let token = create_token_with_clock("123", &clock).expect("Failed to create token");
@@ -84,9 +86,8 @@ pub fn create_token_with_clock(user_id: &str, clock: &impl Clock) -> Result<Stri
         iat: usize::try_from(now).map_err(|_| Error::from(ErrorKind::InvalidToken))?,
     };
 
-    // Load JWT secret from environment variable with fallback for development
-    let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+    // Load JWT secret from environment variable (no fallback to avoid hardcoded secrets)
+    let secret = std::env::var("JWT_SECRET").map_err(|_| Error::from(ErrorKind::InvalidToken))?;
 
     encode(
         &Header::default(),
@@ -117,14 +118,14 @@ pub fn create_token_with_clock(user_id: &str, clock: &impl Clock) -> Result<Stri
 ///
 /// ```
 /// use cto_parallel_test::auth::jwt::{create_token, validate_token};
+/// std::env::set_var("JWT_SECRET", "test_secret_key_change_in_production");
 ///
 /// let token = create_token("123").unwrap();
 /// let claims = validate_token(&token).expect("Failed to validate token");
 /// assert_eq!(claims.sub, "123");
 /// ```
 pub fn validate_token(token: &str) -> Result<Claims, Error> {
-    let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+    let secret = std::env::var("JWT_SECRET").map_err(|_| Error::from(ErrorKind::InvalidToken))?;
 
     let validation = Validation::default();
     let token_data = decode::<Claims>(
@@ -139,9 +140,33 @@ pub fn validate_token(token: &str) -> Result<Claims, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Once;
+    // Move imports to module scope to satisfy clippy::items_after_statements in tests
+    use super::super::clock::Clock as TestClock;
+    use std::time::{Duration, SystemTimeError, UNIX_EPOCH};
+
+    // Helper clock that always errors to exercise error propagation
+    struct FailingClock;
+
+    impl TestClock for FailingClock {
+        fn now(&self) -> Result<u64, SystemTimeError> {
+            let err = UNIX_EPOCH
+                .duration_since(UNIX_EPOCH + Duration::from_secs(1))
+                .expect_err("expected time error");
+            Err(err)
+        }
+    }
+
+    fn ensure_test_secret() {
+        static INIT: Once = Once::new();
+        INIT.call_once(|| {
+            std::env::set_var("JWT_SECRET", "test_secret_key_change_in_production");
+        });
+    }
 
     #[test]
     fn test_create_token_success() {
+        ensure_test_secret();
         let user_id = "123";
         let token = create_token(user_id);
         assert!(token.is_ok());
@@ -150,6 +175,7 @@ mod tests {
 
     #[test]
     fn test_validate_token_success() {
+        ensure_test_secret();
         let user_id = "123";
         let token = create_token(user_id).expect("Failed to create token");
 
@@ -159,6 +185,7 @@ mod tests {
 
     #[test]
     fn test_token_contains_correct_claims() {
+        ensure_test_secret();
         let user_id = "123";
         let token = create_token(user_id).expect("Failed to create token");
 
@@ -172,6 +199,7 @@ mod tests {
     #[test]
     fn test_token_expiration_is_24_hours() {
         use super::super::clock::test_helpers::MockClock;
+        ensure_test_secret();
 
         let user_id = "123";
         // Use a future timestamp to avoid expiration during validation
@@ -197,6 +225,7 @@ mod tests {
 
     #[test]
     fn test_invalid_token_rejected() {
+        ensure_test_secret();
         let invalid_token = "invalid.token.here";
         let result = validate_token(invalid_token);
         assert!(result.is_err());
@@ -204,20 +233,7 @@ mod tests {
 
     #[test]
     fn test_clock_error_propagates() {
-        use super::super::clock::Clock;
-        use std::time::{Duration, SystemTimeError, UNIX_EPOCH};
-
-        struct FailingClock;
-
-        impl Clock for FailingClock {
-            fn now(&self) -> Result<u64, SystemTimeError> {
-                let err = UNIX_EPOCH
-                    .duration_since(UNIX_EPOCH + Duration::from_secs(1))
-                    .expect_err("expected time error");
-                Err(err)
-            }
-        }
-
+        ensure_test_secret();
         let result = create_token_with_clock("123", &FailingClock);
         assert!(result.is_err());
         let err = result.expect_err("expected clock failure");
@@ -227,6 +243,7 @@ mod tests {
     #[test]
     fn test_expired_token_rejected() {
         use jsonwebtoken::errors::ErrorKind;
+        ensure_test_secret();
 
         let claims = Claims {
             sub: "123".to_string(),
@@ -250,12 +267,14 @@ mod tests {
 
     #[test]
     fn test_empty_token_rejected() {
+        ensure_test_secret();
         let result = validate_token("");
         assert!(result.is_err());
     }
 
     #[test]
     fn test_different_tokens_for_same_user() {
+        ensure_test_secret();
         let user_id = "123";
         let token1 = create_token(user_id).expect("Failed to create token 1");
 
@@ -277,6 +296,7 @@ mod tests {
 
     #[test]
     fn test_empty_user_id_handled() {
+        ensure_test_secret();
         let user_id = "";
         let token = create_token(user_id).expect("Failed to create token");
         let claims = validate_token(&token).expect("Failed to validate token");
@@ -285,6 +305,7 @@ mod tests {
 
     #[test]
     fn test_long_user_id_handled() {
+        ensure_test_secret();
         let user_id = "a".repeat(1000);
         let token = create_token(&user_id).expect("Failed to create token");
         let claims = validate_token(&token).expect("Failed to validate token");
@@ -293,6 +314,7 @@ mod tests {
 
     #[test]
     fn test_special_characters_in_user_id() {
+        ensure_test_secret();
         let user_id = "user@email.com";
         let token = create_token(user_id).expect("Failed to create token");
         let claims = validate_token(&token).expect("Failed to validate token");

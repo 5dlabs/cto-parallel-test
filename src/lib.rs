@@ -7,9 +7,18 @@ pub mod auth;
 #[cfg(test)]
 mod integration_tests {
     use super::auth::{create_token, validate_token, User};
+    use std::sync::Once;
+
+    fn ensure_test_secret() {
+        static INIT: Once = Once::new();
+        INIT.call_once(|| {
+            std::env::set_var("JWT_SECRET", "test_secret_key_change_in_production");
+        });
+    }
 
     #[test]
     fn test_complete_auth_flow() {
+        ensure_test_secret();
         // Hash password
         let password = "mypassword";
         let hash = User::hash_password(password).expect("hashing failed");
