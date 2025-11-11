@@ -94,7 +94,11 @@ pub fn create_token_with_clock(user_id: &str, clock: &impl Clock) -> Result<Stri
     // Set `typ` for clarity; some validators expect an explicit type
     header.typ = Some("JWT".to_string());
 
-    encode(&header, &claims, &EncodingKey::from_secret(secret.as_bytes()))
+    encode(
+        &header,
+        &claims,
+        &EncodingKey::from_secret(secret.as_bytes()),
+    )
 }
 
 /// Validates a JWT token and returns the claims if valid
@@ -147,8 +151,7 @@ pub fn validate_token(token: &str) -> Result<Claims, Error> {
 /// - Short HMAC secrets reduce effective security. Enforce >= 32 bytes to align with
 ///   common guidance for HS256 and preempt weak-secret findings from scanners.
 fn load_jwt_secret() -> Result<String, Error> {
-    let secret =
-        std::env::var("JWT_SECRET").map_err(|_| Error::from(ErrorKind::InvalidToken))?;
+    let secret = std::env::var("JWT_SECRET").map_err(|_| Error::from(ErrorKind::InvalidToken))?;
 
     // Enforce a reasonable minimum length for HS256 HMAC keys
     if secret.len() < 32 {
