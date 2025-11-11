@@ -83,8 +83,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}:\
-            ${{ steps.meta.outputs.tag_name }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}:${{ steps.meta.outputs.tag_name }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}:${{ github.sha }}
           # Use GitHub Actions cache for Docker layers
           cache-from: type=gha
