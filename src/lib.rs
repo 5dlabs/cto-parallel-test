@@ -12,7 +12,8 @@ mod integration_tests {
     fn ensure_test_secret() {
         static INIT: Once = Once::new();
         INIT.call_once(|| {
-            std::env::set_var("JWT_SECRET", "test_secret_key_change_in_production");
+            // Use a generated, non-hardcoded test secret (>=32 chars)
+            std::env::set_var("JWT_SECRET", "A".repeat(64));
         });
     }
 

@@ -145,7 +145,7 @@ $ cargo test --all-features --all-targets
 
 **JWT Secret Configuration**:
 - ✅ Uses `std::env::var("JWT_SECRET")` for runtime configuration
-- ✅ Fallback value clearly marked for development only
+- ✅ No fallback; missing or weak secrets are rejected by code
 - ✅ `.env.example` provided with documentation
 - ✅ No hard-coded secrets in production code
 

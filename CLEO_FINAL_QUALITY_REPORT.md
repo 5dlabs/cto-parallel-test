@@ -102,7 +102,7 @@ $ yamllint .github/workflows/ci.yml
 **Verification:**
 - ✅ No hard-coded secrets or configuration
 - ✅ JWT_SECRET loaded from environment variables
-- ✅ Fallback only for development/testing
+- ✅ No fallback; missing or weak secrets are rejected by code
 - ✅ `.env.example` provides proper guidance
 - ✅ No mock implementations in production code
 - ✅ MockClock only used in tests (proper pattern)

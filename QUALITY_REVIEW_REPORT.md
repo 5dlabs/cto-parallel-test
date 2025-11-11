@@ -77,17 +77,16 @@ test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured
 **Status**: ✅ NO MOCKS - All live implementation
 
 **Verified**:
-- ✅ JWT tokens use environment-configurable `JWT_SECRET` (not hard-coded)
+- ✅ JWT tokens use environment-configurable `JWT_SECRET` (no fallback)
 - ✅ Argon2 password hashing with cryptographic-quality random salt (`OsRng`)
 - ✅ No hard-coded trading pairs, endpoints, or business logic
 - ✅ Clock abstraction for testability (production uses real system time)
-- ✅ Configuration via environment variables with documented fallback
+- ✅ Configuration via environment variables (required; no fallback)
 
 **Evidence**:
 ```rust
-// JWT secret loaded from environment
-let secret = std::env::var("JWT_SECRET")
-    .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+// JWT secret loaded from environment (missing/weak secrets rejected in code)
+let secret = std::env::var("JWT_SECRET")?;
 
 // Cryptographic random salt generation
 let salt = SaltString::generate(&mut OsRng);

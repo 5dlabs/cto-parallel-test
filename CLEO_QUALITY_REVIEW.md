@@ -166,7 +166,7 @@ fn test_user_serialization_excludes_password_hash() {
 
 ### JWT Security ✅
 - **Expiration:** 24-hour TTL (86400 seconds)
-- **Secret Key:** Environment-based with secure fallback for development
+- **Secret Key:** Environment-based (required; no fallback)
 - **Claims:** Standard JWT claims (sub, exp, iat)
 - **Validation:** Signature verification + expiration check
 - **Stateless:** No server-side session storage required
@@ -188,8 +188,8 @@ fn test_expired_token_rejected() {
 ```
 
 ### Configuration Security ✅
-- **JWT_SECRET:** Loaded from environment variable
-- **Fallback:** Only for development (`test_secret_key_change_in_production`)
+- **JWT_SECRET:** Loaded from environment variable (required; no fallback)
+- **Policy:** Tests generate a non-hardcoded secret at runtime
 - **Documentation:** Clear warning about production requirements
 
 ---

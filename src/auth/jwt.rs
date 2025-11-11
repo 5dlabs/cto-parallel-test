@@ -37,7 +37,8 @@ pub struct Claims {
 ///
 /// ```
 /// use cto_parallel_test::auth::jwt::create_token;
-/// std::env::set_var("JWT_SECRET", "test_secret_key_change_in_production");
+/// // Set a generated, non-hardcoded test secret (>=32 chars)
+/// std::env::set_var("JWT_SECRET", "A".repeat(64));
 ///
 /// let token = create_token("123").expect("Failed to create token");
 /// ```
@@ -65,7 +66,8 @@ pub fn create_token(user_id: &str) -> Result<String, Error> {
 ///
 /// ```
 /// use cto_parallel_test::auth::{jwt::create_token_with_clock, SystemClock};
-/// std::env::set_var("JWT_SECRET", "test_secret_key_change_in_production");
+/// // Set a generated, non-hardcoded test secret (>=32 chars)
+/// std::env::set_var("JWT_SECRET", "A".repeat(64));
 ///
 /// let clock = SystemClock;
 /// let token = create_token_with_clock("123", &clock).expect("Failed to create token");
@@ -123,7 +125,8 @@ pub fn create_token_with_clock(user_id: &str, clock: &impl Clock) -> Result<Stri
 ///
 /// ```
 /// use cto_parallel_test::auth::jwt::{create_token, validate_token};
-/// std::env::set_var("JWT_SECRET", "test_secret_key_change_in_production");
+/// // Set a generated, non-hardcoded test secret (>=32 chars)
+/// std::env::set_var("JWT_SECRET", "A".repeat(64));
 ///
 /// let token = create_token("123").unwrap();
 /// let claims = validate_token(&token).expect("Failed to validate token");
@@ -183,7 +186,8 @@ mod tests {
     fn ensure_test_secret() {
         static INIT: Once = Once::new();
         INIT.call_once(|| {
-            std::env::set_var("JWT_SECRET", "test_secret_key_change_in_production");
+            // Use a generated, non-hardcoded test secret (>=32 chars)
+            std::env::set_var("JWT_SECRET", "A".repeat(64));
         });
     }
 
@@ -274,7 +278,7 @@ mod tests {
             iat: 0,
         };
 
-        let secret = "test_secret_key_change_in_production";
+        let secret = load_jwt_secret().expect("test secret should be set");
         let token = encode(
             &Header::default(),
             &claims,

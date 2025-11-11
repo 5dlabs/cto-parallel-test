@@ -56,7 +56,7 @@ argon2.hash_password(password.as_bytes(), &salt)
 - Tokens expire after 24 hours (86400 seconds)
 - Uses HMAC-SHA256 signature validation
 - Secret key loaded from environment variable (`JWT_SECRET`)
-- Fallback secret clearly marked for development only
+- No fallback secret; missing/weak secrets rejected
 - Token validation checks expiration automatically
 - Standard JWT claims included (sub, exp, iat)
 
@@ -64,8 +64,7 @@ argon2.hash_password(password.as_bytes(), &salt)
 ```rust
 // src/auth/jwt.rs
 const TOKEN_TTL_SECS: u64 = 24 * 60 * 60;
-let secret = std::env::var("JWT_SECRET")
-    .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+let secret = std::env::var("JWT_SECRET")?; // no fallback; missing/weak secret rejected
 ```
 
 ### 3. Serialization Security ✅ COMPLIANT
@@ -122,7 +121,7 @@ Argon2::default()
 **Status**: ✅ **SECURE**
 
 - JWT secret loaded from `JWT_SECRET` environment variable
-- Development fallback clearly labeled as insecure
+ - No fallback; missing or weak secrets are rejected by code
 - No hardcoded secrets in production code
 - Test passwords only in test modules
 
