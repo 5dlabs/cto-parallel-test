@@ -86,14 +86,15 @@ pub fn create_token_with_clock(user_id: &str, clock: &impl Clock) -> Result<Stri
         iat: usize::try_from(now).map_err(|_| Error::from(ErrorKind::InvalidToken))?,
     };
 
-    // Load JWT secret from environment variable (no fallback to avoid hardcoded secrets)
-    let secret = std::env::var("JWT_SECRET").map_err(|_| Error::from(ErrorKind::InvalidToken))?;
+    // Load and validate JWT secret from environment variable (no fallback to avoid hardcoded secrets)
+    let secret = load_jwt_secret()?;
 
-    encode(
-        &Header::default(),
-        &claims,
-        &EncodingKey::from_secret(secret.as_bytes()),
-    )
+    // Be explicit about the algorithm used in the header
+    let mut header = Header::new(Algorithm::HS256);
+    // Set `typ` for clarity; some validators expect an explicit type
+    header.typ = Some("JWT".to_string());
+
+    encode(&header, &claims, &EncodingKey::from_secret(secret.as_bytes()))
 }
 
 /// Validates a JWT token and returns the claims if valid
@@ -125,7 +126,7 @@ pub fn create_token_with_clock(user_id: &str, clock: &impl Clock) -> Result<Stri
 /// assert_eq!(claims.sub, "123");
 /// ```
 pub fn validate_token(token: &str) -> Result<Claims, Error> {
-    let secret = std::env::var("JWT_SECRET").map_err(|_| Error::from(ErrorKind::InvalidToken))?;
+    let secret = load_jwt_secret()?;
 
     // Enforce expected algorithm explicitly for defense-in-depth
     let mut validation = Validation::new(Algorithm::HS256);
@@ -138,6 +139,22 @@ pub fn validate_token(token: &str) -> Result<Claims, Error> {
     )?;
 
     Ok(token_data.claims)
+}
+
+/// Loads the JWT secret from environment and enforces a minimum strength requirement.
+///
+/// Security rationale:
+/// - Short HMAC secrets reduce effective security. Enforce >= 32 bytes to align with
+///   common guidance for HS256 and preempt weak-secret findings from scanners.
+fn load_jwt_secret() -> Result<String, Error> {
+    let secret =
+        std::env::var("JWT_SECRET").map_err(|_| Error::from(ErrorKind::InvalidToken))?;
+
+    // Enforce a reasonable minimum length for HS256 HMAC keys
+    if secret.len() < 32 {
+        return Err(Error::from(ErrorKind::InvalidToken));
+    }
+    Ok(secret)
 }
 
 #[cfg(test)]
