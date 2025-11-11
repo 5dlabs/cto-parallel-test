@@ -1,6 +1,7 @@
+---
 name: Deploy
 
-on:
+'on':
   push:
     branches: [main, develop, feature/*, feat/*, fix/*]
 
@@ -11,8 +12,10 @@ env:
 jobs:
   build:
     # Use Arc runner (k8s-runner) for 5-10x faster builds
-    # Arc runners have pre-installed: sccache, mold linker, pre-warmed dependencies
-    runs-on: ubuntu-22.04  # Fallback to ubuntu-22.04 if k8s-runner not available
+    # Arc runners have pre-installed: sccache, mold linker,
+    # pre-warmed dependencies
+    # Fallback to ubuntu-22.04 if k8s-runner not available
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write
@@ -44,10 +47,11 @@ jobs:
           if [ -f target/release/cto-parallel-test ]; then
             cp target/release/cto-parallel-test ./cto-parallel-test
           else
-            echo "⚠️  No binary target found - this is a library crate"
+            echo "⚠️  No binary target found - library crate"
             echo "Creating placeholder for Docker build demo"
             echo '#!/bin/sh' > ./cto-parallel-test
-            echo 'echo "Library crate - no binary to run"' >> ./cto-parallel-test
+            echo 'echo "Library crate - no binary"' \
+              >> ./cto-parallel-test
             chmod +x ./cto-parallel-test
           fi
 
@@ -79,7 +83,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}:${{ steps.meta.outputs.tag_name }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}:\
+            ${{ steps.meta.outputs.tag_name }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_BASE }}:${{ github.sha }}
           # Use GitHub Actions cache for Docker layers
           cache-from: type=gha
