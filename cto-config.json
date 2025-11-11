@@ -39,7 +39,7 @@
       "service": "cto-parallel-test",
       "docsRepository": "5dlabs/cto-parallel-test",
       "docsProjectDirectory": "docs",
-      "workingDirectory": ".",
+      "workingDirectory": "./docs",
       "model": "claude-sonnet-4-5-20250929",
       "cli": "factory",
       "implementationAgent": "5DLabs-Rex",
