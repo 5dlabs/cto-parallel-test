@@ -5,7 +5,7 @@
 
 use super::clock::{Clock, SystemClock};
 use jsonwebtoken::errors::{Error, ErrorKind};
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
 /// JWT Claims structure containing standard token claims
@@ -127,7 +127,10 @@ pub fn create_token_with_clock(user_id: &str, clock: &impl Clock) -> Result<Stri
 pub fn validate_token(token: &str) -> Result<Claims, Error> {
     let secret = std::env::var("JWT_SECRET").map_err(|_| Error::from(ErrorKind::InvalidToken))?;
 
-    let validation = Validation::default();
+    // Enforce expected algorithm explicitly for defense-in-depth
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.validate_exp = true;
+
     let token_data = decode::<Claims>(
         token,
         &DecodingKey::from_secret(secret.as_bytes()),
