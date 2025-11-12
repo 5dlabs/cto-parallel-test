@@ -1,0 +1,6 @@
+# Ignore false positives in example environment file
+.env.example:4
+.env.example:5
+
+# Ignore test data in unit tests
+src/auth/models.rs:241
