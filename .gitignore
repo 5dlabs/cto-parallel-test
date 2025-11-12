@@ -1,0 +1,15 @@
+# Rust
+/target
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Hook files - never commit
+hooks/
+.hooks/
+**/hooks/
