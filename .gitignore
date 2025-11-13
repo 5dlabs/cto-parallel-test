@@ -16,3 +16,6 @@ hooks/
 
 # Local security scan reports
 gitleaks-*.json
+
+# Ignore gitleaks working tree outputs
+.gitleaks.*
