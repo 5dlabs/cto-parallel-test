@@ -8,6 +8,7 @@ This service provides a production‑grade authentication foundation with:
 ## Environment Variables
 - `JWT_SECRET` (required): HMAC secret for signing/verifying JWTs. Must be a strong, random value of at least 32 bytes. Prefer a 256-bit (32-byte) or longer secret generated from a CSPRNG.
 - `JWT_EXP_SECONDS` (optional): Token lifetime in seconds. Defaults to `86400` (24 hours).
+- `JWT_MIN_SECRET_BYTES` (optional): Minimum allowed bytes for `JWT_SECRET`. Values below 32 are ignored. Use to raise the minimum on stricter deployments.
 
 ## Public API
 - `cto_parallel_test::auth::jwt::create_token(user_id: &str) -> Result<String, AuthError>`

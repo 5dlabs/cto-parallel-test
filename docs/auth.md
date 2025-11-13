@@ -20,6 +20,7 @@ Environment variables:
 
 - `JWT_SECRET` (required): HMAC secret for signing tokens.
 - `JWT_EXP_SECONDS` (optional): Token lifetime in seconds. Default: `86400`.
+- `JWT_MIN_SECRET_BYTES` (optional): Raises the minimum required length for `JWT_SECRET` (never below 32 bytes).
 
 ## Public API
 
@@ -33,4 +34,3 @@ See `src/auth/tests.rs` for usage examples and end-to-end tests.
 
 - Wall-clock time is abstracted behind a `Clock` trait for testability and to comply with project coding guidelines.
 - Clippy pedantic and formatting checks pass; tests cover hashing and JWT flows.
-

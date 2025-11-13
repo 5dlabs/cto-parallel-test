@@ -4,8 +4,9 @@ use std::env;
 use std::error::Error as StdError;
 use std::fmt;
 
-/// Minimum recommended length (in bytes) for HS256 secrets.
-const MIN_SECRET_LEN: usize = 32;
+/// Absolute minimum length (in bytes) for HS256 secrets.
+/// Can be increased via `JWT_MIN_SECRET_BYTES` but never decreased.
+const ABSOLUTE_MIN_SECRET_LEN: usize = 32;
 
 /// JWT Claims: subject (user id), expiry, and issued-at timestamps (seconds since epoch).
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -33,10 +34,10 @@ impl fmt::Display for AuthError {
         match self {
             Self::MissingSecret => write!(f, "JWT secret not configured (JWT_SECRET)"),
             Self::InvalidExpirationVar(v) => write!(f, "Invalid JWT_EXP_SECONDS value: {v}"),
-            Self::WeakSecret => write!(
-                f,
-                "JWT secret too short; require at least {MIN_SECRET_LEN} bytes"
-            ),
+            Self::WeakSecret => {
+                let min = read_min_secret_len();
+                write!(f, "JWT secret too short; require at least {min} bytes")
+            }
             Self::Jwt(e) => write!(f, "JWT error: {e}"),
         }
     }
@@ -83,10 +84,23 @@ impl Clock for SystemClock {
 /// Read the JWT HMAC secret from the `JWT_SECRET` environment variable.
 fn read_secret() -> Result<String, AuthError> {
     let secret = env::var("JWT_SECRET").map_err(|_| AuthError::MissingSecret)?;
-    if secret.len() < MIN_SECRET_LEN {
+    let min_len = read_min_secret_len();
+    if secret.len() < min_len {
         return Err(AuthError::WeakSecret);
     }
     Ok(secret)
+}
+
+/// Read the configured minimum secret length from `JWT_MIN_SECRET_BYTES`.
+/// Values lower than the absolute minimum are ignored.
+fn read_min_secret_len() -> usize {
+    match env::var("JWT_MIN_SECRET_BYTES") {
+        Ok(v) => v
+            .parse::<usize>()
+            .map(|n| n.max(ABSOLUTE_MIN_SECRET_LEN))
+            .unwrap_or(ABSOLUTE_MIN_SECRET_LEN),
+        Err(_) => ABSOLUTE_MIN_SECRET_LEN,
+    }
 }
 
 /// Read token TTL from `JWT_EXP_SECONDS` (defaults to 86400 = 24h if not set).
