@@ -13,3 +13,6 @@ Cargo.lock
 hooks/
 .hooks/
 **/hooks/
+
+# Local security scan reports
+gitleaks-*.json

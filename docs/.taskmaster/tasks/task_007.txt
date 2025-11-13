@@ -189,7 +189,8 @@ mod auth_tests {
     #[test]
     fn test_password_hashing_and_verification() {
         // Create a test user with hashed password
-        let password = "secure_password";
+        // Avoid hardcoding secrets in examples; use env or placeholders
+        let password = std::env::var("TEST_PASSWORD").unwrap_or_else(|_| "example-password".to_string());
         let hashed = User::hash_password(password);
         
         let user = User {
@@ -441,7 +442,8 @@ mod auth_tests {
     #[test]
     fn test_password_hashing_and_verification() {
         // Create a test user with hashed password
-        let password = "secure_password";
+        // Avoid hardcoding secrets in examples; use env or placeholders
+        let password = std::env::var("TEST_PASSWORD").unwrap_or_else(|_| "example-password".to_string());
         let hashed = User::hash_password(password);
         
         let user = User {
@@ -596,4 +598,3 @@ async fn test_full_user_flow() {
 ```
 
 This test should verify the entire user flow from product browsing to checkout, ensuring all components work together correctly.
-

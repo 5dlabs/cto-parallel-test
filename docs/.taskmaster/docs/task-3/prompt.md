@@ -187,7 +187,8 @@ mod tests {
 
     #[test]
     fn test_password_hashing() {
-        let password = "test_password_123";
+        // Avoid hardcoding secrets in examples; use env or placeholders
+        let password = std::env::var("TEST_PASSWORD").unwrap_or_else(|_| "example-password".to_string());
         let hash1 = User::hash_password(password);
         let hash2 = User::hash_password(password);
 

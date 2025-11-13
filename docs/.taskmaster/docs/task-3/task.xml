@@ -605,7 +605,8 @@ fn test_complete_auth_flow() {
     use your_crate::auth::{jwt, models::User};
 
     // 1. User registration: hash password
-    let password = "user_password_123";
+    // Avoid hardcoding secrets in examples; use env or placeholders
+    let password = std::env::var("TEST_PASSWORD").unwrap_or_else(|_| "example-password".to_string());
     let password_hash = User::hash_password(password);
 
     // 2. Create user (simulated database insert)
