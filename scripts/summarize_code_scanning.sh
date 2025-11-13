@@ -68,37 +68,59 @@ if [[ "$COUNT" -eq 0 ]]; then
   exit 0
 fi
 
-# Normalize severity with reasonable fallbacks, to lowercase.
-SEV_JQ='(.rule.severity // .severity // .rule.security_severity_level // .security_severity_level // "unknown") | ascii_downcase'
+# Normalize severity with reasonable fallbacks, to lowercase. Then map
+# tool-specific severities (error/warning/note) into security severities
+# so gating remains strict even when security_severity_level is absent.
+RAW_SEV_JQ='(.rule.severity // .severity // .rule.security_severity_level // .security_severity_level // "unknown") | ascii_downcase'
 
 echo "Open Code Scanning alerts: $COUNT"
 echo
 
 # Totals by severity
 declare -A totals
-for s in critical high medium low warning note unknown; do totals[$s]=0; done
+for s in critical high medium low note unknown; do totals[$s]=0; done
 
-while IFS= read -r sev; do
-  case "$sev" in
-    critical|high|medium|low|warning|note|unknown) : ;;
-    *) sev="unknown" ;;
+map_to_security_bucket() {
+  case "$1" in
+    critical) echo critical ;;
+    high)     echo high ;;
+    medium)   echo medium ;;
+    low)      echo low ;;
+    error)    echo high ;;
+    warning)  echo low ;;
+    note)     echo note ;;
+    *)        echo unknown ;;
   esac
-  totals[$sev]=$(( totals[$sev] + 1 ))
-done < <(jq -r ".[] | ${SEV_JQ}" "$JSON_FILE")
+}
+
+while IFS= read -r raw; do
+  bucket=$(map_to_security_bucket "$raw")
+  totals[$bucket]=$(( totals[$bucket] + 1 ))
+done < <(jq -r ".[] | ${RAW_SEV_JQ}" "$JSON_FILE")
 
 echo "Severity totals:"
 printf "  critical: %d\n" "${totals[critical]}"
 printf "  high:     %d\n" "${totals[high]}"
 printf "  medium:   %d\n" "${totals[medium]}"
 printf "  low:      %d\n" "${totals[low]}"
-printf "  warning:  %d\n" "${totals[warning]}"
 printf "  note:     %d\n" "${totals[note]}"
 printf "  unknown:  %d\n" "${totals[unknown]}"
 
 echo
 echo "Alerts:"
+# Show the original (raw) severity alongside the mapped bucket
 jq -r \
-  ".[] | \"- [\" + (${SEV_JQ}) + \"] \" + (.rule.id // .rule.name // \"<no-id>\") + \" (\" + .state + \")\"" \
+  ".[] | (
+    ${RAW_SEV_JQ} as $raw | 
+    (
+      if ($raw == \"critical\" or $raw == \"high\" or $raw == \"medium\" or $raw == \"low\") then $raw
+      elif $raw == \"error\" then \"high\"
+      elif $raw == \"warning\" then \"low\"
+      elif $raw == \"note\" then \"note\"
+      else \"unknown\" end
+    ) as $bucket |
+    \"- [\" + $bucket + \"] \" + (.rule.id // .rule.name // \"<no-id>\") + \" (state: \" + .state + \", raw: \" + $raw + \")\"
+  )" \
   "$JSON_FILE"
 
 # Exit non-zero if any medium/high/critical alerts present
@@ -107,4 +129,3 @@ if (( totals[critical] > 0 || totals[high] > 0 || totals[medium] > 0 )); then
 fi
 
 exit 0
-
