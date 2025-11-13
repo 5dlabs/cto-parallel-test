@@ -1,134 +1,92 @@
-# E-Shop Frontend
+# E-Shop Frontend (Vite + React + shadcn/ui)
 
-A modern e-commerce frontend application built with Next.js 15, React 19, TypeScript, Tailwind CSS, and shadcn/ui.
+A modern e‑commerce frontend built with Vite, React 18, Tailwind CSS, and shadcn/ui.
 
 ## Features
 
-- 🎨 Modern UI with shadcn/ui components
-- 📱 Mobile-first responsive design (375px/768px/1920px)
-- ♿ WCAG AA accessible
-- 🎯 TypeScript strict mode
-- 🚀 Next.js 15 App Router
-- 🎨 Tailwind CSS for styling
-- 🔒 Client-side form validation
+- Modern UI with shadcn/ui components
+- Mobile‑first responsive design (375px / 768px / 1920px)
+- WCAG AA accessible (semantic HTML, keyboard nav, contrast)
+- Client‑side validation with Zod + React Hook Form
+- Environment‑driven API base URL (no hardcoded endpoints)
 
 ## Pages
 
-- **Home** (`/`) - Landing page with hero section and features
-- **Products** (`/products`) - Product listing with grid layout
-- **Product Detail** (`/products/[id]`) - Individual product view
-- **Cart** (`/cart`) - Shopping cart with order summary
-- **Login** (`/login`) - User login form
-- **Register** (`/register`) - User registration form
+- Home (`/`) – Landing page
+- Products (`/products`) – Product grid
+- Product Detail (`/products/:id`) – Single product view
+- Cart (`/cart`) – Shopping cart
+- Login (`/login`) – Auth form
+- Register (`/register`) – Registration form
 
 ## Components
 
-### Layout
-- `Header` - Navigation header with cart badge and user menu
-- `Footer` - Site footer with links
-
-### UI Components (shadcn/ui)
-- Button
-- Card
-- Badge
-- Input
-- Label
-- Form
-- Navigation Menu
-- Separator
+- Layout: `Header`, `Footer`
+- UI (shadcn/ui): `Button`, `Card`, `Badge`, `Input`, `NavigationMenu`
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 22.x or later
-- pnpm 10.x or later
+- Node.js 20+
 
-### Installation
+### Install
 
 ```bash
-pnpm install
+npm install
 ```
 
 ### Development
 
 ```bash
-pnpm dev
+VITE_API_BASE_URL=https://api.example.test npm start
+# App runs on http://localhost:3000
 ```
-
-Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ### Build
 
 ```bash
-pnpm build
-```
-
-### Production
-
-```bash
-pnpm start
+npm run build
 ```
 
 ### Lint
 
 ```bash
-pnpm lint
+npm run lint
 ```
 
-## Technology Stack
+## Configuration
 
-- **Next.js 16.0.2** - React framework with App Router
-- **React 19.2.0** - UI library
-- **TypeScript 5.9.3** - Type safety
-- **Tailwind CSS 4.1.17** - Utility-first CSS
-- **shadcn/ui** - High-quality React components
-- **lucide-react** - Icon library
+- `VITE_API_BASE_URL` controls the backend API base (defaults to `/api`).
+- Example: copy `.env.example` to `.env` and set `VITE_API_BASE_URL`.
 
-## Accessibility
+## Security
 
-This application follows WCAG AA standards:
+- Strict Content Security Policy in `index.html` to mitigate XSS.
+- No hardcoded secrets; configuration via env only.
+- Avoids `dangerouslySetInnerHTML`; uses safe URL encoding.
 
-- Semantic HTML elements
-- ARIA labels and attributes
-- Keyboard navigation support
-- Proper color contrast
-- Form validation with accessible error messages
-
-## Responsive Design
-
-The application is mobile-first and fully responsive:
-
-- Mobile: 375px and up
-- Tablet: 768px and up
-- Desktop: 1920px and up
-
-## Project Structure
+## Project Structure (relevant parts)
 
 ```
 frontend/
-├── app/                  # Next.js app router pages
-│   ├── cart/            # Shopping cart page
-│   ├── login/           # Login page
-│   ├── products/        # Products listing and detail pages
-│   ├── register/        # Registration page
-│   ├── layout.tsx       # Root layout with Header/Footer
-│   └── page.tsx         # Home page
-├── components/
-│   ├── layout/          # Layout components
-│   │   ├── Header.tsx
-│   │   └── Footer.tsx
-│   └── ui/              # shadcn/ui components
-├── lib/
-│   └── utils.ts         # Utility functions
-└── public/              # Static assets
+├── src/
+│   ├── App.jsx
+│   ├── main.jsx
+│   ├── config.js           # exports CONFIG.apiBaseUrl from env
+│   ├── components/
+│   │   ├── Header.jsx
+│   │   ├── Footer.jsx
+│   │   └── ui/             # shadcn/ui components
+│   └── pages/              # Home, Products, ProductDetail, Cart, Login, Register
+├── index.html              # Vite entry with CSP
+├── package.json            # scripts
+└── tailwind.config.js
 ```
 
 ## Future Enhancements
 
-- State management for cart and user authentication
+- State management for cart and authentication
 - API integration for products and orders
-- Payment gateway integration
-- Product search and filtering
-- User profile management
-- Order history
+- Payment provider integration
+- Search and filtering
