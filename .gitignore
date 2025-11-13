@@ -23,3 +23,7 @@ Thumbs.db
 .env.local
 .env.*.local
 
+# Hooks - never commit
+hooks/
+.hooks/
+**/hooks/
