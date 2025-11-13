@@ -1,71 +1,69 @@
 # Product Catalog Module
 
-This module provides a thread-safe, in-memory product catalog with full CRUD operations, inventory management, and flexible filtering. It is dependency-light and designed as a foundational building block for higher-level API services.
+This module provides a thread-safe, in-memory product catalog with CRUD, inventory management, and flexible filtering.
 
 ## Highlights
-- Thread-safe storage via `Arc<Mutex<Vec<Product>>>`
-- Auto-incrementing product IDs
-- Decimal-precise pricing using `rust_decimal::Decimal`
-- CRUD: create, list, get by ID, delete
-- Inventory updates with read-after-write semantics
-- Filtering by name substring, price range, and stock status (AND semantics)
+
+- Thread-safe storage via `Arc<Mutex<...>>`
+- Auto-incrementing product IDs (monotonic, unique per process)
+- Decimal-precise prices using `rust_decimal::Decimal`
+- Filtering by name (case-insensitive contains), price range, and stock status
+- No external dependencies beyond `serde` and `rust_decimal`
 
 ## Module Layout
-- `src/catalog/models.rs` — Data models (`Product`, `NewProduct`, `ProductFilter`)
-- `src/catalog/service.rs` — `ProductService` with thread-safe operations and tests
-- `src/catalog/mod.rs` — Public exports
-- `src/lib.rs` — Registers `pub mod catalog;`
+
+- `src/catalog/models.rs`
+  - `Product` — full product record
+  - `NewProduct` — inputs for creation
+  - `ProductFilter` — optional criteria for filtering
+- `src/catalog/service.rs`
+  - `ProductService` — thread-safe service exposing CRUD + filter APIs
 
 ## Usage
 
 ```rust
 use cto_parallel_test::catalog::{NewProduct, ProductFilter, ProductService};
 use rust_decimal::Decimal;
+use std::str::FromStr;
 
-let service = ProductService::new();
+let svc = ProductService::new();
 
-// Create
-let p = service.create(NewProduct {
+let p = svc.create(NewProduct {
     name: "Laptop".into(),
-    description: "13-inch, 16GB RAM".into(),
-    price: Decimal::from_str_exact("999.99").unwrap(),
+    description: "14-inch ultrabook".into(),
+    price: Decimal::from_str("999.99").unwrap(),
     inventory_count: 10,
 });
 
-// Read
-let all = service.get_all();
-let one = service.get_by_id(p.id);
+let found = svc.get_by_id(p.id);
+assert!(found.is_some());
 
-// Update inventory
-let _ = service.update_inventory(p.id, 8);
-
-// Filter
-let filtered = service.filter(&ProductFilter {
-    name_contains: Some("lap".into()),
-    min_price: None,
-    max_price: None,
-    in_stock: Some(true),
+let results = svc.filter(&ProductFilter {
+    name_contains: Some("laptop".into()),
+    ..Default::default()
 });
-
-// Delete
-let _deleted = service.delete(p.id);
+assert!(!results.is_empty());
 ```
 
-## Concurrency Guarantees
-- Internal state protected with `Mutex`; operations fail closed if a lock is poisoned.
-- ID allocation and product mutations do not hold multiple locks simultaneously, avoiding deadlocks.
-- Comprehensive concurrency tests validate creation and mixed read/write patterns.
+## Concurrency Model
 
-## Security Considerations
-- No external I/O or OS command execution; no SQL, deserialization, or filesystem paths involved.
-- No secrets stored; all data is in-process memory only.
-- Fail-secure defaults: poisoned locks cause a controlled panic rather than returning inconsistent state.
+- Internal state uses two independent locks:
+  - `next_id: Mutex<i32>` for ID allocation (held briefly per create)
+  - `products: Mutex<Vec<Product>>` for data access/mutation
+- Lock acquisition is narrow to minimize contention and avoid deadlocks.
+- On poisoned mutex, the service fails closed via panic to prevent serving inconsistent state.
 
-## Testing
-- Run the standard gates (see `coding-guidelines.md`):
-  - `cargo fmt --all -- --check`
-  - `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`
-  - `cargo test --workspace --all-features`
+## Security Notes
 
-Unit tests cover CRUD operations, filtering, concurrency behavior, and decimal precision.
+- No I/O, deserialization from untrusted inputs, or external commands.
+- No secrets in code; all behavior is deterministic and in-memory.
+- Panics are restricted to poisoned-lock scenarios (fail secure-by-default).
+
+## Tests
+
+Unit tests cover:
+- CRUD operations and ID auto-increment
+- Decimal precision invariants
+- Filtering for all criteria and combined cases
+- Concurrency under create and mixed read/write workloads
 
