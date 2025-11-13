@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Fetch open GitHub Code Scanning alerts for a PR and print MEDIUM/HIGH/CRITICAL.
+# Fetch open GitHub Code Scanning alerts for a PR and print alerts at or above a minimum severity.
 # Usage:
-#   ./tooling/gh-code-scanning.sh [repo] [pr_number]
+#   MIN_SEVERITY=high ./tooling/gh-code-scanning.sh [repo] [pr_number]
+# Env:
+#   MIN_SEVERITY   One of: low, medium, high, critical (default: medium)
+#
+# Args:
+#   repo           owner/repo (default: 5dlabs/cto-parallel-test)
+#   pr_number      PR number; inferred from branch via gh when omitted
 # Defaults:
 #   repo: 5dlabs/cto-parallel-test
 #   pr_number: inferred from current branch via gh (if authenticated)
 
 REPO="${1:-5dlabs/cto-parallel-test}"
 PR_NUM="${2:-}"
+MIN_SEVERITY_STR="${MIN_SEVERITY:-medium}"
 
 have_cmd() { command -v "$1" >/dev/null 2>&1; }
 
@@ -77,12 +84,20 @@ if [[ -z "$JSON" || "$JSON" == "[]" ]]; then
   exit 0
 fi
 
-# Print only MEDIUM/HIGH/CRITICAL alerts in a concise table.
+# Print alerts filtered by minimum severity in a concise table.
 if have_cmd jq; then
-  echo "$JSON" | jq -r '
+  echo "$JSON" | jq -r --arg min "$MIN_SEVERITY_STR" '
+    def sevnum($s):
+      ([$s] | map(
+        (.|ascii_downcase) as $x | if $x=="critical" then 4
+        elif $x=="high" then 3
+        elif $x=="medium" then 2
+        elif $x=="low" then 1
+        else 0 end
+      ))[0];
     .[]
-    | select((.rule.security_severity_level // "") as $lvl
-             | ($lvl|ascii_downcase)=="critical" or ($lvl|ascii_downcase)=="high" or ($lvl|ascii_downcase)=="medium")
+    | (sevnum(.rule.security_severity_level // "unknown")) as $lvl
+    | select($lvl >= sevnum($min))
     | [
         (.rule.security_severity_level // "unknown"),
         (.rule.id // .rule.name // "rule"),
@@ -94,4 +109,3 @@ else
   # Fallback: print raw JSON
   echo "$JSON"
 fi
-
