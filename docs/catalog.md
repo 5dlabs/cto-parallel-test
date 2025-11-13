@@ -1,69 +1,52 @@
-# Product Catalog Module
+# Catalog Module
 
-This module provides a thread-safe, in-memory product catalog with CRUD, inventory management, and flexible filtering.
+Thread-safe in-memory product catalog providing CRUD, inventory tracking, and flexible filtering with precise decimal pricing.
 
-## Highlights
+## Features
+- Thread-safe storage (`Arc<Mutex<Vec<Product>>>`)
+- Auto-incrementing integer IDs
+- Decimal prices via `rust_decimal::Decimal`
+- CRUD: create, list, get by id, delete
+- Inventory updates with read-after-write consistency
+- Filtering by name substring (case-insensitive), price min/max, and stock state
 
-- Thread-safe storage via `Arc<Mutex<...>>`
-- Auto-incrementing product IDs (monotonic, unique per process)
-- Decimal-precise prices using `rust_decimal::Decimal`
-- Filtering by name (case-insensitive contains), price range, and stock status
-- No external dependencies beyond `serde` and `rust_decimal`
-
-## Module Layout
-
-- `src/catalog/models.rs`
-  - `Product` — full product record
-  - `NewProduct` — inputs for creation
-  - `ProductFilter` — optional criteria for filtering
-- `src/catalog/service.rs`
-  - `ProductService` — thread-safe service exposing CRUD + filter APIs
+## Public API
+- `catalog::ProductService` – main entry point
+- `catalog::models::{Product, NewProduct, ProductFilter}`
 
 ## Usage
-
 ```rust
-use cto_parallel_test::catalog::{NewProduct, ProductFilter, ProductService};
+use cto_parallel_test::catalog::{ProductService, ProductFilter};
+use cto_parallel_test::catalog::Product;
+use cto_parallel_test::catalog::NewProduct;
 use rust_decimal::Decimal;
 use std::str::FromStr;
 
 let svc = ProductService::new();
-
 let p = svc.create(NewProduct {
     name: "Laptop".into(),
-    description: "14-inch ultrabook".into(),
+    description: "14\" ultrabook".into(),
     price: Decimal::from_str("999.99").unwrap(),
     inventory_count: 10,
 });
 
-let found = svc.get_by_id(p.id);
-assert!(found.is_some());
+let by_id = svc.get_by_id(p.id);
+let all = svc.get_all();
+let _ = svc.update_inventory(p.id, 12);
 
 let results = svc.filter(&ProductFilter {
     name_contains: Some("laptop".into()),
     ..Default::default()
 });
-assert!(!results.is_empty());
 ```
 
-## Concurrency Model
+## Security & Quality
+- No unsafe Rust (`#![forbid(unsafe_code)]`)
+- All inputs are plain data; no serialization of untrusted input
+- No hardcoded secrets or external IO in this module
+- Verified with `cargo fmt`, `cargo clippy` (pedantic, deny warnings), and `cargo test`
 
-- Internal state uses two independent locks:
-  - `next_id: Mutex<i32>` for ID allocation (held briefly per create)
-  - `products: Mutex<Vec<Product>>` for data access/mutation
-- Lock acquisition is narrow to minimize contention and avoid deadlocks.
-- On poisoned mutex, the service fails closed via panic to prevent serving inconsistent state.
-
-## Security Notes
-
-- No I/O, deserialization from untrusted inputs, or external commands.
-- No secrets in code; all behavior is deterministic and in-memory.
-- Panics are restricted to poisoned-lock scenarios (fail secure-by-default).
-
-## Tests
-
-Unit tests cover:
-- CRUD operations and ID auto-increment
-- Decimal precision invariants
-- Filtering for all criteria and combined cases
-- Concurrency under create and mixed read/write workloads
+## Notes
+- This module has no external dependencies beyond `serde` and `rust_decimal`.
+- Suitable as a foundation for higher-level API layers and persistence backends.
 
