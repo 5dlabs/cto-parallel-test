@@ -13,8 +13,31 @@ if ! command -v gh >/dev/null 2>&1; then
   exit 1
 fi
 
-# Resolve repo owner/name
+# Resolve repo owner/name with robust fallbacks
+# 1) $GITHUB_REPOSITORY if present
+# 2) Parse from `git remote get-url origin`
+# 3) `gh repo view` as a last resort (may require auth)
 REPO_FULL=${GITHUB_REPOSITORY:-}
+if [[ -z "$REPO_FULL" ]]; then
+  if URL=$(git remote get-url origin 2>/dev/null); then
+    case "$URL" in
+      git@github.com:*/*.git)
+        REPO_FULL=${URL#git@github.com:}
+        REPO_FULL=${REPO_FULL%.git}
+        ;;
+      https://github.com/*/*.git)
+        REPO_FULL=${URL#https://github.com/}
+        REPO_FULL=${REPO_FULL%.git}
+        ;;
+      https://github.com/*/*)
+        REPO_FULL=${URL#https://github.com/}
+        ;;
+      *)
+        : # leave empty; try gh below
+        ;;
+    esac
+  fi
+fi
 if [[ -z "$REPO_FULL" ]]; then
   REPO_FULL=$(gh repo view --json nameWithOwner -q .nameWithOwner)
 fi
@@ -25,6 +48,10 @@ PR_NUM="${1:-}"
 if [[ -z "$PR_NUM" ]]; then
   BRANCH=$(git rev-parse --abbrev-ref HEAD)
   PR_NUM=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || true)
+  # Fallback via REST API that may work unauthenticated for public repos
+  if [[ -z "$PR_NUM" ]]; then
+    PR_NUM=$(gh api -X GET "/repos/${OWNER}/${REPO}/pulls?state=open&head=${OWNER}:${BRANCH}" --jq '.[0].number' 2>/dev/null || true)
+  fi
 fi
 
 if [[ -z "${PR_NUM:-}" ]]; then
