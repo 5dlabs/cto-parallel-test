@@ -39,6 +39,9 @@ assert_eq!(claims.sub, "1");
 
 - No hardcoded secrets. Tokens require `JWT_SECRET` at runtime.
 - Password hashes are never serialized (`#[serde(skip_serializing)]`).
+- Password hashes are never serialized and never accepted from input (`#[serde(skip_serializing, skip_deserializing)]`).
+- `Debug` for `User` redacts the `password_hash` field to avoid leaking sensitive material in logs.
+- All inbound auth DTOs (`LoginRequest`, `RegisterRequest`, and `User` if ever deserialized) use `#[serde(deny_unknown_fields)]` to prevent mass-assignment or silent acceptance of unexpected fields.
 - Argon2 defaults are used; consider tuning parameters per deployment (increase memory cost and iterations where feasible).
 - JWT is strictly validated with `HS256` only to avoid algorithm confusion attacks; 30s leeway is allowed for clock skew.
 - A minimum secret length of 32 bytes is enforced for HMAC keys to reduce risk of weak keys.
