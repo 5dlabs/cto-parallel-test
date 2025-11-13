@@ -11,6 +11,7 @@ Checks Performed
 - Rust quality gates: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings`, and `cargo test --workspace --all-features` — all passing in this session.
 - Frontend: `npm ci` (0 vulnerabilities), `npm run lint` (OK), and build scripts are configured. Dev server binds `127.0.0.1` with strict port.
 - Code scanning: repository configured with CodeQL via `.github/workflows/codeql.yml`. Use `tooling/pr-and-scan.sh` to open a PR and query alerts with `gh api "/repos/<owner>/<repo>/code-scanning/alerts?state=open&pr=<number>"`.
+ - Code scanning: repository configured with CodeQL via `.github/workflows/codeql.yml`. A gating job (`check-alerts`) now runs after analysis on PRs and fails the workflow if any MEDIUM/HIGH/CRITICAL alerts remain open for that PR. For ad‑hoc checks, use `tooling/pr-and-scan.sh` to open a PR and query alerts with `gh api "/repos/<owner>/<repo>/code-scanning/alerts?state=open&pr=<number>"`.
  - CI hardening: pinned the following actions to commit SHAs
    - `actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955` (v4.3.0)
    - `actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020` (v4.4.0)
