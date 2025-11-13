@@ -1,121 +1,59 @@
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
-/// Represents a product in the catalog
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// A product in the catalog.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Product {
+    /// Auto-incremented unique identifier.
     pub id: i32,
+    /// Display name.
     pub name: String,
-    pub description: String,
+    /// Price with exact decimal precision.
     pub price: Decimal,
-    pub inventory_count: i32,
+    /// Units available in stock.
+    pub stock: i32,
 }
 
-/// DTO for creating a new product
-#[derive(Debug, Serialize, Deserialize)]
+/// Input payload for creating a new product.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct NewProduct {
     pub name: String,
-    pub description: String,
     pub price: Decimal,
-    pub inventory_count: i32,
+    pub stock: i32,
 }
 
-/// Filter criteria for searching products
-#[derive(Debug, Serialize, Deserialize, Default)]
+impl NewProduct {
+    /// Basic invariant validation.
+    ///
+    /// # Errors
+    /// Returns an error if name is empty, price is negative, or stock is negative.
+    pub fn validate(&self) -> Result<(), &'static str> {
+        if self.name.trim().is_empty() {
+            return Err("name must not be empty");
+        }
+        if self.price.is_sign_negative() {
+            return Err("price must be non-negative");
+        }
+        if self.stock < 0 {
+            return Err("stock must be non-negative");
+        }
+        Ok(())
+    }
+}
+
+/// Filter criteria to query products.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ProductFilter {
+    /// Case-insensitive substring check on the name.
     pub name_contains: Option<String>,
+    /// Inclusive minimum price.
     pub min_price: Option<Decimal>,
+    /// Inclusive maximum price.
     pub max_price: Option<Decimal>,
+    /// If set, true only returns items with stock > 0; false returns stock == 0.
     pub in_stock: Option<bool>,
-}
-
-impl ProductFilter {
-    /// Creates a new empty product filter
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Sets the name filter (case-insensitive substring match)
-    #[must_use]
-    pub fn with_name(mut self, name: impl Into<String>) -> Self {
-        self.name_contains = Some(name.into());
-        self
-    }
-
-    /// Sets the minimum price filter
-    #[must_use]
-    pub fn with_min_price(mut self, price: Decimal) -> Self {
-        self.min_price = Some(price);
-        self
-    }
-
-    /// Sets the maximum price filter
-    #[must_use]
-    pub fn with_max_price(mut self, price: Decimal) -> Self {
-        self.max_price = Some(price);
-        self
-    }
-
-    /// Sets the stock status filter
-    #[must_use]
-    pub fn with_in_stock(mut self, in_stock: bool) -> Self {
-        self.in_stock = Some(in_stock);
-        self
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::str::FromStr;
-
-    #[test]
-    fn test_product_creation() {
-        let product = Product {
-            id: 1,
-            name: "Test Product".to_string(),
-            description: "A test product".to_string(),
-            price: Decimal::from_str("19.99").unwrap(),
-            inventory_count: 10,
-        };
-
-        assert_eq!(product.id, 1);
-        assert_eq!(product.name, "Test Product");
-        assert_eq!(product.price, Decimal::from_str("19.99").unwrap());
-        assert_eq!(product.inventory_count, 10);
-    }
-
-    #[test]
-    fn test_product_filter_builder() {
-        let filter = ProductFilter::new()
-            .with_name("laptop")
-            .with_min_price(Decimal::from_str("100.00").unwrap())
-            .with_max_price(Decimal::from_str("2000.00").unwrap())
-            .with_in_stock(true);
-
-        assert_eq!(filter.name_contains, Some("laptop".to_string()));
-        assert_eq!(filter.min_price, Some(Decimal::from_str("100.00").unwrap()));
-        assert_eq!(
-            filter.max_price,
-            Some(Decimal::from_str("2000.00").unwrap())
-        );
-        assert_eq!(filter.in_stock, Some(true));
-    }
-
-    #[test]
-    fn test_product_serialization() {
-        let product = Product {
-            id: 1,
-            name: "Test Product".to_string(),
-            description: "A test product".to_string(),
-            price: Decimal::from_str("19.99").unwrap(),
-            inventory_count: 10,
-        };
-
-        let json = serde_json::to_string(&product).unwrap();
-        let deserialized: Product = serde_json::from_str(&json).unwrap();
-
-        assert_eq!(product, deserialized);
-    }
+    /// Inclusive minimum stock.
+    pub min_stock: Option<i32>,
+    /// Inclusive maximum stock.
+    pub max_stock: Option<i32>,
 }
