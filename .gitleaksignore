@@ -2,11 +2,28 @@
 .env.example:4
 .env.example:5
 
-# Ignore test data in unit tests (test fixtures, not real secrets)
-src/auth/models.rs:135
-src/auth/models.rs:191
-src/auth/models.rs:241
-src/auth/models.rs:258
-src/auth/models.rs:271
-src/auth/models.rs:302
-src/auth/models.rs:312
+# Ignore test data in unit tests and documentation (test fixtures, not real secrets)
+# These are example passwords used in test code and documentation
+src/auth/models.rs:hashicorp-tf-password:35
+src/auth/models.rs:hashicorp-tf-password:79
+src/auth/models.rs:hashicorp-tf-password:135
+src/auth/models.rs:hashicorp-tf-password:145
+src/auth/models.rs:hashicorp-tf-password:160
+src/auth/models.rs:hashicorp-tf-password:271
+src/auth/models.rs:hashicorp-tf-password:312
+
+# Ignore example passwords in documentation
+README.md:hashicorp-tf-password:75
+IMPLEMENTATION_SUMMARY.md:hashicorp-tf-password:83
+docs/.taskmaster/docs/task-7/task.txt:hashicorp-tf-password:191
+
+# Ignore task specification files containing example passwords
+docs/.taskmaster/docs/task-3/prompt.md:hashicorp-tf-password:190
+docs/.taskmaster/docs/task-3/task.md:generic-api-key:259
+docs/.taskmaster/docs/task-3/task.md:hashicorp-tf-password:271
+docs/.taskmaster/docs/task-3/task.xml:hashicorp-tf-password:608
+docs/.taskmaster/tasks/task_007.txt:hashicorp-tf-password:192
+docs/.taskmaster/tasks/task_007.txt:hashicorp-tf-password:444
+
+# Ignore task markdown files  
+task/task.md:hashicorp-tf-password:*
