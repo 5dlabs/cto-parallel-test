@@ -12,7 +12,7 @@ pub struct Product {
 }
 
 /// Represents the data needed to create a new product
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NewProduct {
     pub name: String,
     pub description: String,
@@ -21,7 +21,7 @@ pub struct NewProduct {
 }
 
 /// Filter criteria for searching products
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ProductFilter {
     pub name_contains: Option<String>,
     pub min_price: Option<Decimal>,
