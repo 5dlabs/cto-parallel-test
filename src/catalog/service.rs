@@ -1,5 +1,13 @@
 use crate::catalog::models::{NewProduct, Product, ProductFilter};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
+
+/// Acquire a mutex or fail closed with context
+fn lock_or_panic<'a, T>(mutex: &'a Mutex<T>, context: &str) -> MutexGuard<'a, T> {
+    match mutex.lock() {
+        Ok(guard) => guard,
+        Err(e) => panic!("mutex poisoned while {context}: {e}"),
+    }
+}
 
 /// Thread-safe in-memory product catalog service
 ///
@@ -33,24 +41,23 @@ impl ProductService {
     /// Panics if the mutex is poisoned
     #[must_use]
     pub fn create(&self, new_product: NewProduct) -> Product {
-        let mut products = self
-            .products
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        let mut next_id = self
-            .next_id
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        // Allocate ID under its own lock, then release before locking products
+        let id = {
+            let mut next_id = lock_or_panic(&self.next_id, "allocating next product id");
+            let id = *next_id;
+            *next_id += 1;
+            id
+        };
 
         let product = Product {
-            id: *next_id,
+            id,
             name: new_product.name,
             description: new_product.description,
             price: new_product.price,
             inventory_count: new_product.inventory_count,
         };
 
-        *next_id += 1;
+        let mut products = lock_or_panic(&self.products, "pushing new product");
         products.push(product.clone());
         product
     }
@@ -61,10 +68,7 @@ impl ProductService {
     /// Panics if the mutex is poisoned
     #[must_use]
     pub fn get_all(&self) -> Vec<Product> {
-        let products = self
-            .products
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let products = lock_or_panic(&self.products, "reading all products");
         products.clone()
     }
 
@@ -80,10 +84,7 @@ impl ProductService {
     /// Panics if the mutex is poisoned
     #[must_use]
     pub fn get_by_id(&self, id: i32) -> Option<Product> {
-        let products = self
-            .products
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let products = lock_or_panic(&self.products, "reading product by id");
         products.iter().find(|p| p.id == id).cloned()
     }
 
@@ -100,10 +101,7 @@ impl ProductService {
     /// Panics if the mutex is poisoned
     #[must_use]
     pub fn update_inventory(&self, id: i32, new_count: i32) -> Option<Product> {
-        let mut products = self
-            .products
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut products = lock_or_panic(&self.products, "updating inventory");
         if let Some(product) = products.iter_mut().find(|p| p.id == id) {
             product.inventory_count = new_count;
             Some(product.clone())
@@ -126,10 +124,7 @@ impl ProductService {
     /// Panics if the mutex is poisoned
     #[must_use]
     pub fn filter(&self, filter: &ProductFilter) -> Vec<Product> {
-        let products = self
-            .products
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let products = lock_or_panic(&self.products, "filtering products");
         products
             .iter()
             .filter(|p| {
@@ -164,10 +159,7 @@ impl ProductService {
     /// Panics if the mutex is poisoned
     #[must_use]
     pub fn delete(&self, id: i32) -> bool {
-        let mut products = self
-            .products
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut products = lock_or_panic(&self.products, "deleting product");
         let initial_len = products.len();
         products.retain(|p| p.id != id);
         products.len() < initial_len
