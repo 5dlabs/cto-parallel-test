@@ -12,7 +12,7 @@ Run
 - Build: `pnpm build` outputs `frontend/dist`
 
 Configuration
-- `VITE_API_BASE_URL` points to your API (e.g., http://localhost:8080)
+- `VITE_API_BASE_URL` should be a relative path like `/api` and served via a reverse proxy to your API. This keeps CSP strict and avoids cross-origin requests.
 - `PORT` sets dev/preview port
 
 Security Notes
@@ -22,4 +22,3 @@ Security Notes
 
 Pages
 - Home, ProductList, ProductDetail, Cart, Login, Register
-

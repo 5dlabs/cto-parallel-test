@@ -16,7 +16,7 @@ Implements the frontend e‑commerce UI using Vite + React + shadcn/ui and tight
 
 ## Testing Performed
 - Local build: `cd frontend && npm ci && npm run build` (OK)
-- Security audit: `npm audit --omit=dev` (0 vulnerabilities)
+- Security audit: `npm audit --audit-level=moderate` (0 vulnerabilities)
 - Lint: `npm run lint` (no errors; only allowed warnings)
 
 ## Security Notes
@@ -30,4 +30,3 @@ Implements the frontend e‑commerce UI using Vite + React + shadcn/ui and tight
 2. `cd frontend && npm ci && npm run dev` and navigate routes.
 3. Verify CI workflows run on this PR.
 4. Confirm GitHub Code Scanning shows no MEDIUM/HIGH/CRITICAL alerts for this PR.
-
