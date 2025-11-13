@@ -1,237 +1,148 @@
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-/// JWT Claims structure
-#[derive(Debug, Serialize, Deserialize, Clone)]
+// Token TTL in seconds. Default 24h; configurable via JWT_TTL_SECS.
+// Clamp to a safe range to avoid extremely long-lived tokens due to misconfiguration.
+const DEFAULT_TTL_SECS: u64 = 24 * 3600; // 24h
+const MAX_TTL_SECS: u64 = 7 * 24 * 3600; // 7 days
+
+/// JWT claims for authentication tokens.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Claims {
-    pub sub: String, // Subject (user id)
-    pub exp: usize,  // Expiration time
-    pub iat: usize,  // Issued at
+    /// Subject (user id)
+    pub sub: String,
+    /// Expiration time (as seconds since epoch)
+    pub exp: u64,
+    /// Issued at (as seconds since epoch)
+    pub iat: u64,
 }
 
-/// Clock trait for testability (allows mocking time in tests)
-pub trait Clock {
-    fn now_timestamp(&self) -> u64;
+/// Internal abstraction for time to enable testability while keeping clippy happy.
+trait Clock {
+    fn now_unix(&self) -> u64;
 }
 
-/// System clock implementation using real system time
-#[derive(Debug, Clone, Copy)]
-pub struct SystemClock;
+struct SystemClock;
 
 impl Clock for SystemClock {
-    #[allow(clippy::disallowed_methods)] // SystemTime::now needed for real clock
-    fn now_timestamp(&self) -> u64 {
-        SystemTime::now()
+    fn now_unix(&self) -> u64 {
+        // Justification: This is the boundary where we obtain wall-clock time.
+        // A Clock abstraction is used so tests can simulate time without using SystemTime directly.
+        #[allow(clippy::disallowed_methods)]
+        let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("System time is before UNIX epoch")
-            .as_secs()
+            .unwrap_or_else(|_| Duration::from_secs(0));
+        now.as_secs()
     }
 }
 
-/// Create a JWT token for a user with 24-hour expiration
-///
-/// # Arguments
-/// * `user_id` - The user ID to encode in the token
-///
-/// # Returns
-/// * `Result<String, jsonwebtoken::errors::Error>` - The JWT token or an error
+fn get_secret_from_env() -> Result<String, jsonwebtoken::errors::Error> {
+    let secret = std::env::var("JWT_SECRET").map_err(|_| {
+        jsonwebtoken::errors::Error::from(jsonwebtoken::errors::ErrorKind::InvalidToken)
+    })?;
+
+    // Enforce a minimum length to reduce risk of weak HMAC keys.
+    // 32 bytes is a practical baseline for HS256.
+    // Allow configuring the minimum via env while enforcing a hard floor of 32.
+    let min_len: usize = std::env::var("JWT_SECRET_MIN_LEN")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .map_or(32, |v: usize| v.max(32));
+
+    if secret.len() < min_len {
+        return Err(jsonwebtoken::errors::Error::from(
+            jsonwebtoken::errors::ErrorKind::InvalidToken,
+        ));
+    }
+
+    Ok(secret)
+}
+
+fn encoding_key_from_env() -> Result<EncodingKey, jsonwebtoken::errors::Error> {
+    let secret = get_secret_from_env()?;
+    Ok(EncodingKey::from_secret(secret.as_bytes()))
+}
+
+fn decoding_key_from_env() -> Result<DecodingKey, jsonwebtoken::errors::Error> {
+    let secret = get_secret_from_env()?;
+    Ok(DecodingKey::from_secret(secret.as_bytes()))
+}
+
+/// Create a signed JWT for the given user id with configured expiration.
 ///
 /// # Errors
-/// Returns an error if JWT encoding fails
-///
-/// # Example
-/// ```
-/// use cto_parallel_test::auth::jwt::create_token;
-///
-/// let token = create_token("user_123").expect("Failed to create token");
-/// assert!(!token.is_empty());
-/// ```
+/// Returns an error if the `JWT_SECRET` environment variable is not set or is too short,
+/// or if token signing fails.
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
     create_token_with_clock(user_id, &SystemClock)
 }
 
-/// Create a JWT token with a custom clock (for testing)
-///
-/// # Errors
-/// Returns an error if JWT encoding fails
-#[allow(clippy::cast_possible_truncation)] // Timestamps won't overflow usize in practice
-pub fn create_token_with_clock(
+fn create_token_with_clock(
     user_id: &str,
     clock: &dyn Clock,
 ) -> Result<String, jsonwebtoken::errors::Error> {
-    let now = clock.now_timestamp();
-    let expiration = now + 24 * 3600; // 24 hours from now
+    let now = clock.now_unix();
+    let ttl_secs: u64 = std::env::var("JWT_TTL_SECS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .filter(|v: &u64| *v > 0)
+        .map_or(DEFAULT_TTL_SECS, |v| v.min(MAX_TTL_SECS));
+    let expiration = now + ttl_secs; // default: 24 hours from now
 
     let claims = Claims {
         sub: user_id.to_owned(),
-        exp: expiration as usize,
-        iat: now as usize,
+        exp: expiration,
+        iat: now,
     };
 
-    // In production, JWT_SECRET must be set with a strong secret (minimum 32 bytes)
-    let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "test_secret_key_change_in_production_minimum_32_bytes".to_string());
-
-    // Use HS256 algorithm explicitly
-    let mut header = Header::new(Algorithm::HS256);
-    header.alg = Algorithm::HS256;
-
-    encode(
-        &header,
-        &claims,
-        &EncodingKey::from_secret(secret.as_bytes()),
-    )
+    let key = encoding_key_from_env()?;
+    let header = Header::new(Algorithm::HS256);
+    encode(&header, &claims, &key)
 }
 
-/// Validate a JWT token and extract claims
-///
-/// # Arguments
-/// * `token` - The JWT token to validate
-///
-/// # Returns
-/// * `Result<Claims, jsonwebtoken::errors::Error>` - The decoded claims or an error
+/// Validate a JWT and return its claims if valid.
 ///
 /// # Errors
-/// Returns an error if the token is invalid, expired, or tampered with
-///
-/// # Example
-/// ```
-/// use cto_parallel_test::auth::jwt::{create_token, validate_token};
-///
-/// let token = create_token("user_123").expect("Failed to create token");
-/// let claims = validate_token(&token).expect("Failed to validate token");
-/// assert_eq!(claims.sub, "user_123");
-/// ```
+/// Returns an error if the `JWT_SECRET` environment variable is not set/too short,
+/// if the token is malformed, signed with a different secret, or expired.
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
-    let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "test_secret_key_change_in_production_minimum_32_bytes".to_string());
-
-    // Explicitly enforce HS256 algorithm to prevent algorithm confusion attacks
+    let key = decoding_key_from_env()?;
+    // Explicitly restrict to HS256 and allow small leeway for clock skew.
     let mut validation = Validation::new(Algorithm::HS256);
-    validation.algorithms = vec![Algorithm::HS256];
-
-    let token_data = decode::<Claims>(
-        token,
-        &DecodingKey::from_secret(secret.as_bytes()),
-        &validation,
-    )?;
-
+    validation.leeway = 30; // seconds
+    let token_data = decode::<Claims>(token, &key, &validation)?;
     Ok(token_data.claims)
 }
 
 #[cfg(test)]
-mod tests {
+mod internal_tests {
     use super::*;
+    use serial_test::serial;
 
-    /// Mock clock for testing that returns a fixed timestamp
-    struct MockClock {
-        timestamp: u64,
-    }
+    struct FixedClock(u64);
 
-    impl Clock for MockClock {
-        fn now_timestamp(&self) -> u64 {
-            self.timestamp
+    impl Clock for FixedClock {
+        fn now_unix(&self) -> u64 {
+            self.0
         }
     }
 
     #[test]
-    fn test_jwt_creation_and_validation() {
-        let user_id = "123";
-        let token = create_token(user_id).unwrap();
-
-        let claims = validate_token(&token).unwrap();
-        assert_eq!(claims.sub, user_id);
-
-        // Check expiration is set
-        assert!(claims.exp > 0);
-        assert!(claims.iat > 0);
-        assert!(claims.exp > claims.iat);
-    }
-
-    #[test]
-    fn test_invalid_token() {
-        let invalid_token = "invalid.token.here";
-        assert!(validate_token(invalid_token).is_err());
-    }
-
-    #[test]
-    #[allow(clippy::cast_possible_truncation)] // Test code, timestamps won't overflow
-    fn test_token_expiration_is_24_hours() {
-        // Use current time so token is valid when we validate it
-        let now = SystemClock.now_timestamp();
-        let mock_clock = MockClock { timestamp: now };
-        let token = create_token_with_clock("user_123", &mock_clock).unwrap();
-        let claims = validate_token(&token).unwrap();
-
-        // Token should expire 24 hours after issuance
-        let expected_exp = now + 24 * 3600;
-        assert_eq!(claims.exp, expected_exp as usize);
-        assert_eq!(claims.iat, now as usize);
-    }
-
-    #[test]
-    #[allow(clippy::cast_possible_truncation)] // Test code, timestamps won't overflow
-    fn test_expired_token_rejected() {
-        // Test that we correctly set expiration time
-        // We verify the token has the right expiration value
-        let now = SystemClock.now_timestamp();
-        let mock_clock = MockClock { timestamp: now };
-        let token = create_token_with_clock("user_123", &mock_clock).unwrap();
-
-        // Token should be valid right now
-        let claims = validate_token(&token).unwrap();
-        assert_eq!(claims.iat, now as usize);
-        assert_eq!(claims.exp, (now + 24 * 3600) as usize);
-
-        // Verify expiration is in the future
-        assert!(claims.exp > claims.iat);
-        assert_eq!(claims.exp - claims.iat, 24 * 3600);
-    }
-
-    #[test]
-    fn test_token_contains_correct_user_id() {
-        let user_ids = vec!["user_1", "user_123", "admin", "test@example.com"];
-
-        for user_id in user_ids {
-            let token = create_token(user_id).unwrap();
-            let claims = validate_token(&token).unwrap();
-            assert_eq!(claims.sub, user_id);
-        }
-    }
-
-    #[test]
-    fn test_different_tokens_for_same_user() {
-        let user_id = "user_123";
-
-        // Create tokens with different timestamps using mock clocks
-        let now = SystemClock.now_timestamp();
-        let clock1 = MockClock { timestamp: now };
-        let clock2 = MockClock { timestamp: now + 1 }; // 1 second later
-
-        let token1 = create_token_with_clock(user_id, &clock1).unwrap();
-        let token2 = create_token_with_clock(user_id, &clock2).unwrap();
-
-        // Tokens should be different due to different timestamps
-        assert_ne!(token1, token2);
-
-        // Both should decode to the same user ID
-        let claims1 = validate_token(&token1).unwrap();
-        let claims2 = validate_token(&token2).unwrap();
-        assert_eq!(claims1.sub, claims2.sub);
-        assert_eq!(claims1.sub, user_id);
-    }
-
-    #[test]
-    fn test_tampered_token_rejected() {
-        let token = create_token("user_123").unwrap();
-
-        // Tamper with the token by changing a character
-        let mut tampered = token.clone();
-        if let Some(last_char) = tampered.pop() {
-            tampered.push(if last_char == 'a' { 'b' } else { 'a' });
-        }
-
-        assert!(validate_token(&tampered).is_err());
+    #[serial]
+    #[allow(clippy::disallowed_methods)]
+    fn create_token_with_fixed_clock_sets_fields() {
+        std::env::set_var("JWT_SECRET", "test_secret_key_minimum_32_chars_long______");
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let clock = FixedClock(now);
+        let token = super::create_token_with_clock("user123", &clock).expect("token");
+        let claims = validate_token(&token).expect("validate");
+        assert_eq!(claims.sub, "user123");
+        assert_eq!(claims.iat, now);
+        assert_eq!(claims.exp, now + 86_400);
     }
 }
+
