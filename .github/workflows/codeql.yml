@@ -39,3 +39,39 @@ jobs:
         uses: github/codeql-action/analyze@5d5cd550d3e189c569da8f16ea8de2d821c9bf7a # v3.31.2
         with:
           category: '/language:javascript'
+
+  check-alerts:
+    name: Gate on Code Scanning Alerts
+    if: ${{ github.event_name == 'pull_request' }}
+    needs: analyze
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: read
+    steps:
+      - name: Fetch MEDIUM/HIGH/CRITICAL alerts for this PR
+        env:
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "Querying open Code Scanning alerts for PR #$PR in $REPO"
+          url="https://api.github.com/repos/${REPO}/code-scanning/alerts?state=open&per_page=100&pr=${PR}"
+          # Use the workflow token with security-events:read
+          res=$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$url")
+          echo "$res" > alerts.json
+          if jq -e 'type == "array"' alerts.json >/dev/null 2>&1; then
+            count=$(jq '[ .[] | select(((.rule.security_severity_level // "") | ascii_downcase) == "critical" or (.rule.security_severity_level // "" | ascii_downcase) == "high" or (.rule.security_severity_level // "" | ascii_downcase) == "medium") ] | length' alerts.json)
+            echo "Found $count MEDIUM/HIGH/CRITICAL alerts"
+            if [ "$count" -gt 0 ]; then
+              echo "Alerts:" >&2
+              jq -r '.[] | select(((.rule.security_severity_level // "") | ascii_downcase) == "critical" or (.rule.security_severity_level // "" | ascii_downcase) == "high" or (.rule.security_severity_level // "" | ascii_downcase) == "medium") | [(.rule.security_severity_level // "unknown"), (.rule.id // .rule.name // "rule"), (.most_recent_instance.location.path // "path"), ((.most_recent_instance.location.start_line // 1) | tostring)] | @tsv' alerts.json | sed 's/^/  /' >&2
+              echo "Failing due to open Code Scanning alerts (>= MEDIUM)." >&2
+              exit 1
+            fi
+          else
+            echo "Unexpected response while fetching alerts:" >&2
+            cat alerts.json >&2
+            # Do not fail on API anomalies; rely on CodeQL status in this case.
+          fi
