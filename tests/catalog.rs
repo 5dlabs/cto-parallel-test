@@ -44,7 +44,7 @@ fn crud_and_filter_and_precision() {
         name_contains: Some("app".into()),
         ..ProductFilter::default()
     };
-    let results = svc.filter(f);
+    let results = svc.filter(&f);
     assert_eq!(1, results.len());
     assert_eq!("Apple", results[0].name);
 
@@ -55,7 +55,7 @@ fn crud_and_filter_and_precision() {
         in_stock: Some(true),
         ..ProductFilter::default()
     };
-    let results = svc.filter(f);
+    let results = svc.filter(&f);
     assert_eq!(1, results.len());
     assert_eq!("Apple", results[0].name);
 
@@ -64,7 +64,7 @@ fn crud_and_filter_and_precision() {
         in_stock: Some(false),
         ..ProductFilter::default()
     };
-    let results = svc.filter(f);
+    let results = svc.filter(&f);
     assert_eq!(1, results.len());
     assert_eq!("Banana", results[0].name);
 
@@ -120,4 +120,3 @@ fn concurrency_create_and_update() {
     let sevens = updated.iter().filter(|p| p.stock == 7).count();
     assert_eq!(10, sevens);
 }
-
