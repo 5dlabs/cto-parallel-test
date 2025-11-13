@@ -1,4 +1,4 @@
-% Authentication Module
+# Authentication Module
 
 This service provides a production‑grade authentication foundation with:
 - JWT creation and validation (configurable TTL; default 24h)
@@ -38,4 +38,3 @@ This module is stateless and does not perform any DB access. Use it from your ro
 - Rotate `JWT_SECRET` on a schedule and enforce short lived tokens where possible.
 - Consider key identifiers (kid) and rotation strategy for future tasks.
 - Consider `aud`/`iss` claims if multi‑tenant requirements arise.
-
