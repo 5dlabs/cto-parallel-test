@@ -45,8 +45,8 @@ let results = svc.filter(&ProductFilter {
 - All inputs are plain data; no serialization of untrusted input
 - No hardcoded secrets or external IO in this module
 - Verified with `cargo fmt`, `cargo clippy` (pedantic, deny warnings), and `cargo test`
+- Fail-closed design: if a mutex is poisoned, operations panic with context rather than proceed in an unknown state
 
 ## Notes
 - This module has no external dependencies beyond `serde` and `rust_decimal`.
 - Suitable as a foundation for higher-level API layers and persistence backends.
-
