@@ -17,7 +17,7 @@ fi
 
 echo "Checking GitHub auth..."
 if ! gh auth status >/dev/null 2>&1; then
-  echo "Not authenticated. Export GITHUB_TOKEN then run: gh auth login --with-token < <(echo \"$GITHUB_TOKEN\")" >&2
+  echo "Not authenticated. Export GITHUB_TOKEN then run: gh auth login --with-token < <(echo '<token>')" >&2
   exit 1
 fi
 
@@ -64,4 +64,3 @@ if [[ -n "$PR_NUM" ]]; then
 fi
 
 echo "Done."
-
