@@ -33,20 +33,21 @@ impl ProductService {
     /// Panics if the mutex is poisoned
     #[must_use]
     pub fn create(&self, new_product: NewProduct) -> Product {
-        let mut products = self.products.lock().expect("products mutex poisoned");
+        // Acquire next_id first to minimize lock hold time and avoid dual-locking
         let mut next_id = self.next_id.lock().expect("next_id mutex poisoned");
+        let id = *next_id;
+        *next_id += 1;
+        drop(next_id);
 
         let product = Product {
-            id: *next_id,
+            id,
             name: new_product.name,
             description: new_product.description,
             price: new_product.price,
             inventory_count: new_product.inventory_count,
         };
 
-        *next_id += 1;
-        // Release the next_id lock before operating on products to reduce contention
-        drop(next_id);
+        let mut products = self.products.lock().expect("products mutex poisoned");
         products.push(product.clone());
         product
     }
