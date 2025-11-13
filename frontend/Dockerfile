@@ -47,7 +47,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN groupadd -r nodejs && useradd -r -g nodejs nextjs
 
 # Copy built application
-COPY --from=builder /app/public ./public
+# Note: public directory is optional in Next.js, only copy if it exists
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
