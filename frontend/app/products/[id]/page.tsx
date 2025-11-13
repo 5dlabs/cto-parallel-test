@@ -1,97 +1,18 @@
-"use client";
-
-import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, ShoppingCart, Star } from "lucide-react";
+import { getProductById } from "@/lib/api-client";
 
-// Mock product data - will be replaced with real API data later
-const products: Record<string, {
-  id: number;
-  name: string;
-  price: number;
-  category: string;
-  inStock: boolean;
-  image: string;
-  description: string;
-  rating: number;
-  reviews: number;
-}> = {
-  "1": {
-    id: 1,
-    name: "Wireless Headphones",
-    price: 99.99,
-    category: "Electronics",
-    inStock: true,
-    image: "https://placehold.co/800x600/e2e8f0/475569?text=Headphones",
-    description: "Premium wireless headphones with noise cancellation and 30-hour battery life. Experience superior sound quality and comfort.",
-    rating: 4.5,
-    reviews: 128,
-  },
-  "2": {
-    id: 2,
-    name: "Smart Watch",
-    price: 249.99,
-    category: "Electronics",
-    inStock: true,
-    image: "https://placehold.co/800x600/e2e8f0/475569?text=Smart+Watch",
-    description: "Feature-rich smartwatch with health tracking, GPS, and 5-day battery life. Stay connected and active.",
-    rating: 4.8,
-    reviews: 256,
-  },
-  "3": {
-    id: 3,
-    name: "Laptop Backpack",
-    price: 49.99,
-    category: "Accessories",
-    inStock: true,
-    image: "https://placehold.co/800x600/e2e8f0/475569?text=Backpack",
-    description: "Durable laptop backpack with multiple compartments and water-resistant material. Perfect for daily commute.",
-    rating: 4.3,
-    reviews: 89,
-  },
-  "4": {
-    id: 4,
-    name: "Portable Charger",
-    price: 29.99,
-    category: "Electronics",
-    inStock: false,
-    image: "https://placehold.co/800x600/e2e8f0/475569?text=Charger",
-    description: "High-capacity portable charger with fast charging support. Keep your devices powered on the go.",
-    rating: 4.6,
-    reviews: 432,
-  },
-  "5": {
-    id: 5,
-    name: "Bluetooth Speaker",
-    price: 79.99,
-    category: "Electronics",
-    inStock: true,
-    image: "https://placehold.co/800x600/e2e8f0/475569?text=Speaker",
-    description: "Portable Bluetooth speaker with 360-degree sound and waterproof design. Perfect for outdoor adventures.",
-    rating: 4.7,
-    reviews: 312,
-  },
-  "6": {
-    id: 6,
-    name: "Phone Case",
-    price: 19.99,
-    category: "Accessories",
-    inStock: true,
-    image: "https://placehold.co/800x600/e2e8f0/475569?text=Phone+Case",
-    description: "Slim protective phone case with military-grade drop protection. Available in multiple colors.",
-    rating: 4.4,
-    reviews: 567,
-  },
-};
-
-export default function ProductDetailPage() {
-  const params = useParams();
-  const productId = params.id as string;
-  const product = products[productId];
+export default async function ProductDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const product = await getProductById(parseInt(id, 10));
 
   if (!product) {
     return (
@@ -143,23 +64,25 @@ export default function ProductDetailPage() {
             </h1>
             
             {/* Rating */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-5 w-5 ${
-                      i < Math.floor(product.rating)
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-gray-300"
-                    }`}
-                  />
-                ))}
+            {product.rating !== undefined && product.reviews !== undefined && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-5 w-5 ${
+                        i < Math.floor(product.rating ?? 0)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {product.rating} ({product.reviews} reviews)
+                </span>
               </div>
-              <span className="text-sm text-muted-foreground">
-                {product.rating} ({product.reviews} reviews)
-              </span>
-            </div>
+            )}
           </div>
 
           <div className="text-4xl font-bold text-primary">
