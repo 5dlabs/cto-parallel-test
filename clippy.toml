@@ -1,5 +1,5 @@
-% Clippy configuration for consistent linting
-% Based on AWS SDK Rust (smithy-rs) best practices
+# Clippy configuration for consistent linting
+# Based on AWS SDK Rust (smithy-rs) best practices
 
 # Set the maximum cognitive complexity allowed
 cognitive-complexity-threshold = 30
@@ -22,4 +22,3 @@ disallowed-macros = [
     { path = "std::eprintln", reason = "use tracing::error! instead" },
     { path = "std::dbg", reason = "use tracing::debug! instead; remove before committing" },
 ]
-
