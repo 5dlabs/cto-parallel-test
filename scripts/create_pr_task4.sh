@@ -2,7 +2,10 @@
 set -euo pipefail
 
 # Usage: scripts/create_pr_task4.sh
-# Requires: gh CLI authenticated (GITHUB_TOKEN with repo+security_events)
+# Policy:
+# - Do not attempt interactive auth; rely on GH_TOKEN/GITHUB_TOKEN already configured
+# - Never push to main; only push current feature branch
+# - Parameterize owner/repo via env or gh
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 if [[ "$BRANCH" != "feature/task-4-implementation" ]]; then
@@ -15,32 +18,24 @@ if ! command -v gh >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Checking GitHub auth..."
-if ! gh auth status >/dev/null 2>&1; then
-  # Try non-interactive auth if a token is present
-  if [[ -n "${GITHUB_TOKEN:-}" || -n "${GH_TOKEN:-}" ]]; then
-    echo "Attempting GitHub CLI auth using provided token..."
-    TOKEN_TO_USE="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
-    if ! gh auth login --hostname github.com --with-token < <(echo "$TOKEN_TO_USE"); then
-      echo "Failed to authenticate with provided token. Please verify token scopes (repo, security_events) and try again." >&2
-      exit 1
-    fi
-  else
-    echo "Not authenticated. Export GITHUB_TOKEN (repo+security_events) then run: gh auth login --with-token < <(echo '\<token\>')" >&2
-    exit 1
-  fi
+# Resolve repo owner/name without hitting user endpoints
+REPO_FULL=${GITHUB_REPOSITORY:-}
+if [[ -z "$REPO_FULL" ]]; then
+  REPO_FULL=$(gh repo view --json nameWithOwner -q .nameWithOwner)
 fi
+OWNER=${REPO_FULL%/*}
+REPO=${REPO_FULL#*/}
 
-echo "Pushing branch..."
+echo "Pushing branch '$BRANCH' to origin..."
 git push -u origin "$BRANCH"
 
-# Try to fetch the task issue number (optional)
+# Optional: link an issue with label task-4 if available
 ISSUE_NUM=$(gh issue list --label "task-4" --json number --jq '.[0].number' 2>/dev/null || echo "")
 
-TITLE="feat(cto-parallel-test): implement task 4 - product catalog module"
+TITLE="feat(${REPO}): implement task 4 - product catalog module"
 BODY_FILE="task/pr-body-task-4.md"
 
-echo "Creating PR..."
+echo "Creating PR from '$BRANCH' into 'main'..."
 if [[ -n "$ISSUE_NUM" ]]; then
   gh pr create \
     --title "$TITLE" \
@@ -65,12 +60,13 @@ else
     --head "$BRANCH"
 fi
 
-echo "PR created. Listing code scanning alerts (if any)..."
+echo "PR created. Listing Code Scanning alerts (if any)..."
 PR_NUM=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number')
 if [[ -n "$PR_NUM" ]]; then
   gh api \
-    "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=$PR_NUM" \
+    "/repos/${OWNER}/${REPO}/code-scanning/alerts?state=open&pr=$PR_NUM" \
     --jq 'map({rule: .rule.id, severity: .rule.severity, state: .state})'
 fi
 
 echo "Done."
+

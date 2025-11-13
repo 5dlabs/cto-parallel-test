@@ -8,13 +8,18 @@ set -euo pipefail
 #
 # Requires: gh CLI authenticated with a token having repo + security_events
 
-OWNER="5dlabs"
-REPO="cto-parallel-test"
-
 if ! command -v gh >/dev/null 2>&1; then
   echo "GitHub CLI (gh) is required. Install from https://cli.github.com/" >&2
   exit 1
 fi
+
+# Resolve repo owner/name
+REPO_FULL=${GITHUB_REPOSITORY:-}
+if [[ -z "$REPO_FULL" ]]; then
+  REPO_FULL=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+fi
+OWNER=${REPO_FULL%/*}
+REPO=${REPO_FULL#*/}
 
 PR_NUM="${1:-}"
 if [[ -z "$PR_NUM" ]]; then
@@ -27,21 +32,9 @@ if [[ -z "${PR_NUM:-}" ]]; then
   exit 1
 fi
 
-echo "Checking GitHub auth..."
-if ! gh auth status >/dev/null 2>&1; then
-  if [[ -n "${GITHUB_TOKEN:-}" || -n "${GH_TOKEN:-}" ]]; then
-    echo "Attempting GitHub CLI auth using provided token..."
-    TOKEN_TO_USE="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
-    gh auth login --hostname github.com --with-token < <(echo "$TOKEN_TO_USE") >/dev/null
-  else
-    echo "Not authenticated. Export GITHUB_TOKEN (repo+security_events) and retry." >&2
-    exit 1
-  fi
-fi
-
 mkdir -p .reports
 OUT_FILE=".reports/code-scanning-PR-${PR_NUM}.json"
-echo "Fetching Code Scanning alerts for PR #${PR_NUM}..."
+echo "Fetching Code Scanning alerts for ${OWNER}/${REPO} PR #${PR_NUM}..."
 
 gh api \
   "/repos/${OWNER}/${REPO}/code-scanning/alerts?state=open&pr=${PR_NUM}" \
@@ -56,4 +49,3 @@ else
 fi
 
 echo "Saved full response to $OUT_FILE"
-
