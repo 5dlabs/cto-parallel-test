@@ -23,13 +23,10 @@ mod tests {
 
         // Verify all schema modules exist and can be referenced
         // This compilation test ensures the schema.rs file is correctly generated
-        #[allow(clippy::let_unit_value)]
-        let () = {
-            let _ = &schema::users::table;
-            let _ = &schema::products::table;
-            let _ = &schema::carts::table;
-            let _ = &schema::cart_items::table;
-        };
+        let _ = &schema::users::table;
+        let _ = &schema::products::table;
+        let _ = &schema::carts::table;
+        let _ = &schema::cart_items::table;
     }
 
     /// Test that verifies model structs can be instantiated
