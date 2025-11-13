@@ -9,9 +9,13 @@ export default defineConfig(() => ({
     }
   },
   server: {
+    host: '127.0.0.1',
+    strictPort: true,
     port: Number(process.env.PORT || 3000),
   },
   preview: {
+    host: '127.0.0.1',
+    strictPort: true,
     port: Number(process.env.PORT || 3000),
   }
 }))

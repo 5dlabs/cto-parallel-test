@@ -25,4 +25,6 @@ Routes
 Security Notes
 - No hardcoded secrets; all endpoints are env‑driven.
 - Client validates inputs (zod + react‑hook‑form); never logs sensitive data.
-
+- Dev tooling hardened: upgraded to `vite@7` to remove `esbuild` dev‑server vulnerability (moderate). `npm audit` reports 0 vulnerabilities.
+ - Added a default Content Security Policy in `frontend/index.html` to mitigate XSS (`default-src 'self'`; `connect-src` allows `ws:` for Vite HMR only).
+ - Locked Vite dev/preview to `127.0.0.1` with `strictPort: true` to avoid accidental network exposure and port hopping.
