@@ -10,7 +10,7 @@ export default [
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
-      globals: { window: true, document: true, navigator: true, fetch: 'readonly' },
+      globals: { window: true, document: true, navigator: true, fetch: 'readonly', alert: 'readonly', AbortController: 'readonly' },
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
     plugins: {
