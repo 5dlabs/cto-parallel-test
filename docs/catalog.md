@@ -41,7 +41,7 @@ let results = svc.filter(&ProductFilter {
 ## Concurrency & Safety
 
 - All operations synchronize on internal `Mutex` guards.
-- Mutex poisoning is handled via `PoisonError::into_inner()` to prefer availability; callers should validate returned data according to their needs.
+- Secure defaults: mutex poisoning results in a panic (fail-closed) to avoid operating on potentially corrupted state.
 - No unsafe code is used (`#![forbid(unsafe_code)]`).
 
 ## Testing
@@ -53,4 +53,3 @@ cargo test --workspace --all-features
 ```
 
 The test suite covers CRUD operations, concurrent access, filtering, and decimal precision.
-
