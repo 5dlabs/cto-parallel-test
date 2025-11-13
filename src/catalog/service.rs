@@ -22,7 +22,7 @@ impl ProductService {
     ///
     /// # Panics
     /// Panics if the internal mutex is poisoned
-    #[allow(clippy::must_use_candidate)]
+    #[must_use]
     pub fn create(&self, new_product: NewProduct) -> Product {
         let mut products = self.products.lock().expect("Failed to lock products");
         let mut next_id = self.next_id.lock().expect("Failed to lock next_id");
@@ -66,7 +66,7 @@ impl ProductService {
     ///
     /// # Panics
     /// Panics if the internal mutex is poisoned
-    #[allow(clippy::must_use_candidate)]
+    #[must_use]
     pub fn update_inventory(&self, id: i32, new_count: i32) -> Option<Product> {
         let mut products = self.products.lock().expect("Failed to lock products");
         if let Some(product) = products.iter_mut().find(|p| p.id == id) {
@@ -180,14 +180,14 @@ mod tests {
     fn test_get_all_products() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Product 1".to_string(),
             description: "First".to_string(),
             price: Decimal::from_str("10.00").unwrap(),
             inventory_count: 1,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Product 2".to_string(),
             description: "Second".to_string(),
             price: Decimal::from_str("20.00").unwrap(),
@@ -245,21 +245,21 @@ mod tests {
     fn test_filter_by_name() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Gaming Laptop".to_string(),
             description: "High-end laptop".to_string(),
             price: Decimal::from_str("1500.00").unwrap(),
             inventory_count: 3,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Office Laptop".to_string(),
             description: "Budget laptop".to_string(),
             price: Decimal::from_str("500.00").unwrap(),
             inventory_count: 5,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Gaming Mouse".to_string(),
             description: "RGB mouse".to_string(),
             price: Decimal::from_str("50.00").unwrap(),
@@ -277,7 +277,7 @@ mod tests {
     fn test_filter_by_name_case_insensitive() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "LAPTOP".to_string(),
             description: "Test".to_string(),
             price: Decimal::from_str("100.00").unwrap(),
@@ -293,21 +293,21 @@ mod tests {
     fn test_filter_by_price_range() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Cheap Item".to_string(),
             description: "Low price".to_string(),
             price: Decimal::from_str("10.00").unwrap(),
             inventory_count: 10,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Medium Item".to_string(),
             description: "Mid price".to_string(),
             price: Decimal::from_str("50.00").unwrap(),
             inventory_count: 5,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Expensive Item".to_string(),
             description: "High price".to_string(),
             price: Decimal::from_str("200.00").unwrap(),
@@ -327,14 +327,14 @@ mod tests {
     fn test_filter_by_stock_status() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "In Stock".to_string(),
             description: "Available".to_string(),
             price: Decimal::from_str("10.00").unwrap(),
             inventory_count: 5,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Out of Stock".to_string(),
             description: "Unavailable".to_string(),
             price: Decimal::from_str("20.00").unwrap(),
@@ -356,21 +356,21 @@ mod tests {
     fn test_filter_combined() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Gaming Laptop".to_string(),
             description: "High-end".to_string(),
             price: Decimal::from_str("1500.00").unwrap(),
             inventory_count: 3,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Office Laptop".to_string(),
             description: "Budget".to_string(),
             price: Decimal::from_str("500.00").unwrap(),
             inventory_count: 0,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Budget Laptop".to_string(),
             description: "Entry level".to_string(),
             price: Decimal::from_str("300.00").unwrap(),
@@ -391,14 +391,14 @@ mod tests {
     fn test_empty_filter_returns_all() {
         let service = ProductService::new();
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Product 1".to_string(),
             description: "First".to_string(),
             price: Decimal::from_str("10.00").unwrap(),
             inventory_count: 1,
         });
 
-        service.create(NewProduct {
+        let _ = service.create(NewProduct {
             name: "Product 2".to_string(),
             description: "Second".to_string(),
             price: Decimal::from_str("20.00").unwrap(),
@@ -436,7 +436,7 @@ mod tests {
             let service_clone = Arc::clone(&service);
             let handle = thread::spawn(move || {
                 for j in 0..10 {
-                    service_clone.create(NewProduct {
+                    let _ = service_clone.create(NewProduct {
                         name: format!("Product {i}-{j}"),
                         description: "Concurrent creation".to_string(),
                         price: Decimal::from_str("10.00").unwrap(),
@@ -470,7 +470,7 @@ mod tests {
 
         // Create some initial products
         for i in 0..10 {
-            service.create(NewProduct {
+            let _ = service.create(NewProduct {
                 name: format!("Product {i}"),
                 description: "Initial product".to_string(),
                 price: Decimal::from_str("10.00").unwrap(),
@@ -503,7 +503,7 @@ mod tests {
                         price: Decimal::from_str("15.00").unwrap(),
                         inventory_count: 5,
                     });
-                    service_clone.update_inventory(product.id, 3);
+                    let _ = service_clone.update_inventory(product.id, 3);
                 }
             });
             handles.push(handle);
