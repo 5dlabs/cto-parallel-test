@@ -13,6 +13,15 @@ Run Locally
 
 Configuration
 - API base URL via `VITE_API_BASE_URL` (default `/api`): see `frontend/src/config.js`.
+- Dev server port via `PORT` (default `3000`) for `vite` dev/preview.
+
+Environment Variables
+- `VITE_API_BASE_URL` — Required in non-dev setups; points to your backend API (e.g., `https://api.example.com`).
+- `PORT` — Optional; set to change local dev/preview port.
+
+Troubleshooting
+- If the frontend cannot reach the API in dev, verify `VITE_API_BASE_URL` and browser CORS policies.
+- For production builds served behind a reverse proxy, prefer relative `VITE_API_BASE_URL` (e.g., `/api`) and configure the proxy to route securely over HTTPS.
 
 Routes
 - `/` HomePage

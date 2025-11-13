@@ -13,7 +13,19 @@ const schema = z.object({
 
 export default function Register() {
   const form = useForm({ resolver: zodResolver(schema), defaultValues: { name: "", email: "", password: "" } })
-  const onSubmit = () => alert("Registered! Please login.")
+  const onSubmit = async (values) => {
+    try {
+      const res = await fetch(`${CONFIG.apiBaseUrl}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      })
+      if (!res.ok) throw new Error(`Register failed: ${res.status}`)
+      alert('Registration successful. Please login.')
+    } catch {
+      alert('Registration failed')
+    }
+  }
   const { register, handleSubmit, formState } = form
   const { errors, isSubmitting } = formState
   return (
@@ -47,4 +59,3 @@ export default function Register() {
     </div>
   )
 }
-

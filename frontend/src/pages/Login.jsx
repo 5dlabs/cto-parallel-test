@@ -12,10 +12,20 @@ const schema = z.object({
 
 export default function Login() {
   const form = useForm({ resolver: zodResolver(schema), defaultValues: { email: "", password: "" } })
-  const onSubmit = (values) => {
-    // In real app, call API securely using CONFIG.apiBaseUrl
-    // Avoid logging sensitive data
-    alert(`Logged in as ${values.email}`)
+  const onSubmit = async (values) => {
+    try {
+      const res = await fetch(`${CONFIG.apiBaseUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+        credentials: 'include',
+      })
+      if (!res.ok) throw new Error(`Login failed: ${res.status}`)
+      // Avoid storing tokens in localStorage; prefer httpOnly cookies.
+      alert('Login successful')
+    } catch {
+      alert('Login failed')
+    }
   }
   const { register, handleSubmit, formState } = form
   const { errors, isSubmitting } = formState
@@ -45,4 +55,3 @@ export default function Login() {
     </div>
   )
 }
-
