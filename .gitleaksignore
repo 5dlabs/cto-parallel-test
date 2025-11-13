@@ -9,6 +9,7 @@ src/auth/models.rs:hashicorp-tf-password:79
 src/auth/models.rs:hashicorp-tf-password:135
 src/auth/models.rs:hashicorp-tf-password:145
 src/auth/models.rs:hashicorp-tf-password:160
+src/auth/models.rs:hashicorp-tf-password:258
 src/auth/models.rs:hashicorp-tf-password:271
 src/auth/models.rs:hashicorp-tf-password:312
 
@@ -29,5 +30,10 @@ docs/.taskmaster/tasks/task_007.txt:hashicorp-tf-password:444
 task/task.md:hashicorp-tf-password:*
 
 # Ignore task status documentation containing test fixture references
-TASK_STATUS.md:hashicorp-tf-password:*
+TASK_STATUS.md:hashicorp-tf-password:86
+TASK_STATUS.md:hashicorp-tf-password:89
+TASK_STATUS.md:hashicorp-tf-password:92
 TASK_STATUS.md:generic-api-key:*
+
+# Ignore build artifacts in target directory
+target/**
