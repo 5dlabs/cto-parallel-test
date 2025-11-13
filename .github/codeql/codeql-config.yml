@@ -1,0 +1,7 @@
+name: CodeQL configuration
+paths-ignore:
+  - frontend/dist/**
+  - frontend/node_modules/**
+  - target/**
+  - tooling/target/**
+
