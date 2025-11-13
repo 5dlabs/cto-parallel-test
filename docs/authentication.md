@@ -21,6 +21,7 @@ This service provides a production‑grade authentication foundation with:
 - Expiration validated by default. Tokens failing validation (expired/tampered) are rejected.
 - Password hash is excluded from JSON via `#[serde(skip_serializing)]`.
 - Uses `Clock` abstraction internally for time; default clock bridges to system time.
+ - JWT algorithm explicitly restricted to HS256 for both signing and validation to prevent algorithm confusion.
 
 ## Quick Start (local)
 ```bash
