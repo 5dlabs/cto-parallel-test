@@ -2,5 +2,11 @@
 .env.example:4
 .env.example:5
 
-# Ignore test data in unit tests
+# Ignore test data in unit tests (test fixtures, not real secrets)
+src/auth/models.rs:135
+src/auth/models.rs:191
 src/auth/models.rs:241
+src/auth/models.rs:258
+src/auth/models.rs:271
+src/auth/models.rs:302
+src/auth/models.rs:312
