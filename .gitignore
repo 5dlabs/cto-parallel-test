@@ -19,3 +19,6 @@ gitleaks-*.json
 
 # Ignore gitleaks working tree outputs
 .gitleaks.*
+
+# Local reports directory
+.reports/

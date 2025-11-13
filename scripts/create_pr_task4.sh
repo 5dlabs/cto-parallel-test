@@ -17,8 +17,18 @@ fi
 
 echo "Checking GitHub auth..."
 if ! gh auth status >/dev/null 2>&1; then
-  echo "Not authenticated. Export GITHUB_TOKEN then run: gh auth login --with-token < <(echo '<token>')" >&2
-  exit 1
+  # Try non-interactive auth if a token is present
+  if [[ -n "${GITHUB_TOKEN:-}" || -n "${GH_TOKEN:-}" ]]; then
+    echo "Attempting GitHub CLI auth using provided token..."
+    TOKEN_TO_USE="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
+    if ! gh auth login --hostname github.com --with-token < <(echo "$TOKEN_TO_USE"); then
+      echo "Failed to authenticate with provided token. Please verify token scopes (repo, security_events) and try again." >&2
+      exit 1
+    fi
+  else
+    echo "Not authenticated. Export GITHUB_TOKEN (repo+security_events) then run: gh auth login --with-token < <(echo '\<token\>')" >&2
+    exit 1
+  fi
 fi
 
 echo "Pushing branch..."
