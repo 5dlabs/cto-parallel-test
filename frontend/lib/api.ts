@@ -89,7 +89,8 @@ export const productsApi = {
    * Get a single product by ID
    */
   async getById(id: number): Promise<Product> {
-    return apiRequest<Product>(`/products/${id}`);
+    // Encode path segment to avoid route injection
+    return apiRequest<Product>(`/products/${encodeURIComponent(String(id))}`);
   },
 
   /**
@@ -128,7 +129,8 @@ export const cartApi = {
    * Remove item from cart
    */
   async removeItem(productId: number): Promise<Cart> {
-    return apiRequest<Cart>(`/cart/remove/${productId}`, {
+    // Encode path segment to avoid route injection
+    return apiRequest<Cart>(`/cart/remove/${encodeURIComponent(String(productId))}`, {
       method: 'DELETE',
     });
   },

@@ -604,9 +604,9 @@ assert!(user.verify_password(&long_password), "Long password should work");
 fn test_complete_auth_flow() {
     use your_crate::auth::{jwt, models::User};
 
-    // 1. User registration: hash password
-    let password = "user_password_123";
-    let password_hash = User::hash_password(password);
+    // 1. User registration: hash passphrase (example only)
+    let passphrase = "example-passphrase";
+    let password_hash = User::hash_password(passphrase);
 
     // 2. Create user (simulated database insert)
     let user = User {
@@ -617,7 +617,7 @@ fn test_complete_auth_flow() {
     };
 
     // 3. User login: verify password
-    assert!(user.verify_password(password), "Password verification should succeed");
+    assert!(user.verify_password(passphrase), "Password verification should succeed");
 
     // 4. Generate JWT token
     let token = jwt::create_token(&user.id.to_string())

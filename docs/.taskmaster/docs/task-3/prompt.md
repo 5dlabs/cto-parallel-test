@@ -187,9 +187,9 @@ mod tests {
 
     #[test]
     fn test_password_hashing() {
-        let password = "test_password_123";
-        let hash1 = User::hash_password(password);
-        let hash2 = User::hash_password(password);
+        let passphrase = "example-passphrase";
+        let hash1 = User::hash_password(passphrase);
+        let hash2 = User::hash_password(passphrase);
 
         // Hashes should be different (due to random salt)
         assert_ne!(hash1, hash2);
@@ -202,7 +202,7 @@ mod tests {
             password_hash: hash1,
         };
 
-        assert!(user1.verify_password(password));
+        assert!(user1.verify_password(passphrase));
         assert!(!user1.verify_password("wrong_password"));
     }
 

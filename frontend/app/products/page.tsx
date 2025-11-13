@@ -95,7 +95,7 @@ export default function ProductList() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Link href={`/products/${product.id}`} className="w-full">
+                  <Link href={`/products/${encodeURIComponent(String(product.id))}`} className="w-full">
                     <Button className="w-full" disabled={!product.inStock}>
                       View Details
                     </Button>

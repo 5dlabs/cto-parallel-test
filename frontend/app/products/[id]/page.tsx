@@ -11,7 +11,8 @@ import { productsApi, cartApi, type Product } from "@/lib/api";
 export default function ProductDetail() {
   const params = useParams();
   const router = useRouter();
-  const productId = parseInt(params.id as string);
+  // Explicit radix to avoid implicit octal/hex parsing
+  const productId = parseInt(params.id as string, 10);
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
