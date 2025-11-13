@@ -1,6 +1,8 @@
 use super::*;
+use serial_test::serial;
 
 #[test]
+#[serial]
 fn test_password_hashing() {
     let password = "test_password_123";
     let hash1 = User::hash_password(password);
@@ -22,6 +24,7 @@ fn test_password_hashing() {
 }
 
 #[test]
+#[serial]
 fn test_jwt_creation_and_validation() {
     std::env::set_var("JWT_SECRET", "test_secret_key_minimum_32_chars_long______");
 
@@ -37,8 +40,19 @@ fn test_jwt_creation_and_validation() {
 }
 
 #[test]
+#[serial]
 fn test_invalid_token() {
     std::env::set_var("JWT_SECRET", "test_secret_key_minimum_32_chars_long______");
     let invalid_token = "invalid.token.here";
     assert!(crate::auth::jwt::validate_token(invalid_token).is_err());
+}
+
+#[test]
+#[serial]
+fn test_rejects_short_secret() {
+    // Too short (<32 chars) should be rejected
+    std::env::set_var("JWT_SECRET", "short_secret_key");
+    let err = crate::auth::jwt::create_token("1").unwrap_err();
+    let msg = format!("{err}");
+    assert!(msg.contains("InvalidToken") || msg.to_lowercase().contains("invalid token"));
 }

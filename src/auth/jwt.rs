@@ -108,7 +108,8 @@ fn create_token_with_clock(
 /// if the token is malformed, signed with a different secret, or expired.
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let key = decoding_key_from_env()?;
-    // Explicitly restrict to HS256 and allow small leeway for clock skew.
+    // Explicitly restrict to HS256 to avoid algorithm confusion
+    // and allow a small leeway for clock skew when validating exp.
     let mut validation = Validation::new(Algorithm::HS256);
     validation.leeway = 30; // seconds
     let token_data = decode::<Claims>(token, &key, &validation)?;
@@ -133,6 +134,7 @@ mod internal_tests {
     #[allow(clippy::disallowed_methods)]
     fn create_token_with_fixed_clock_sets_fields() {
         std::env::set_var("JWT_SECRET", "test_secret_key_minimum_32_chars_long______");
+        // Use real wall-clock time for fresh, non-expired tokens in test
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -145,4 +147,3 @@ mod internal_tests {
         assert_eq!(claims.exp, now + 86_400);
     }
 }
-

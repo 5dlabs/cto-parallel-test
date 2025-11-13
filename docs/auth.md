@@ -10,7 +10,7 @@ This crate provides a foundational, secure authentication module:
 ## Configuration
 
 - `JWT_SECRET` (required): Secret key used to sign and validate JWTs.
-  - Must be a strong, random value (≥32 chars recommended).
+  - Must be a strong, random value (≥32 chars REQUIRED).
   - Example:
     ```bash
     export JWT_SECRET="your_secure_random_secret_key_minimum_32_characters"
@@ -51,4 +51,3 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic
 cargo test --workspace --all-features
 ```
-
