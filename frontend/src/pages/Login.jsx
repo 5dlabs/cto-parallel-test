@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
+import { CONFIG } from "@/config"
 
 const schema = z.object({
   email: z.string().email(),
