@@ -1,0 +1,12 @@
+/target
+Cargo.lock
+
+# Environment variables - never commit
+.env
+.env.*
+!.env.example
+
+# Hook files - never commit
+hooks/
+.hooks/
+**/hooks/
