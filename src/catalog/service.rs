@@ -41,6 +41,22 @@ impl ProductService {
     /// Panics if the mutex is poisoned
     #[must_use]
     pub fn create(&self, new_product: NewProduct) -> Product {
+        // Basic input hardening: trim text, prevent negative values.
+        // This keeps the API infallible while enforcing safe defaults.
+        let NewProduct {
+            name,
+            description,
+            price,
+            inventory_count,
+        } = new_product;
+        let name = name.trim().to_string();
+        let description = description.trim().to_string();
+        let price = if price.is_sign_negative() {
+            rust_decimal::Decimal::ZERO
+        } else {
+            price
+        };
+        let inventory_count = inventory_count.max(0);
         // Allocate ID under its own lock, then release before locking products
         let id = {
             let mut next_id = lock_or_panic(&self.next_id, "allocating next product id");
@@ -51,10 +67,10 @@ impl ProductService {
 
         let product = Product {
             id,
-            name: new_product.name,
-            description: new_product.description,
-            price: new_product.price,
-            inventory_count: new_product.inventory_count,
+            name,
+            description,
+            price,
+            inventory_count,
         };
 
         let mut products = lock_or_panic(&self.products, "pushing new product");
@@ -103,7 +119,8 @@ impl ProductService {
     pub fn update_inventory(&self, id: i32, new_count: i32) -> Option<Product> {
         let mut products = lock_or_panic(&self.products, "updating inventory");
         if let Some(product) = products.iter_mut().find(|p| p.id == id) {
-            product.inventory_count = new_count;
+            // Prevent negative inventory; clamp to zero.
+            product.inventory_count = new_count.max(0);
             Some(product.clone())
         } else {
             None
@@ -485,5 +502,34 @@ mod tests {
 
         let final_products = service.get_all();
         assert_eq!(final_products.len(), 30);
+    }
+
+    #[test]
+    fn test_create_sanitizes_and_clamps() {
+        let service = ProductService::new();
+
+        let new_product = NewProduct {
+            name: "  Trimmed Name  ".to_string(),
+            description: "  Some description  ".to_string(),
+            price: Decimal::from_str("-5.00").unwrap(),
+            inventory_count: -10,
+        };
+
+        let p = service.create(new_product);
+        assert_eq!(p.name, "Trimmed Name");
+        assert_eq!(p.description, "Some description");
+        assert_eq!(p.price, Decimal::from_str("0").unwrap());
+        assert_eq!(p.inventory_count, 0);
+    }
+
+    #[test]
+    fn test_update_inventory_clamps_negative_to_zero() {
+        let service = ProductService::new();
+        let p = service.create(create_test_product("Item", "10.00", 5));
+
+        let updated = service.update_inventory(p.id, -3).unwrap();
+        assert_eq!(updated.inventory_count, 0);
+        let fetched = service.get_by_id(p.id).unwrap();
+        assert_eq!(fetched.inventory_count, 0);
     }
 }
