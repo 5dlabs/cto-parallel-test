@@ -7,11 +7,10 @@ Implements a thread-safe, in-memory Product Catalog module with:
 - Concurrency-safe storage using `Arc<Mutex<...>>` with fail-closed behavior on mutex poison
 - Deterministic auto-increment IDs starting at 1
 
-Security and quality gates are enforced:
+Security and quality gates enforced:
 - `#![forbid(unsafe_code)]` at crate root
 - No `unwrap`/`expect` in production paths; tests only
-- Gitleaks: no leaks in working tree
-- Cargo Audit: no vulnerable dependencies
+- Secret scan (working tree): no leaks (`gitleaks --no-git`)
 
 ## Changes Made
 - Add dependencies in `Cargo.toml`: `rust_decimal` (with `serde`), `serde`, `serde_json`
@@ -22,14 +21,10 @@ Security and quality gates are enforced:
 - Docs hygiene in `.taskmaster` to avoid false positives in secret scanning
 
 ## Tests & Validation
-- Formatting: `cargo fmt --all --check` — Passed
-- Lint: `cargo clippy --all-targets --all-features -- -D warnings -W clippy::pedantic` — Passed
+- Formatting: `cargo fmt --all -- --check` — Passed
+- Lint: `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic` — Passed
 - Unit tests: `cargo test --workspace --all-features` — 18 passed
-- Coverage (llvm-cov):
-  - Command: `cargo llvm-cov --summary-only --workspace --all-features`
-  - Result: TOTAL Lines 96.17%, Functions 95.56%, Files covered 100%
 - Secret scanning: `gitleaks detect --no-git` — no leaks
-- Dependency audit: `cargo audit` — no vulnerabilities
 
 ## Acceptance Criteria Checklist
 - Dependencies present and compile
@@ -49,4 +44,3 @@ Security and quality gates are enforced:
 
 ## Agent
 Implemented by: 5DLabs-Rex
-
