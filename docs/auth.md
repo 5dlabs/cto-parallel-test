@@ -39,8 +39,10 @@ assert_eq!(claims.sub, "1");
 
 - No hardcoded secrets. Tokens require `JWT_SECRET` at runtime.
 - Password hashes are never serialized (`#[serde(skip_serializing)]`).
-- Argon2 defaults are used; consider tuning parameters per deployment.
-- A `Clock` abstraction is used to bound wall-clock time usage.
+- Argon2 defaults are used; consider tuning parameters per deployment (increase memory cost and iterations where feasible).
+- JWT is strictly validated with `HS256` only to avoid algorithm confusion attacks; 30s leeway is allowed for clock skew.
+- A minimum secret length of 32 bytes is enforced for HMAC keys to reduce risk of weak keys.
+- A `Clock` abstraction is used to bound wall-clock time usage and enable deterministic tests.
 
 ## Testing
 
