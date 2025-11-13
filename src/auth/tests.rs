@@ -80,3 +80,30 @@ fn test_rejects_too_short_secret() {
     let err = create_token("uid").expect_err("must reject weak secret");
     assert!(matches!(err, AuthError::WeakSecret));
 }
+
+#[test]
+fn test_expired_token_is_rejected() {
+    use crate::auth::jwt::{Clock, create_token_with};
+
+    struct FixedClock(u64);
+    impl Clock for FixedClock {
+        fn now_seconds(&self) -> u64 { self.0 }
+    }
+
+    let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+    // SAFETY: See note above regarding ENV_LOCK
+    unsafe {
+        // Set a strong random secret so validation uses the same key
+        std::env::set_var("JWT_SECRET", gen_hex(48));
+    }
+
+    // Create a token with a timestamp far in the past so it is definitely expired
+    let clock = FixedClock(1); // iat = 1
+    let secret = std::env::var("JWT_SECRET").unwrap();
+    let token = create_token_with("expired_user", &clock, secret.as_bytes(), 1 /* 1s TTL */)
+        .expect("token created");
+
+    // Validating against current system time should reject this token as expired
+    let res = validate_token(&token);
+    assert!(res.is_err(), "expired token must be rejected");
+}
