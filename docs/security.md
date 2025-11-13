@@ -7,7 +7,7 @@ Overview
 Local Checks
 - Lint: `cd frontend && npm ci && npm run lint`
 - Build: `npm run build`
-- Audit: `npm run audit:ci` (fails on high/critical)
+- Audit: `npm run audit:ci` (fails on moderate/high/critical)
 
 GitHub Code Scanning
 - CodeQL workflow in `.github/workflows/codeql.yml` runs on pushes and PRs.
@@ -18,4 +18,3 @@ GitHub Code Scanning
 
 Secrets
 - Do not commit secrets. Configure `VITE_API_BASE_URL` via environment. See `frontend/.env.example`.
-
