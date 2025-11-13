@@ -154,7 +154,7 @@ mod tests {
             .as_secs();
 
         let expected_expiration = now + 24 * 3600;
-        
+
         // Cast to i64 for safe arithmetic in test - potential wrapping is acceptable in tests
         #[allow(clippy::cast_possible_wrap)]
         let exp_diff = (claims.exp as i64 - expected_expiration as i64).abs();
