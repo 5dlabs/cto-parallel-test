@@ -47,6 +47,10 @@ let results = svc.filter(&ProductFilter {
 - Verified with `cargo fmt`, `cargo clippy` (pedantic, deny warnings), and `cargo test`
 - Fail-closed design: if a mutex is poisoned, operations panic with context rather than proceed in an unknown state
 
+## Conventions
+- Adheres to coding patterns in `coding-guidelines.md` (immutability by default, clear error contexts, small units)
+- Follows PR and review process in `github-guidelines.md` (labels, descriptions, and CI checks)
+
 ## Notes
 - This module has no external dependencies beyond `serde` and `rust_decimal`.
 - Suitable as a foundation for higher-level API layers and persistence backends.
