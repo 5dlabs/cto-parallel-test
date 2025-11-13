@@ -3,7 +3,8 @@
  * Provides centralized API communication with environment-based configuration
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+// Use Vite env for API base; default to relative path for secure proxying
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
 
 export interface Product {
   id: number;
@@ -52,22 +53,15 @@ export interface AuthResponse {
 /**
  * Generic API request handler with error handling
  */
-async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-
+async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
+  // Use cookie-based auth; never persist tokens in localStorage
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    credentials: 'include',
     ...options,
     headers,
   });
@@ -162,13 +156,7 @@ export const authApi = {
       body: JSON.stringify(credentials),
     });
 
-    // Store token in localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', response.token);
-      localStorage.setItem('user_id', response.userId.toString());
-      localStorage.setItem('username', response.username);
-    }
-
+    // Server should set httpOnly cookie; do not store tokens client-side
     return response;
   },
 
@@ -181,13 +169,7 @@ export const authApi = {
       body: JSON.stringify(userData),
     });
 
-    // Store token in localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', response.token);
-      localStorage.setItem('user_id', response.userId.toString());
-      localStorage.setItem('username', response.username);
-    }
-
+    // Server should set httpOnly cookie; do not store tokens client-side
     return response;
   },
 
@@ -195,30 +177,23 @@ export const authApi = {
    * Logout user
    */
   logout(): void {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_id');
-      localStorage.removeItem('username');
-    }
+    // Server should clear httpOnly cookie; nothing to purge client-side
   },
 
   /**
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
-    if (typeof window === 'undefined') return false;
-    return !!localStorage.getItem('auth_token');
+    // Without client-side tokens, authenticated state is derived server-side
+    return false;
   },
 
   /**
    * Get current user info from localStorage
    */
   getCurrentUser(): { userId: number; username: string } | null {
-    if (typeof window === 'undefined') return null;
-    const userId = localStorage.getItem('user_id');
-    const username = localStorage.getItem('username');
-    if (!userId || !username) return null;
-    return { userId: parseInt(userId), username };
+    // Fetch from API when needed; no client-side persistence of secrets
+    return null;
   },
 };
 

@@ -49,7 +49,7 @@ jobs:
         working-directory: ./frontend
         run: pnpm install --frozen-lockfile
 
-      - name: Type check and build
+      - name: Build frontend
         working-directory: ./frontend
         run: pnpm build
 
@@ -57,5 +57,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: frontend/.next
+          path: frontend/dist
           retention-days: 7
