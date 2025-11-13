@@ -1,0 +1,41 @@
+name: Code Scanning Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+  security-events: read
+
+jobs:
+  gate-code-scanning:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure jq and gh are available
+        run: |
+          jq --version || sudo apt-get update && sudo apt-get install -y jq
+          gh --version || true
+
+      - name: Fetch Code Scanning alerts for this PR
+        id: fetch
+        run: |
+          set -euo pipefail
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          echo "PR_NUMBER=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          bash scripts/list_code_scanning.sh "$PR_NUMBER"
+
+      - name: Summarize and gate on severity
+        run: |
+          set -euo pipefail
+          PR_NUMBER=${{ steps.fetch.outputs.PR_NUMBER }}
+          bash scripts/summarize_code_scanning.sh "$PR_NUMBER"
+

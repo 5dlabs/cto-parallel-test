@@ -89,6 +89,11 @@ PR_NUM=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/nul
 if [[ -z "$PR_NUM" ]]; then
   PR_NUM=$(gh api -X GET "/repos/${OWNER}/${REPO}/pulls?state=open&head=${OWNER}:${BRANCH}" --jq '.[0].number' 2>/dev/null || true)
 fi
+# Ensure PR_NUM is numeric; if not, treat as unset (avoids writing files with JSON content)
+if [[ -n "$PR_NUM" ]] && ! [[ "$PR_NUM" =~ ^[0-9]+$ ]]; then
+  PR_NUM=""
+fi
+
 if [[ -n "$PR_NUM" ]]; then
   mkdir -p .reports
   OUT_FILE=".reports/code-scanning-PR-${PR_NUM}.json"
