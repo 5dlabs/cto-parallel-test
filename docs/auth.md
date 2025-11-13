@@ -10,11 +10,15 @@ This crate provides a foundational, secure authentication module:
 ## Configuration
 
 - `JWT_SECRET` (required): Secret key used to sign and validate JWTs.
-  - Must be a strong, random value (≥32 chars REQUIRED).
+  - Must be a strong, random value (≥32 chars by default; see `JWT_SECRET_MIN_LEN`).
   - Example:
     ```bash
     export JWT_SECRET="your_secure_random_secret_key_minimum_32_characters"
     ```
+- `JWT_TTL_SECS` (optional): Token lifetime in seconds. Defaults to `86400` (24 hours).
+  - Example: `export JWT_TTL_SECS=7200`  # 2 hours
+- `JWT_SECRET_MIN_LEN` (optional): Minimum secret length to enforce; cannot be lower than 32.
+  - Example: `export JWT_SECRET_MIN_LEN=48`
 
 ## Usage
 
