@@ -115,9 +115,10 @@ impl ProductService {
         products
             .iter()
             .filter(|p| {
-                let name_match = filter.name_contains.as_ref().is_none_or(|name| {
-                    p.name.to_lowercase().contains(&name.to_lowercase())
-                });
+                let name_match = filter
+                    .name_contains
+                    .as_ref()
+                    .is_none_or(|name| p.name.to_lowercase().contains(&name.to_lowercase()));
 
                 let min_price_match = filter.min_price.is_none_or(|min| p.price >= min);
 
@@ -403,13 +404,21 @@ mod tests {
 
         let handle1 = thread::spawn(move || {
             for i in 0..50 {
-                let _ = service_clone1.create(create_test_product(&format!("Product A{i}"), "10.00", 5));
+                let _ = service_clone1.create(create_test_product(
+                    &format!("Product A{i}"),
+                    "10.00",
+                    5,
+                ));
             }
         });
 
         let handle2 = thread::spawn(move || {
             for i in 0..50 {
-                let _ = service_clone2.create(create_test_product(&format!("Product B{i}"), "20.00", 3));
+                let _ = service_clone2.create(create_test_product(
+                    &format!("Product B{i}"),
+                    "20.00",
+                    3,
+                ));
             }
         });
 
