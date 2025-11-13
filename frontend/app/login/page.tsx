@@ -14,6 +14,7 @@ export default function Login() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -57,9 +58,9 @@ export default function Login() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {error && (
+            {(error || info) && (
               <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
-                {error}
+                {error || info}
               </div>
             )}
             <div className="space-y-2">
@@ -83,7 +84,7 @@ export default function Login() {
                   className="text-sm text-primary hover:underline"
                   onClick={(e) => {
                     e.preventDefault();
-                    alert("Password reset functionality would be implemented here");
+                    setInfo("Password reset functionality would be implemented here");
                   }}
                 >
                   Forgot password?

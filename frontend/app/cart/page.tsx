@@ -13,6 +13,7 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [removingItemId, setRemovingItemId] = useState<number | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCart();
@@ -35,10 +36,11 @@ export default function CartPage() {
   async function handleRemoveItem(productId: number) {
     try {
       setRemovingItemId(productId);
+      setActionError(null);
       const updatedCart = await cartApi.removeItem(productId);
       setCart(updatedCart);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to remove item');
+      setActionError(err instanceof Error ? err.message : 'Failed to remove item');
       console.error('Error removing item:', err);
     } finally {
       setRemovingItemId(null);
@@ -97,6 +99,11 @@ export default function CartPage() {
       <h1 className="text-3xl font-bold tracking-tight mb-8">Shopping Cart</h1>
 
       <div className="grid gap-8 lg:grid-cols-3">
+        {actionError && (
+          <div className="lg:col-span-3 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+            {actionError}
+          </div>
+        )}
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
           {cart.items.map((item) => (

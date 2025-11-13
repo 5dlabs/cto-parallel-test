@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form"
+import { useState } from "react"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Input } from "@/components/ui/input"
@@ -13,6 +14,7 @@ const schema = z.object({
 
 export default function Login() {
   const form = useForm({ resolver: zodResolver(schema), defaultValues: { email: "", password: "" } })
+  const [status, setStatus] = useState({ type: "", message: "" })
   const onSubmit = async (values) => {
     try {
       const res = await fetch(`${CONFIG.apiBaseUrl}/auth/login`, {
@@ -23,9 +25,9 @@ export default function Login() {
       })
       if (!res.ok) throw new Error(`Login failed: ${res.status}`)
       // Avoid storing tokens in localStorage; prefer httpOnly cookies.
-      alert('Login successful')
+      setStatus({ type: 'success', message: 'Login successful' })
     } catch {
-      alert('Login failed')
+      setStatus({ type: 'error', message: 'Login failed' })
     }
   }
   const { register, handleSubmit, formState } = form
@@ -37,6 +39,11 @@ export default function Login() {
           <CardTitle>Login</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {status.message && (
+            <div className={`p-3 text-sm rounded-md border ${status.type === 'error' ? 'text-destructive bg-destructive/10 border-destructive/20' : 'text-green-600 bg-green-600/10 border-green-600/20'}`}>
+              {status.message}
+            </div>
+          )}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1">
               <label className="text-sm font-medium">Email</label>

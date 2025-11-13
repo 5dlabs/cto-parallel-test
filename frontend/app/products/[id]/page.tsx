@@ -18,6 +18,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -48,10 +49,10 @@ export default function ProductDetail() {
     try {
       setAddingToCart(true);
       await cartApi.addItem(product.id, 1);
-      alert('Added to cart!');
+      setNotice({ type: 'success', msg: 'Added to cart!' });
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to add to cart';
-      alert(errorMsg);
+      setNotice({ type: 'error', msg: errorMsg });
       console.error('Error adding to cart:', err);
     } finally {
       setAddingToCart(false);
@@ -98,6 +99,11 @@ export default function ProductDetail() {
       </Button>
 
       <div className="grid gap-8 md:grid-cols-2">
+        {notice && (
+          <div className={`md:col-span-2 p-3 rounded-md border text-sm ${notice.type === 'error' ? 'text-destructive bg-destructive/10 border-destructive/20' : 'text-green-600 bg-green-600/10 border-green-600/20'}`}>
+            {notice.msg}
+          </div>
+        )}
         {/* Product Image Placeholder */}
         <div className="aspect-square rounded-lg border bg-muted flex items-center justify-center">
           <span className="text-4xl text-muted-foreground">{product.name[0]}</span>

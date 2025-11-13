@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form"
+import { useState } from "react"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Input } from "@/components/ui/input"
@@ -14,6 +15,7 @@ const schema = z.object({
 
 export default function Register() {
   const form = useForm({ resolver: zodResolver(schema), defaultValues: { name: "", email: "", password: "" } })
+  const [status, setStatus] = useState({ type: "", message: "" })
   const onSubmit = async (values) => {
     try {
       const res = await fetch(`${CONFIG.apiBaseUrl}/auth/register`, {
@@ -22,9 +24,9 @@ export default function Register() {
         body: JSON.stringify(values),
       })
       if (!res.ok) throw new Error(`Register failed: ${res.status}`)
-      alert('Registration successful. Please login.')
+      setStatus({ type: 'success', message: 'Registration successful. Please login.' })
     } catch {
-      alert('Registration failed')
+      setStatus({ type: 'error', message: 'Registration failed' })
     }
   }
   const { register, handleSubmit, formState } = form
@@ -36,6 +38,11 @@ export default function Register() {
           <CardTitle>Register</CardTitle>
         </CardHeader>
         <CardContent>
+          {status.message && (
+            <div className={`p-3 text-sm rounded-md border ${status.type === 'error' ? 'text-destructive bg-destructive/10 border-destructive/20' : 'text-green-600 bg-green-600/10 border-green-600/20'}`}>
+              {status.message}
+            </div>
+          )}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1">
               <label className="text-sm font-medium">Name</label>
