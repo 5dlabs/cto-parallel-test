@@ -1,4 +1,4 @@
-use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::error::Error as StdError;
@@ -157,4 +157,3 @@ pub fn validate_token(token: &str) -> Result<Claims, AuthError> {
     )?;
     Ok(token_data.claims)
 }
-

@@ -1,6 +1,6 @@
 use argon2::{
-    Argon2,
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
 };
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
@@ -64,4 +64,3 @@ pub struct AuthResponse {
     pub user_id: i32,
     pub username: String,
 }
-

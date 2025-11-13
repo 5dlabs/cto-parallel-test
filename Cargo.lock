@@ -182,7 +182,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cto_parallel_test"
+name = "cto-parallel-test"
 version = "0.1.0"
 dependencies = [
  "argon2",

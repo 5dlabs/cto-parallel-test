@@ -1,7 +1,7 @@
+use crate::auth::jwt::{create_token, validate_token, AuthError};
 use crate::auth::User;
-use crate::auth::jwt::{AuthError, create_token, validate_token};
-use rand::RngCore;
 use rand::rngs::OsRng;
+use rand::RngCore;
 use std::sync::{Mutex, OnceLock};
 
 static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -83,7 +83,7 @@ fn test_rejects_too_short_secret() {
 
 #[test]
 fn test_expired_token_is_rejected() {
-    use crate::auth::jwt::{Clock, create_token_with};
+    use crate::auth::jwt::{create_token_with, Clock};
 
     struct FixedClock(u64);
     impl Clock for FixedClock {
