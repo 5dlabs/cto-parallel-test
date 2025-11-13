@@ -27,3 +27,7 @@ docs/.taskmaster/tasks/task_007.txt:hashicorp-tf-password:444
 
 # Ignore task markdown files  
 task/task.md:hashicorp-tf-password:*
+
+# Ignore task status documentation containing test fixture references
+TASK_STATUS.md:hashicorp-tf-password:*
+TASK_STATUS.md:generic-api-key:*
