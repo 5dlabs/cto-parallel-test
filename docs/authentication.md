@@ -6,7 +6,7 @@ This service provides a production‑grade authentication foundation with:
 - User model and request/response DTOs
 
 ## Environment Variables
-- `JWT_SECRET` (required): HMAC secret for signing/verifying JWTs. Must be a strong, random string.
+- `JWT_SECRET` (required): HMAC secret for signing/verifying JWTs. Must be a strong, random value of at least 32 bytes. Prefer a 256-bit (32-byte) or longer secret generated from a CSPRNG.
 - `JWT_EXP_SECONDS` (optional): Token lifetime in seconds. Defaults to `86400` (24 hours).
 
 ## Public API
@@ -24,7 +24,7 @@ This service provides a production‑grade authentication foundation with:
 
 ## Quick Start (local)
 ```bash
-export JWT_SECRET="your_very_long_random_secret"
+export JWT_SECRET="$(openssl rand -base64 48)"  # >=32 bytes
 # Optional TTL override
 # export JWT_EXP_SECONDS=86400
 
@@ -36,5 +36,6 @@ This module is stateless and does not perform any DB access. Use it from your ro
 
 ## Hardening
 - Rotate `JWT_SECRET` on a schedule and enforce short lived tokens where possible.
+- Enforce `JWT_SECRET` length ≥ 32 bytes (already enforced at runtime) and store outside code (env/secret manager).
 - Consider key identifiers (kid) and rotation strategy for future tasks.
 - Consider `aud`/`iss` claims if multi‑tenant requirements arise.
