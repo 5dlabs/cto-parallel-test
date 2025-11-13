@@ -4,6 +4,11 @@ set -euo pipefail
 # Create or reuse a PR for the current branch, then fetch GH Code Scanning alerts for it.
 # Usage:
 #   tooling/pr-and-scan.sh [owner/repo]
+# Env:
+#   PR_LABELS      Comma-separated labels to apply to the PR
+#                  default: "task-6,service-cto-parallel-test,run-play-task-6-qdv4v"
+#   PR_TITLE       Optional PR title (falls back to --fill if unset)
+#   PR_BODY_FILE   Path to body file (default: docs/PR_BODY_TASK_6.md)
 # Defaults:
 #   owner/repo inferred from git remote 'origin'
 
@@ -72,14 +77,25 @@ fi
 info "Pushing branch to origin..."
 git push -u origin "$BRANCH"
 
+PR_LABELS_DEFAULT="task-6,service-cto-parallel-test,run-play-task-6-qdv4v"
+PR_LABELS_CSV="${PR_LABELS:-$PR_LABELS_DEFAULT}"
+PR_BODY_FILE="${PR_BODY_FILE:-docs/PR_BODY_TASK_6.md}"
+PR_TITLE="${PR_TITLE:-}"
+
 # Try to create a PR, but tolerate if it already exists
 PR_URL=""
 set +e
-PR_URL=$(gh pr create --repo "$REPO" \
-  --fill \
-  --body-file docs/PR_BODY_TASK_6.md \
-  --label task-6 \
-  --label service-cto-parallel-test 2>/dev/null)
+if [[ -n "$PR_TITLE" ]]; then
+  PR_URL=$(gh pr create --repo "$REPO" \
+    --title "$PR_TITLE" \
+    --body-file "$PR_BODY_FILE" \
+    --label "$PR_LABELS_CSV" 2>/dev/null)
+else
+  PR_URL=$(gh pr create --repo "$REPO" \
+    --fill \
+    --body-file "$PR_BODY_FILE" \
+    --label "$PR_LABELS_CSV" 2>/dev/null)
+fi
 rc=$?
 set -e
 if [[ $rc -ne 0 ]]; then
@@ -102,4 +118,3 @@ echo "$ALERTS" | sed 's/^/  /' >&2
 
 # Fail so CI can catch unresolved security issues
 exit 1
-
