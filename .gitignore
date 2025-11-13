@@ -1,23 +1,21 @@
-# Rust build artifacts
+# Rust build outputs
 /target/
-Cargo.lock
 
-# IDE files
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# OS files
+# Common editor/OS cruft
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*.log
+.idea/
+.vscode/
+*~
 
-# Environment files
+# Environment files (never commit secrets)
 .env
 .env.local
 
-# Hook files - never commit
+# Git hooks - never commit
 hooks/
 .hooks/
 **/hooks/
@@ -26,9 +24,12 @@ hooks/
 *.profraw
 *.profdata
 
-# Documentation build
+# Documentation build artifacts
 /doc/
 
-# Backup files
+# Backup/temporary files
 *.bak
 *.tmp
+
+# GitHub CLI auth files (do not commit tokens)
+.config/gh/
