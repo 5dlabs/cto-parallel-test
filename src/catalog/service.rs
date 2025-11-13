@@ -45,6 +45,8 @@ impl ProductService {
         };
 
         *next_id += 1;
+        // Release the next_id lock before operating on products to reduce contention
+        drop(next_id);
         products.push(product.clone());
         product
     }

@@ -37,3 +37,20 @@ jobs:
           shared-key: rust-cache-ci
       - name: Run tests
         run: cargo test --all-features --all-targets
+
+  security-audit:
+    name: Dependency Security Audit
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: . -> target
+          shared-key: rust-cache-ci
+      - name: Install cargo-audit
+        run: cargo install --locked cargo-audit
+      - name: Run cargo-audit (deny vulnerabilities)
+        run: cargo audit --deny warnings
