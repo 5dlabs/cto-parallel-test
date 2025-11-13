@@ -1,1 +1,7 @@
-/target
+# Hook files - never commit
+hooks/
+.hooks/
+**/hooks/
+
+# Rust target dir
+target/
