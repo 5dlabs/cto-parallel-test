@@ -24,6 +24,17 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
+    files: ['**/*.config.js'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+    rules: {
+      // Config files may use Node globals or ESM helpers
+      'no-undef': 'off',
     },
   },
 ])
