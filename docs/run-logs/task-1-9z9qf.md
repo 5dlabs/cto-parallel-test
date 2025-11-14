@@ -24,3 +24,15 @@ Next Steps (PR + Alerts)
     --label run-play-task-1-9z9qf
 - PR_NUMBER=$(gh pr view --json number -q .number)
 - gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR_NUMBER}" | jq '.'
+
+Attempt 2 — Verification Refresh
+- Date (UTC): 2025-11-14
+- fmt: `cargo fmt --all -- --check` — pass
+- clippy: `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic` — pass
+- tests: `cargo test --workspace --all-features` — pass (4/4)
+- gitleaks: `gitleaks detect --config .gitleaks.toml --report-format json --report-path gitleaks-report.json` — no leaks (`[]`)
+- cargo-audit: `cargo audit --json > audit.json` — vulnerabilities.found=false
+- GitHub code scanning check attempted but blocked by auth (401). Use:
+  - `gh auth login -h github.com` or set `GH_TOKEN`
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
