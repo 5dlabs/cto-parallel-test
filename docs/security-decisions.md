@@ -20,8 +20,8 @@ Manual Scanning During PR Review
 References
 - See `coding-guidelines.md` and `github-guidelines.md` for required gates and PR workflow.
 
-Local Scan Results (this run)
-- Timestamp (UTC): 2025-11-14T15:21:47Z
+P25-11-14T15:25:58Z
+
 - fmt/clippy/tests: all passing
 - cargo audit: no advisories found (`vulnerabilities.found=false`)
 - gitleaks: no leaks found (`[]`)
