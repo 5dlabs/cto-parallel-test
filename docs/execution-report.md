@@ -49,6 +49,19 @@ Completion Criteria (met locally)
 - All quality gates green (fmt, clippy pedantic, tests).
 - Database code follows secure defaults and best practices per coding-guidelines and github-guidelines.
 
+Attempt 29 Updates
+- Re-ran local gates: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`, and `cargo test --workspace --all-features -- --nocapture` — all passing (4/4).
+- Refreshed dependency audit: `cargo audit -q --json > audit.json` → `"vulnerabilities.found": false`.
+- Refreshed secrets scan: `gitleaks detect --source . --no-git --config .gitleaks.toml --report-format json --report-path gitleaks-report.json --no-banner --log-level error` → `[]`.
+- Security hardening: added a migration to enforce DB-level constraints on input sizes and numeric ranges: `migrations/2025-11-14-220500-0004_add_security_constraints`.
+  - Length checks: `users.username (3..=64)`, `users.email (3..=254)`, `users.password_hash (60..=255)`, `products.name (1..=200)`, `products.description (<=5000 if present)`.
+  - Numeric checks: `products.price >= 0`, `products.inventory_count >= 0`, `cart_items.quantity > 0`.
+- GitHub auth still unavailable in this environment. To check PR-specific alerts once credentials are fixed:
+  - `export GH_HOST=github.com`
+  - `gh auth login -h github.com` (or set `GH_TOKEN=<github_app_installation_token>`)
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
+
 Attempt 27 Updates
 - Re-ran local gates: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`, and `cargo test --workspace --all-features` — all passing (4/4).
 - Refreshed dependency audit: `cargo audit -q --json > audit.json` → `"vulnerabilities.found": false`.
@@ -619,3 +632,32 @@ Attempt 28 Updates
 Artifacts (Attempt 28)
 - `audit.json:1` — `"vulnerabilities":{"found":false}`
 - `gitleaks-report.json:1` — `[]`
+
+Attempt 30 Updates
+- Re-ran local gates: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`, and `cargo test --workspace --all-features -- --nocapture` — all passing (4/4).
+- Refreshed dependency audit: `cargo audit -q --json > audit.json` → `"vulnerabilities.found": false`.
+- Refreshed secrets scan: downloaded `gitleaks` v8.22.1 locally and executed `./gitleaks detect --source . --no-git --config .gitleaks.toml --report-format json --report-path gitleaks-report.json --no-banner --log-level error` → `[]`.
+- GitHub auth remains unavailable here (HTTP 403 rate limit for unauthenticated requests). To check PR-specific alerts once credentials are fixed:
+  - `export GH_HOST=github.com`
+  - `gh auth login -h github.com` (or set `GH_TOKEN=<github_app_installation_token>`) 
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open${PR:+&pr=${PR}}" | jq '.'`
+
+Attempt 32 Updates
+- Re-ran local gates: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`, and `cargo test --workspace --all-features -- --nocapture` — all passing (4/4).
+- Dependency audit: `cargo audit -q --json > audit.json` → `"vulnerabilities.found": false`.
+- Secrets scan: `./gitleaks detect --source . --no-git --report-format json --report-path gitleaks-report.json --no-banner --log-level error` → `[]`.
+- CI security coverage remains intact in `.github/workflows/security.yml` (CodeQL, cargo-audit, Gitleaks) and quality gates in `.github/workflows/ci.yml`.
+- GitHub code scanning alerts could not be fetched here due to invalid token/rate limit (403). Commands for authenticated check are documented above.
+- Repo hygiene: added `gitleaks` to `.gitignore` to prevent committing the binary used for local scanning.
+
+Attempt 31 Updates
+- Timestamp (UTC): 2025-11-14T16:21:30Z
+- Re-ran local gates: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`, and `cargo test --workspace --all-features -- --nocapture` — all passing (4/4).
+- Refreshed dependency audit: `cargo audit -q --json > audit.json` → `"vulnerabilities.found": false`.
+- Refreshed secrets scan (existing local binary): `./gitleaks detect --source . --no-git --config .gitleaks.toml --report-format json --report-path gitleaks-report.json --no-banner --log-level error` → `[]`.
+- GitHub auth remains unavailable here (HTTP 403 rate limit for unauthenticated). To check PR-specific alerts once credentials are fixed:
+  - `export GH_HOST=github.com`
+  - `gh auth login -h github.com` (or set `GH_TOKEN=<github_app_installation_token>`) 
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open${PR:+&pr=${PR}}" | jq '.'`

@@ -145,3 +145,66 @@ Attempt 11 — Verification Refresh
   - `export GH_TOKEN=<github_app_installation_token>` (or `gh auth login -h github.com`)
   - `PR=$(gh pr view --json number -q .number)`
   - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
+
+Attempt 12 — Verification Refresh
+- Date (UTC): 2025-11-14T16:11:07Z
+- Local code sweep: no risky APIs found (no raw SQL, no command execution, no filesystem writes); `#![forbid(unsafe_code)]` enforced; password_hash excluded from serde; Diesel ORM only.
+- CI security workflows: present and correct — CodeQL, cargo-audit, and Gitleaks in `.github/workflows/security.yml`; fmt/clippy/tests in `.github/workflows/ci.yml`.
+- Artifacts: `audit.json` shows `vulnerabilities.found=false`; `gitleaks-report.json` contains `[]`.
+- GitHub code scanning: auth unavailable here. To fetch PR alerts once authenticated:
+  - `export GH_HOST=github.com`
+  - `gh auth login -h github.com` (or set `GH_TOKEN=<github_app_installation_token>`)
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
+
+Attempt 13 — Verification Refresh
+- Date (UTC): 2025-11-14T16:12:45Z
+- fmt: `cargo fmt --all -- --check` — pass
+- clippy: `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic` — pass
+- tests: `cargo test --workspace --all-features -- --nocapture` — pass (4/4)
+- gitleaks: `gitleaks detect --source . --no-git --config .gitleaks.toml --report-format json --report-path gitleaks-report.json --no-banner --log-level error` — no leaks (`[]`)
+- cargo-audit: `cargo audit -q --json > audit.json` — `vulnerabilities.found=false`
+- Security hardening: Added DB-level constraints to enforce sane input sizes and non-negative numeric values (new migration `migrations/2025-11-14-220500-0004_add_security_constraints`). Constraints include length checks on `users.username`, `users.email`, `users.password_hash`, `products.name`, optional `products.description`; non-negative checks for `products.price`, `products.inventory_count`; positive check for `cart_items.quantity`.
+- GitHub Code Scanning: gh CLI remains unauthenticated. To check PR alerts once authenticated:
+  - `export GH_HOST=github.com`
+  - `gh auth login -h github.com` (or set `GH_TOKEN=<github_app_installation_token>`) 
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
+
+Attempt 30 — Verification Refresh
+- Date (UTC): 2025-11-14T16:18:23Z
+- fmt: `cargo fmt --all -- --check` — pass
+- clippy: `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic` — pass
+- tests: `cargo test --workspace --all-features -- --nocapture` — pass (4/4)
+- gitleaks: downloaded `gitleaks` v8.22.1 locally and ran `./gitleaks detect --source . --no-git --config .gitleaks.toml --report-format json --report-path gitleaks-report.json --no-banner --log-level error` — no leaks (`[]`); see `gitleaks-report.json`
+- cargo-audit: `cargo audit -q --json > audit.json` — `vulnerabilities.found=false`; see `audit.json`
+- GitHub Code Scanning: unauthenticated in this environment; current response: HTTP 403 rate limit. To check once authenticated:
+  - `export GH_HOST=github.com`
+  - `gh auth login -h github.com` (or set `GH_TOKEN=<github_app_installation_token>`) 
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open${PR:+&pr=${PR}}" | jq '.'`
+ 
+Attempt 32 — Verification Refresh
+- fmt: `cargo fmt --all -- --check` — pass
+- clippy: `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic` — pass
+- tests: `cargo test --workspace --all-features -- --nocapture` — pass (4/4)
+- cargo-audit: `cargo audit -q --json > audit.json` — vulnerabilities.found=false; see `audit.json`
+- gitleaks: `./gitleaks detect --source . --no-git --report-format json --report-path gitleaks-report.json --no-banner --log-level error` — no leaks (`[]`); see `gitleaks-report.json`
+- GitHub Code Scanning: blocked by invalid token/rate-limit (403). To check once authenticated:
+  - `gh auth login -h github.com` (or set `GH_TOKEN`)
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open${PR:+&pr=${PR}}" | jq '.'`
+- Repo hygiene: added `gitleaks` to `.gitignore` to prevent accidentally committing the binary used for local scans.
+
+Attempt 31 — Verification Refresh
+- Date (UTC): 2025-11-14T16:21:30Z
+- fmt: `cargo fmt --all -- --check` — pass
+- clippy: `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic` — pass
+- tests: `cargo test --workspace --all-features -- --nocapture` — pass (4/4)
+- gitleaks: `./gitleaks detect --source . --no-git --config .gitleaks.toml --report-format json --report-path gitleaks-report.json --no-banner --log-level error` — no leaks (`[]`)
+- cargo-audit: `cargo audit -q --json > audit.json` — vulnerabilities.found=false
+- GitHub Code Scanning: CLI unauthenticated here (HTTP 403 rate limit for anonymous). Once authenticated:
+  - `export GH_HOST=github.com`
+  - `gh auth login -h github.com` (or set `GH_TOKEN=<github_app_installation_token>`)
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open${PR:+&pr=${PR}}" | jq '.'`

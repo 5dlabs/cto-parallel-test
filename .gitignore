@@ -16,3 +16,5 @@ hooks/
 gitleaks-report.json
 gitleaks*.json
 audit.json
+# Gitleaks binary (downloaded for local scans)
+gitleaks
