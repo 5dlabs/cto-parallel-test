@@ -1,6 +1,6 @@
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
-use dotenvy::dotenv;
+use dotenv::dotenv;
 use std::env;
 use std::time::Duration;
 
