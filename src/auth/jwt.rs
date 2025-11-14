@@ -41,17 +41,32 @@ fn current_timestamp_secs() -> u64 {
 }
 
 fn read_hmac_secret() -> Result<Vec<u8>, jsonwebtoken::errors::Error> {
-    // Require JWT_SECRET to be set and of sufficient length (>= 32)
-    let secret = std::env::var("JWT_SECRET")
-        .map_err(|_| jsonwebtoken::errors::Error::from(ErrorKind::InvalidToken))?;
+    // Load JWT secret from environment with a safe minimum length.
+    // Acceptance: allow a development-only fallback when not provided.
     let min_len_env = std::env::var("JWT_SECRET_MIN_LEN").ok();
     let min_len = min_len_env
         .and_then(|v| v.parse::<usize>().ok())
         .map_or(32, |n| n.max(32));
-    if secret.len() < min_len {
-        return Err(jsonwebtoken::errors::Error::from(ErrorKind::InvalidToken));
+
+    if let Ok(secret) = std::env::var("JWT_SECRET") {
+        if secret.len() < min_len {
+            return Err(jsonwebtoken::errors::Error::from(ErrorKind::InvalidToken));
+        }
+        return Ok(secret.into_bytes());
     }
-    Ok(secret.into_bytes())
+
+    // Development fallback: only enabled in debug builds or when explicitly allowed.
+    let dev_fallback_allowed = cfg!(debug_assertions)
+        || matches!(std::env::var("JWT_ALLOW_DEV_FALLBACK").as_deref(), Ok("1"));
+    if dev_fallback_allowed {
+        // Chosen to exceed the minimum length requirement.
+        let fallback = "dev_only_signing_key_min_32_chars________"
+            .as_bytes()
+            .to_vec();
+        return Ok(fallback);
+    }
+
+    Err(jsonwebtoken::errors::Error::from(ErrorKind::InvalidToken))
 }
 
 /// Create a signed JWT for the provided user identifier with a 24-hour expiration.
@@ -65,8 +80,8 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
         .ok()
         .and_then(|s| s.parse::<u64>().ok())
         .unwrap_or(24 * 3600)
-        // Enforce a maximum TTL of 7 days to reduce risk of long-lived tokens
-        .min(7 * 24 * 3600);
+        // Enforce a maximum TTL of 24 hours per acceptance criteria
+        .min(24 * 3600);
     let expiration = now + ttl_secs; // expiration from now
 
     let exp = usize::try_from(expiration)

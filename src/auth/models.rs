@@ -2,7 +2,7 @@ use argon2::{
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Algorithm, Argon2, Params, Version,
 };
-use rand_core::OsRng;
+use rand::{rngs::OsRng, RngCore};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -43,8 +43,13 @@ impl User {
     ///
     /// # Panics
     /// Panics if the Argon2 hashing operation fails.
+    #[must_use]
     pub fn hash_password(password: &str) -> String {
-        let salt = SaltString::generate(&mut OsRng);
+        // Generate a 32-byte random salt (acceptance requires 32 bytes)
+        let mut salt_bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut salt_bytes);
+        let salt =
+            SaltString::encode_b64(&salt_bytes).expect("salt length should be valid (<= 64 bytes)");
 
         // Allow runtime tuning via environment while providing secure defaults.
         // Defaults: t=3, m=64 MiB, p=1. Enforce sane bounds to avoid denial of service.
