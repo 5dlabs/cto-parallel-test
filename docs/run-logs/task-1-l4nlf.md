@@ -20,17 +20,16 @@ Local Security Scans
 - gitleaks: repository history scan returned only redacted placeholders; no active secrets in working tree
 
 Database Migrations
-- Diesel CLI installed: diesel --version → 2.3.3 (postgres)
 - Migrations present under migrations/ and validated by build/tests.
   Added hardening migration:
   - Non-negative checks: products.price >= 0; products.inventory_count >= 0
   - Positive quantity: cart_items.quantity > 0
   - Unique line items: UNIQUE(cart_id, product_id)
-- Applying migrations locally requires a running PostgreSQL instance. Example steps:
+- Applying migrations requires a running PostgreSQL instance. In this environment, Postgres was not available, so migrations were not executed. To run locally:
   - docker run -d --name cto_pg -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=<password> -e POSTGRES_DB=ecommerce_db -p 5432:5432 postgres:16-alpine
   - export DATABASE_URL=postgres://postgres:<password>@localhost:5432/ecommerce_db
-  - diesel migration run
-  - Verified live in this run using Dockerized Postgres: tables and constraints confirmed with psql.
+  - cargo install diesel_cli --no-default-features --features postgres
+  - diesel setup && diesel migration run
 
 GitHub Code Scanning (blocker: unauthenticated gh)
 - gh auth unavailable in this environment (401). Provided exact commands below to execute once GH_TOKEN is present.
