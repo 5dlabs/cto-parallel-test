@@ -42,7 +42,12 @@ pub struct Product {
 }
 
 /// New product for insertion into the database.
-#[derive(Insertable, Deserialize, Debug)]
+///
+/// Security: Do not derive `Deserialize` to prevent mass-assignment attacks
+/// from directly binding untrusted input into a DB insertable struct. The
+/// application layer should define a request DTO and perform explicit
+/// validation and mapping before DB insert.
+#[derive(Insertable, Debug)]
 #[diesel(table_name = products)]
 pub struct NewProduct {
     pub name: String,
