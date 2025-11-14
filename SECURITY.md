@@ -8,6 +8,7 @@ This repository includes a frontend e‑commerce app with secure defaults. Key p
 - XSS prevention
   - No usage of `dangerouslySetInnerHTML`
   - Strict Content Security Policy added in `frontend/index.html`
+  - Next.js headers enforce CSP without `unsafe-inline` for styles in `frontend/next.config.ts:16`
 - Sensitive data handling
   - No secrets committed; configuration via environment variables (`.env`)
   - `localStorage` only stores non‑sensitive cart state
