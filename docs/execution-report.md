@@ -270,3 +270,17 @@ Attempt 12 Updates
 Artifacts (Attempt 12)
 - `audit.json:1` — confirms no advisories (`vulnerabilities.found=false`).
 - `gitleaks-report.json:1` — `[]` (no secrets detected).
+
+Attempt 13 Updates
+- Re-validated local gates and scanners — all clean:
+  - `cargo fmt --all -- --check` — pass
+  - `cargo clippy --workspace --all-targets --all-features -- -D warnings` — pass
+  - `cargo test --workspace --all-features` — pass (4/4)
+  - `cargo audit --json > audit.json` — `vulnerabilities.found=false`
+  - `gitleaks detect --no-banner -f json -r gitleaks-report.json --source .` — no leaks
+- GitHub code scanning fetch blocked locally due to unauthenticated/rate-limited `gh` (HTTP 403).
+  Use a valid token to verify:
+  - `gh auth login -h github.com` (or `export GH_TOKEN=<token>`) 
+  - Repo alerts: `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&per_page=100" | jq '.'`
+  - PR alerts: `PR=$(gh pr view --json number -q .number); gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&per_page=100&pr=${PR}" | jq '.'`
+- No code changes required; CI security workflows unchanged and valid (`.github/workflows/security.yml`).
