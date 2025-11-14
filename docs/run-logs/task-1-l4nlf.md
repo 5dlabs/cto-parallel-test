@@ -54,4 +54,4 @@ Notes
 Outcome
 - Local gates: GREEN (fmt/clippy/tests)
 - Local scans: GREEN (cargo-audit, gitleaks)
-- CI security scanning present (CodeQL, cargo-audit, gitleaks). PR will trigger.
+- CI security scanning present (CodeQL, cargo-audit, gitleaks working-tree). PR will trigger.
