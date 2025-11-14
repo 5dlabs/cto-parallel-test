@@ -306,3 +306,21 @@ Next steps in CI:
 - Audit (runtime): see security/npm-audit.json
 - Audit (full): see security/npm-audit-full.json
 - Lint/build: passed
+
+## Verification Snapshot (attempt 35)
+
+- No frontend code changes in this iteration; latest scans and build from attempt 34 remain valid.
+- Added helper scripts to streamline PR and code scanning comment:
+  - `task/gh-pr-create.sh` — creates the PR with labels and optional issue link
+  - `task/gh-pr-comment-scan.sh` — posts a Markdown summary of open Code Scanning alerts to the PR
+- Updated `.gitignore` to exclude `bin/` to prevent committing local binaries (e.g., gitleaks).
+
+Usage:
+
+```
+gh auth login -h github.com
+bash task/gh-pr-create.sh feature/task-6-implementation main
+bash task/gh-pr-comment-scan.sh feature/task-6-implementation
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
