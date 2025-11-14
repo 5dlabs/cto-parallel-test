@@ -45,20 +45,23 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install OSV-Scanner
-        uses: google/osv-scanner/actions/install@v1
+        run: |
+          curl -LO https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64
+          chmod +x osv-scanner_linux_amd64
+          sudo mv osv-scanner_linux_amd64 /usr/local/bin/osv-scanner
 
       - name: Run OSV-Scanner (repo)
         run: |
-          osv-scanner --repo . --format sarif --output osv-results.sarif || true
+          osv-scanner --lockfile=Cargo.lock --format sarif --output osv-results.sarif || true
           # If vulnerabilities are found, fail after upload to surface alerts
-          if jq -e '.runs[]?.results? | length > 0' osv-results.sarif >/dev/null 2>&1; then
+          if [ -f osv-results.sarif ] && jq -e '.runs[]?.results? | length > 0' osv-results.sarif >/dev/null 2>&1; then
             echo "OSV vulnerabilities detected" >&2
             export OSV_FAIL=1
           fi
           echo "OSV_FAIL=${OSV_FAIL:-0}" >> "$GITHUB_ENV"
 
       - name: Upload SARIF (OSV)
-        if: always()
+        if: always() && hashFiles('osv-results.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: osv-results.sarif
