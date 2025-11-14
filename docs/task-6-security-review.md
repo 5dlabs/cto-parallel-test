@@ -36,6 +36,25 @@ gh api \
 
 All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
 
+## Verification Snapshot (final pass)
+
+- Secrets scan (workspace): `gitleaks detect --no-git -f json -r security/gitleaks-report.json`
+  - Output: `[]` (no leaks) – see `security/gitleaks-report.json`
+- Dependency audit (runtime only): `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../security/npm-audit.json`
+  - Result: 0 moderate/high/critical – see `security/npm-audit.json`
+- Dependency audit (all deps): `cd frontend && npm audit --json > ../security/npm-audit-full.json`
+  - Result: 0 vulnerabilities of any severity – see `security/npm-audit-full.json`
+- Frontend quality: `cd frontend && npm ci && npm run lint && npm run build` succeeded
+
+GitHub code scanning remains gated by CLI auth in this environment. To fetch alerts for the current PR branch and append to this document, run:
+
+```
+gh auth login -h github.com
+bash task/gh-code-scan.sh $(git rev-parse --abbrev-ref HEAD) --update-docs
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+
 ## Verification Snapshot (attempt 18)
 
 - Secrets scan (tracked files): `gitleaks detect --redact --config .gitleaks.toml --report-format json --report-path security/gitleaks-report.json`
