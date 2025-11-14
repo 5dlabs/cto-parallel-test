@@ -37,3 +37,7 @@ hooks/
 # Security scan artifacts (do not commit)
 gitleaks*.json
 .bin/
+
+# Local reports and PR scaffold (ephemeral)
+.reports/
+PR_BODY.md
