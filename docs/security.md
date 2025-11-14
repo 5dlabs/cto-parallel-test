@@ -22,3 +22,12 @@ Local pre-PR checks:
 - `cargo fmt --all -- --check`
 - `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`
 - `cargo test --workspace --all-features`
+
+Local verification results (this change set):
+
+- Formatting: PASS
+- Clippy (pedantic, deny warnings): PASS
+- Tests: PASS (all unit and integration tests green)
+- Secret scan (gitleaks): PASS (no leaks found)
+
+If GitHub auth is unavailable locally, proceed with local verification and push to the feature branch. CI will run CodeQL and upload all SARIF results on the PR.
