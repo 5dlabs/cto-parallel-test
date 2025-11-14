@@ -519,3 +519,18 @@ Attempt 21 Updates
 Artifacts (Attempt 21)
 - `audit.json:1` — `"vulnerabilities":{"found":false}`
 - `gitleaks-report.json:1` — `[]`
+
+Attempt 22 Updates
+- Timestamp (UTC): 2025-11-14T11:32:17Z
+- Re-verified quality gates and security scanners — all clean and unchanged:
+  - `cargo fmt --all -- --check` — pass
+  - `cargo clippy --workspace --all-targets --all-features -- -D warnings` — pass
+  - `cargo test --workspace --all-features` — pass (4/4)
+  - `cargo audit --json > audit.json` — `vulnerabilities.found=false`
+  - `gitleaks detect --no-git -f json -r gitleaks-report.json` — no leaks (`[]`)
+- CI security coverage unchanged: CodeQL, cargo-audit (deny warnings), and Gitleaks in `.github/workflows/security.yml`.
+- GitHub CLI remains unauthenticated here; use the documented `gh` commands above to create a PR and fetch PR-scoped Code Scanning alerts once a valid token is configured.
+
+Artifacts (Attempt 22)
+- `audit.json:1` — `"vulnerabilities":{"found":false}`
+- `gitleaks-report.json:1` — `[]`
