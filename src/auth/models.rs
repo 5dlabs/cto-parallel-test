@@ -4,14 +4,27 @@ use argon2::{
     Argon2,
 };
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct User {
     pub id: i32,
     pub username: String,
     pub email: String,
-    #[serde(skip_serializing)]
+    #[serde(skip_serializing, skip_deserializing)]
     pub password_hash: String,
+}
+
+impl fmt::Debug for User {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("User")
+            .field("id", &self.id)
+            .field("username", &self.username)
+            .field("email", &self.email)
+            .field("password_hash", &"<redacted>")
+            .finish()
+    }
 }
 
 impl User {
@@ -42,12 +55,14 @@ impl User {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct LoginRequest {
     pub username: String,
     pub password: String,
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RegisterRequest {
     pub username: String,
     pub email: String,

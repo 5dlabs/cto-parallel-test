@@ -57,8 +57,9 @@ fn test_password_hashing_supports_edge_cases() {
 
 #[test]
 #[serial]
-fn test_jwt_creation_and_validation_with_default_key() {
+fn test_jwt_creation_and_validation_with_required_key() {
     clear_auth_env();
+    std::env::set_var("JWT_SECRET", "dev_only_signing_key_min_32_chars________");
     let user_id = "123";
     let token = crate::auth::jwt::create_token(user_id).expect("token");
     assert!(!token.is_empty());
