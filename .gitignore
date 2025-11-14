@@ -7,3 +7,6 @@ gitleaks*.json
 .env
 .env.*
 !.env.example
+
+# Local binaries/tools (do not commit)
+bin/
