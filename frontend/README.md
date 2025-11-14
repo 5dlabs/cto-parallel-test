@@ -5,6 +5,10 @@ Production-ready e-commerce frontend using React, Vite, Tailwind CSS, and shadcn
 ## Quick Start
 
 - cp .env.example .env and set `VITE_API_BASE_URL` (e.g., `https://api.example.com`)
+  - Optional runtime knobs:
+    - `VITE_FREE_SHIPPING_THRESHOLD` (number, default 50)
+    - `VITE_STANDARD_SHIPPING_COST` (number, default 9.99)
+  - Next.js app also supports `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD`, and `NEXT_PUBLIC_STANDARD_SHIPPING_COST`.
 - Optionally set `VITE_PORT`/`PORT` to change dev port (default: 3000)
 - npm ci
 - npm start
@@ -16,6 +20,7 @@ Production-ready e-commerce frontend using React, Vite, Tailwind CSS, and shadcn
 - UI: Header with cart badge, Footer; shadcn/ui components (button, card, badge, input, form, navigation-menu)
 - Styling: Tailwind CSS with shadcn/ui tokens (New York theme)
 - Config: All endpoints come from `VITE_API_BASE_URL` (no hardcoded URLs)
+  - Thresholds for shipping are parameterized via env
 
 ## Security Notes
 
