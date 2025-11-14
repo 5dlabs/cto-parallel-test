@@ -208,3 +208,19 @@ Attempt 31 — Verification Refresh
   - `gh auth login -h github.com` (or set `GH_TOKEN=<github_app_installation_token>`)
   - `PR=$(gh pr view --json number -q .number)`
   - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open${PR:+&pr=${PR}}" | jq '.'`
+
+---
+Verification — Current Run
+- Date (UTC): 2025-11-14T16:39:49Z
+- fmt: cargo fmt --all -- --check — pass
+- clippy: cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic — pass
+- tests: cargo test --workspace --all-features — pass (4/4)
+- gitleaks: gitleaks detect --no-git -s . -c .gitleaks.toml -f json -r gitleaks-report.json — no leaks (`[]`)
+- cargo-audit: cargo audit — vulnerabilities.found=false; see audit.json
+- GitHub Code Scanning: GH token invalid in environment. To check PR alerts once authenticated:
+  - export GH_HOST=github.com
+  - export GH_TOKEN=<github_app_installation_token>
+  - PR_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+  - gh pr create --fill --title "feat(db): Diesel/Postgres schema, models, pooling" --label task-1 --label service-cto-parallel-test --label run-play-task-1-9z9qf --base main --head "$PR_BRANCH"
+  - PR=$(gh pr view --json number -q .number)
+  - gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'
