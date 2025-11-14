@@ -10,6 +10,8 @@ target/
 gitleaks-report.json
 gitleaks_report_latest.json
 *.sarif
+code_scanning_alerts.json
+*.stderr
 
 # Local scanner binaries
 osv-scanner
