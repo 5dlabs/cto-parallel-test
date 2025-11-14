@@ -11,23 +11,20 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export function Header() {
-  const [cartItemCount, setCartItemCount] = useState(0);
-
-  useEffect(() => {
+  const [cartItemCount] = useState(() => {
     try {
       const raw = typeof window !== 'undefined' ? localStorage.getItem('cart_items') : null
       const items = raw ? JSON.parse(raw) : []
-      const count = Array.isArray(items)
-        ? items.reduce((acc, it) => acc + (it?.quantity || 1), 0)
+      return Array.isArray(items)
+        ? items.reduce((acc: number, it: any) => acc + (it?.quantity || 1), 0)
         : 0
-      setCartItemCount(count)
     } catch {
-      setCartItemCount(0)
+      return 0
     }
-  }, [])
+  })
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

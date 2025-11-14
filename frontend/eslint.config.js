@@ -10,7 +10,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   globalIgnores(['dist', '.next', 'build', 'out']),
   {
-    files: ['**/*.{js,jsx}'],
+    files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
       react,
       security,
@@ -24,11 +24,14 @@ export default defineConfig([
     ],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser,
+      globals: { ...globals.browser, React: 'readonly', process: 'readonly', require: 'readonly' },
+      // Use TS parser so rules also cover .ts/.tsx files
+      parser: (await import('@typescript-eslint/parser')).default,
       parserOptions: {
         ecmaVersion: 'latest',
         ecmaFeatures: { jsx: true },
         sourceType: 'module',
+        project: false,
       },
     },
     rules: {
@@ -57,7 +60,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['**/*.config.js'],
+    files: ['**/*.config.js', '**/*.config.ts'],
     languageOptions: {
       globals: { ...globals.node },
     },

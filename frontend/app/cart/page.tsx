@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -11,17 +11,16 @@ import { calculateSubtotal, calculateShipping, calculateTotal, shippingConfig } 
 interface CartItem { id: string | number; name?: string; title?: string; price?: number; quantity?: number; image?: string }
 
 export default function CartPage() {
-  const [items, setItems] = useState<CartItem[]>([])
-
-  useEffect(() => {
+  const [items] = useState<CartItem[]>(() => {
     try {
+      if (typeof window === 'undefined') return []
       const raw = localStorage.getItem('cart_items')
       const parsed = raw ? JSON.parse(raw) : []
-      setItems(Array.isArray(parsed) ? parsed : [])
+      return Array.isArray(parsed) ? parsed : []
     } catch {
-      setItems([])
+      return []
     }
-  }, [])
+  })
 
   const subtotal = useMemo(() => calculateSubtotal(items.map(i => ({ id: Number(i.id), name: String(i.title || i.name || ''), price: Number(i.price || 0), quantity: Number(i.quantity || 1), image: String(i.image || '') }))), [items])
   const shipping = useMemo(() => calculateShipping(subtotal), [subtotal])

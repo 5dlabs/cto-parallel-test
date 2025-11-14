@@ -10,6 +10,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Reduce server fingerprinting
+  poweredByHeader: false,
   async headers() {
     return [
       {
