@@ -10,7 +10,7 @@ Production-ready e-commerce frontend using React, Vite, Tailwind CSS, and shadcn
     - `VITE_STANDARD_SHIPPING_COST` (number, default 9.99)
   - Next.js app also supports `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD`, and `NEXT_PUBLIC_STANDARD_SHIPPING_COST`.
 - Optionally set `VITE_PORT`/`PORT` to change dev port (default: 3000)
-- npm ci
+- npm install
 - npm start
 - Open http://localhost:3000
 
