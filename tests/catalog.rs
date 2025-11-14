@@ -8,20 +8,18 @@ fn crud_and_filter_and_precision() {
     let svc = ProductService::new();
 
     // Create products
-    let apple = svc
-        .create(NewProduct {
-            name: "Apple".to_string(),
-            price: Decimal::new(199, 2), // 1.99
-            stock: 10,
-        })
-        .expect("create apple");
-    let banana = svc
-        .create(NewProduct {
-            name: "Banana".to_string(),
-            price: Decimal::new(99, 2), // 0.99
-            stock: 0,
-        })
-        .expect("create banana");
+    let apple = svc.create(NewProduct {
+        name: "Apple".to_string(),
+        description: "Crisp and fresh".to_string(),
+        price: Decimal::new(199, 2), // 1.99
+        inventory_count: 10,
+    });
+    let banana = svc.create(NewProduct {
+        name: "Banana".to_string(),
+        description: "Sweet and ripe".to_string(),
+        price: Decimal::new(99, 2), // 0.99
+        inventory_count: 0,
+    });
 
     assert!(apple.id != banana.id);
     assert_eq!(Decimal::new(199, 2), apple.price);
@@ -37,14 +35,14 @@ fn crud_and_filter_and_precision() {
     let updated = svc
         .update_inventory(apple.id, 5)
         .expect("update apple stock");
-    assert_eq!(5, updated.stock);
+    assert_eq!(5, updated.inventory_count);
 
     // filter by name
     let f = ProductFilter {
         name_contains: Some("app".into()),
         ..ProductFilter::default()
     };
-    let results = svc.filter(&f);
+    let results = svc.filter(f);
     assert_eq!(1, results.len());
     assert_eq!("Apple", results[0].name);
 
@@ -55,7 +53,7 @@ fn crud_and_filter_and_precision() {
         in_stock: Some(true),
         ..ProductFilter::default()
     };
-    let results = svc.filter(&f);
+    let results = svc.filter(f);
     assert_eq!(1, results.len());
     assert_eq!("Apple", results[0].name);
 
@@ -64,7 +62,7 @@ fn crud_and_filter_and_precision() {
         in_stock: Some(false),
         ..ProductFilter::default()
     };
-    let results = svc.filter(&f);
+    let results = svc.filter(f);
     assert_eq!(1, results.len());
     assert_eq!("Banana", results[0].name);
 
@@ -86,13 +84,12 @@ fn concurrency_create_and_update() {
         let svc_cloned = Arc::clone(&svc);
         handles.push(thread::spawn(move || {
             for i in 0..per_thread {
-                let _ = svc_cloned
-                    .create(NewProduct {
-                        name: format!("Item-{t}-{i}"),
-                        price: Decimal::new(1234, 2),
-                        stock: 1,
-                    })
-                    .expect("create");
+                let _ = svc_cloned.create(NewProduct {
+                    name: format!("Item-{t}-{i}"),
+                    description: "Bulk".to_string(),
+                    price: Decimal::new(1234, 2),
+                    inventory_count: 1,
+                });
             }
         }));
     }
@@ -109,7 +106,9 @@ fn concurrency_create_and_update() {
     for id in ids {
         let svc_cloned = Arc::clone(&svc);
         handles.push(thread::spawn(move || {
-            let _ = svc_cloned.update_inventory(id, 7).unwrap();
+            let _ = svc_cloned
+                .update_inventory(id, 7)
+                .expect("update inventory");
         }));
     }
     for h in handles {
@@ -117,6 +116,6 @@ fn concurrency_create_and_update() {
     }
 
     let updated = svc.get_all();
-    let sevens = updated.iter().filter(|p| p.stock == 7).count();
+    let sevens = updated.iter().filter(|p| p.inventory_count == 7).count();
     assert_eq!(10, sevens);
 }

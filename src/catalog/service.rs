@@ -1,35 +1,11 @@
 use crate::catalog::models::{NewProduct, Product, ProductFilter};
-use rust_decimal::Decimal;
-use std::error::Error as StdError;
-use std::fmt;
-use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::{Arc, Mutex};
-
-/// Errors that can occur when operating on the catalog.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum CatalogError {
-    /// Provided input failed validation.
-    InvalidInput(&'static str),
-    /// No product exists for the requested id.
-    NotFound(i32),
-}
-
-impl fmt::Display for CatalogError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::InvalidInput(msg) => write!(f, "invalid input: {msg}"),
-            Self::NotFound(id) => write!(f, "product not found: {id}"),
-        }
-    }
-}
-
-impl StdError for CatalogError {}
 
 /// Thread-safe in-memory product catalog service.
 #[derive(Debug, Clone)]
 pub struct ProductService {
     products: Arc<Mutex<Vec<Product>>>,
-    next_id: Arc<AtomicI32>,
+    next_id: Arc<Mutex<i32>>,
 }
 
 impl Default for ProductService {
@@ -44,163 +20,134 @@ impl ProductService {
     pub fn new() -> Self {
         Self {
             products: Arc::new(Mutex::new(Vec::new())),
-            next_id: Arc::new(AtomicI32::new(1)),
+            next_id: Arc::new(Mutex::new(1)),
         }
     }
 
-    /// Create a product with auto-incrementing id.
-    ///
-    /// # Errors
-    /// Returns `CatalogError::InvalidInput` when the provided `NewProduct` fails validation.
-    ///
-    /// # Poison handling
-    /// If the internal mutex has been poisoned by a prior panic, continue by
-    /// recovering the inner state instead of panicking.
-    pub fn create(&self, input: NewProduct) -> Result<Product, CatalogError> {
-        input.validate().map_err(CatalogError::InvalidInput)?;
-
-        let id = self.next_id.fetch_add(1, Ordering::SeqCst);
-        let product = Product {
-            id,
-            name: input.name,
-            price: input.price,
-            stock: input.stock,
-        };
-
-        let mut guard = self
-            .products
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        guard.push(product.clone());
-        Ok(product)
-    }
-
-    /// Return a snapshot of all products.
-    ///
-    /// # Poison handling
-    /// If the internal mutex has been poisoned by a prior panic, continue by
-    /// recovering the inner state instead of panicking.
-    #[must_use]
-    pub fn get_all(&self) -> Vec<Product> {
+    fn lock_products(&self) -> Vec<Product> {
         self.products
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .clone()
     }
 
+    fn lock_products_mut(&self) -> std::sync::MutexGuard<'_, Vec<Product>> {
+        self.products
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    fn next_id(&self) -> i32 {
+        let mut guard = self
+            .next_id
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let current = *guard;
+        *guard += 1;
+        current
+    }
+
+    /// Create a product with auto-incrementing id.
+    #[must_use]
+    pub fn create(&self, input: NewProduct) -> Product {
+        let id = self.next_id();
+        let product = Product {
+            id,
+            name: input.name,
+            description: input.description,
+            price: input.price,
+            inventory_count: input.inventory_count,
+        };
+
+        let mut guard = self.lock_products_mut();
+        guard.push(product.clone());
+        product
+    }
+
+    /// Return a snapshot of all products.
+    #[must_use]
+    pub fn get_all(&self) -> Vec<Product> {
+        self.lock_products()
+    }
+
     /// Return product with matching id if present.
-    ///
-    /// # Poison handling
-    /// If the internal mutex has been poisoned by a prior panic, continue by
-    /// recovering the inner state instead of panicking.
     #[must_use]
     pub fn get_by_id(&self, id: i32) -> Option<Product> {
         self.products
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .iter()
-            .find(|p| p.id == id)
+            .find(|product| product.id == id)
             .cloned()
     }
 
-    /// Update stock to `new_stock` for product id.
-    ///
-    /// # Errors
-    /// Returns `CatalogError::InvalidInput` when `new_stock` is negative.
-    /// Returns `CatalogError::NotFound` when the `id` does not exist.
-    ///
-    /// # Poison handling
-    /// If the internal mutex has been poisoned by a prior panic, continue by
-    /// recovering the inner state instead of panicking.
-    pub fn update_inventory(&self, id: i32, new_stock: i32) -> Result<Product, CatalogError> {
-        if new_stock < 0 {
-            return Err(CatalogError::InvalidInput("stock must be non-negative"));
-        }
-        let mut guard = self
-            .products
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        let product = guard
+    /// Update inventory count for product id.
+    #[must_use]
+    pub fn update_inventory(&self, id: i32, new_count: i32) -> Option<Product> {
+        let mut guard = self.lock_products_mut();
+        guard
             .iter_mut()
-            .find(|p| p.id == id)
-            .ok_or(CatalogError::NotFound(id))?;
-        product.stock = new_stock;
-        Ok(product.clone())
+            .find(|product| product.id == id)
+            .map(|product| {
+                product.inventory_count = new_count;
+                product.clone()
+            })
     }
 
     /// Filter products using the provided criteria.
-    ///
-    /// # Poison handling
-    /// If the internal mutex has been poisoned by a prior panic, continue by
-    /// recovering the inner state instead of panicking.
     #[must_use]
-    pub fn filter(&self, f: &ProductFilter) -> Vec<Product> {
-        let lower = f.name_contains.as_ref().map(|s| s.to_lowercase());
+    pub fn filter(&self, filter: ProductFilter) -> Vec<Product> {
+        let ProductFilter {
+            name_contains,
+            min_price,
+            max_price,
+            in_stock,
+        } = filter;
 
-        let apply_name = |p: &Product| match &lower {
-            Some(sub) => p.name.to_lowercase().contains(sub),
-            None => true,
-        };
-
-        let apply_min_price = |p: &Product| match f.min_price {
-            Some(min) => p.price >= min,
-            None => true,
-        };
-
-        let apply_max_price = |p: &Product| match f.max_price {
-            Some(max) => p.price <= max,
-            None => true,
-        };
-
-        let apply_stock_flag = |p: &Product| match f.in_stock {
-            Some(true) => p.stock > 0,
-            Some(false) => p.stock == 0,
-            None => true,
-        };
-
-        let apply_stock_min = |p: &Product| match f.min_stock {
-            Some(min) => p.stock >= min,
-            None => true,
-        };
-
-        let apply_stock_max = |p: &Product| match f.max_stock {
-            Some(max) => p.stock <= max,
-            None => true,
-        };
+        let name_contains = name_contains.map(|name| name.to_lowercase());
 
         self.products
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .iter()
-            .filter(|&p| {
-                apply_name(p)
-                    && apply_min_price(p)
-                    && apply_max_price(p)
-                    && apply_stock_flag(p)
-                    && apply_stock_min(p)
-                    && apply_stock_max(p)
+            .filter(|product| {
+                if let Some(ref name) = name_contains {
+                    if !product.name.to_lowercase().contains(name) {
+                        return false;
+                    }
+                }
+
+                if let Some(ref min) = min_price {
+                    if product.price < *min {
+                        return false;
+                    }
+                }
+
+                if let Some(ref max) = max_price {
+                    if product.price > *max {
+                        return false;
+                    }
+                }
+
+                if let Some(flag) = in_stock {
+                    let available = product.inventory_count > 0;
+                    if flag != available {
+                        return false;
+                    }
+                }
+
+                true
             })
             .cloned()
             .collect()
     }
 
     /// Delete product by id; returns true if one was removed.
-    ///
-    /// # Poison handling
-    /// If the internal mutex has been poisoned by a prior panic, continue by
-    /// recovering the inner state instead of panicking.
     #[must_use]
     pub fn delete(&self, id: i32) -> bool {
-        let mut guard = self
-            .products
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut guard = self.lock_products_mut();
         let len_before = guard.len();
-        guard.retain(|p| p.id != id);
+        guard.retain(|product| product.id != id);
         guard.len() != len_before
     }
 }
-
-// Helper to prevent unused imports warnings for Decimal in public API docs.
-#[allow(dead_code)]
-fn _ensure_decimal(_: Decimal) {}
