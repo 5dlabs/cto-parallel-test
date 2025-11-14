@@ -33,6 +33,26 @@ bash task/gh-code-scan.sh $(git rev-parse --abbrev-ref HEAD) --update-docs
 
 All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
 
+## Verification Snapshot (attempt 24)
+
+- Secrets scan (workspace): `gitleaks detect --no-banner -v --report-format json --report-path gitleaks-report.json`
+  - Output: no leaks found (see `gitleaks-report.json` at repo root)
+- Dependency audit (runtime only): `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../security/npm-audit.json`
+  - Result: 0 moderate/high/critical – see `security/npm-audit.json`
+- Dependency audit (all deps): `cd frontend && npm audit --json > ../security/npm-audit-full.json`
+  - Result: 0 vulnerabilities – see `security/npm-audit-full.json`
+- Frontend quality: `cd frontend && npm ci && npm run lint && npm run build` all succeeded
+- Dev server boot: `cd frontend && npm start` started Vite at http://localhost:3000
+
+GitHub code scanning is blocked by CLI auth in this environment. To fetch alerts and append a snapshot to this doc:
+
+```
+gh auth login -h github.com
+bash task/gh-code-scan.sh $(git rev-parse --abbrev-ref HEAD) --update-docs
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+
 ## Verification Snapshot (attempt 21)
 
 - Secrets scan (workspace): `gitleaks detect --no-git -f json -r security/gitleaks-report.json`
