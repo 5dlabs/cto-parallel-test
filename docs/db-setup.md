@@ -14,14 +14,14 @@ Environment variables
 
 Local development
 - Start Postgres (example via Docker):
-  `docker run -d --name cto_pg -e POSTGRES_PASSWORD=<your-password> -e POSTGRES_DB=ecommerce_db -p 5432:5432 postgres:16-alpine`
-- Create `.env` with a `DATABASE_URL` pointing at your Postgres instance (use standard Postgres connection string syntax).
+  `docker run -d --name cto_pg -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=<your-password> -e POSTGRES_DB=ecommerce_db -p 5432:5432 postgres:16-alpine`
+- Copy `.env.example` to `.env` and set a real password.
+  Example: `DATABASE_URL=postgres://postgres:<your-password>@localhost:5432/ecommerce_db`.
 - Install Diesel CLI: `cargo install diesel_cli --no-default-features --features postgres`.
 - Apply migrations: `diesel migration run`.
-- Regenerate schema: `diesel print-schema > src/schema.rs`.
+- Regenerate schema (if needed): `diesel print-schema > src/schema.rs`.
 
 Security
-- No secrets are committed; `.env` is gitignored.
-- Diesel uses parameterized queries by default.
+- No secrets are committed; `.env` is gitignored. Use `.env.example` as a template.
+- Diesel uses parameterized queries by default for SQL safety.
 - Password hashes are excluded from serialization.
-
