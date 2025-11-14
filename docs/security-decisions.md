@@ -2,6 +2,7 @@ Security Decisions and Practices
 
 - Uses Diesel ORM which issues parameterized queries by default to mitigate SQL injection.
 - No hardcoded secrets. Runtime configuration is read from environment (`DATABASE_URL`, pool tuning vars). `.env` is gitignored; `.env.example` is provided.
+- `.env.example` template uses `REDACTED` in the connection string to avoid secret-like patterns while still documenting expected format.
 - Password hashes are present in the database model but excluded from serialization using `#[serde(skip_serializing)]`.
 - Insertable models that accept user input (e.g., `NewUser`, `NewProduct`) do not derive `Deserialize`; requests map to explicit DTOs and perform validation and password hashing (where applicable) before DB insert to prevent mass-assignment.
 - Monetary values use PostgreSQL `NUMERIC` mapped to `bigdecimal::BigDecimal` for precision safety.
