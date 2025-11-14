@@ -256,7 +256,9 @@ println!("JWT: {}", token);
 ```rust
 use crate::auth::jwt::validate_token;
 
-let token = "eyJ0eXAiOiJKV1QiLCJhbGc...";
+// Example placeholder token for documentation purposes only.
+// Replace with a real token at runtime (do not hardcode secrets).
+let token = "<JWT_TOKEN>";
 match validate_token(token) {
     Ok(claims) => println!("Valid token for user: {}", claims.sub),
     Err(e) => println!("Invalid token: {}", e),
