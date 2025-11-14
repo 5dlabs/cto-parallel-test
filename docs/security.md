@@ -55,3 +55,4 @@ If GitHub auth is unavailable locally, proceed with local verification and push 
 Additional hardening applied:
 - Capped product name length to 100 chars
 - Capped stock to 1,000,000 with validation on create and update
+ - Prevented integer overflow of auto-incrementing IDs using atomic `fetch_update` with `checked_add`; returns `IdExhausted` instead of wrapping

@@ -12,6 +12,8 @@ pub enum CatalogError {
     InvalidInput(&'static str),
     /// No product exists for the requested id.
     NotFound(i32),
+    /// ID space exhausted; prevents integer overflow/wrap-around.
+    IdExhausted,
 }
 
 impl fmt::Display for CatalogError {
@@ -19,6 +21,7 @@ impl fmt::Display for CatalogError {
         match self {
             Self::InvalidInput(msg) => write!(f, "invalid input: {msg}"),
             Self::NotFound(id) => write!(f, "product not found: {id}"),
+            Self::IdExhausted => write!(f, "id space exhausted"),
         }
     }
 }
@@ -59,7 +62,12 @@ impl ProductService {
     pub fn create(&self, input: NewProduct) -> Result<Product, CatalogError> {
         input.validate().map_err(CatalogError::InvalidInput)?;
 
-        let id = self.next_id.fetch_add(1, Ordering::SeqCst);
+        // Reserve a unique id without risking integer overflow.
+        // If the counter cannot be incremented (i32::MAX reached), return an error.
+        let id = self
+            .next_id
+            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |x| x.checked_add(1))
+            .map_err(|_| CatalogError::IdExhausted)?;
         let product = Product {
             id,
             name: input.name,
