@@ -78,3 +78,29 @@ GitHub Code Scanning Check — Attempt 7
   - `PR=$(gh pr view --json number -q .number || true)`
   - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open${PR:+&pr=${PR}}" | jq '.'`
 - Local scans remain clean: cargo-audit shows no advisories; Gitleaks report is empty (`[]`).
+
+GitHub Code Scanning Check — Attempt 8
+- Timestamp (UTC): 2025-11-14T17:26:01Z
+- Context: `gh` remains unauthenticated / rate-limited (HTTP 403) in this environment; repository: `5dlabs/cto-parallel-test`; no PR detected for current branch.
+- Commands to authenticate and fetch alerts:
+  - `export GH_HOST=github.com`
+  - `gh auth login -h github.com` (or `export GH_TOKEN=<github_app_installation_token>`) 
+  - `PR=$(gh pr view --json number -q .number || true)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open${PR:+&pr=${PR}}" | jq '.'`
+- Local scans remain clean:
+  - `cargo-audit`: `vulnerabilities.found=false`
+  - `gitleaks`: `[]`
+  - `fmt/clippy/tests`: passing
+
+GitHub Code Scanning Check — Attempt 9
+- Timestamp (UTC): 2025-11-14T17:29:27Z
+- Context: `gh` remains unauthenticated / rate-limited (HTTP 403) for this environment; repository: `5dlabs/cto-parallel-test`.
+- Commands to authenticate and fetch alerts:
+  - `export GH_HOST=github.com`
+  - `gh auth login -h github.com` (or `export GH_TOKEN=<github_app_installation_token>`) 
+  - `PR=$(gh pr view --json number -q .number || true)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open${PR:+&pr=${PR}}" | jq '.'`
+- Local scans remain clean and enforce zero MEDIUM/HIGH/CRITICAL findings:
+  - `cargo-audit`: `vulnerabilities.found=false`
+  - `gitleaks`: `[]`
+  - `fmt/clippy/tests`: passing
