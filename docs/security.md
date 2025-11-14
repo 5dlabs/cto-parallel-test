@@ -35,9 +35,9 @@ Local verification results (this change set):
 
 Latest verification (Task 4):
 
-- Timestamp: 2025-11-14 23:14:58 UTC
+ - Timestamp: 2025-11-14 23:20:43 UTC
 - Tools: rustfmt, clippy (pedantic, -D warnings), cargo test, cargo-audit (JSON), gitleaks (JSON)
-- Result: All checks PASS; gitleaks findings = 0; cargo-audit vulnerabilities = 0; zero MEDIUM/HIGH/CRITICAL issues in local scans
+- Result: All checks PASS; gitleaks findings = 0; cargo-audit vulnerabilities = 0; zero MEDIUM/HIGH/CRITICAL issues in local scans. Clippy pedantic clean (API optimized to pass &NewProduct).
 - Artifacts: `gitleaks_report_latest.json`, `cargo_audit_report.json`
 
 Notes:
@@ -49,5 +49,7 @@ If GitHub auth is unavailable locally, proceed with local verification and push 
 Hygiene & Parameterization:
 - Introduced environment overrides with safe clamps for catalog limits:
   - `CATALOG_MAX_NAME_LEN` (1..=10_000; default 100)
+  - `CATALOG_MAX_DESCRIPTION_LEN` (1..=50_000; default 1_000)
   - `CATALOG_MAX_STOCK` (0..=10_000_000; default 1_000_000)
 - Creation sanitizes inputs (name truncation, non-negative price, stock clamped)
+  and caps description length to mitigate unbounded memory usage from untrusted inputs

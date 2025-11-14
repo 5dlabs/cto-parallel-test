@@ -8,13 +8,13 @@ fn crud_and_filter_and_precision() {
     let svc = ProductService::new();
 
     // Create products
-    let apple = svc.create(NewProduct {
+    let apple = svc.create(&NewProduct {
         name: "Apple".to_string(),
         description: "Crisp and fresh".to_string(),
         price: Decimal::new(199, 2), // 1.99
         inventory_count: 10,
     });
-    let banana = svc.create(NewProduct {
+    let banana = svc.create(&NewProduct {
         name: "Banana".to_string(),
         description: "Sweet and ripe".to_string(),
         price: Decimal::new(99, 2), // 0.99
@@ -84,7 +84,7 @@ fn concurrency_create_and_update() {
         let svc_cloned = Arc::clone(&svc);
         handles.push(thread::spawn(move || {
             for i in 0..per_thread {
-                let _ = svc_cloned.create(NewProduct {
+                let _ = svc_cloned.create(&NewProduct {
                     name: format!("Item-{t}-{i}"),
                     description: "Bulk".to_string(),
                     price: Decimal::new(1234, 2),

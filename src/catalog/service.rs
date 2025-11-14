@@ -52,7 +52,7 @@ impl ProductService {
 
     /// Create a product with auto-incrementing id.
     #[must_use]
-    pub fn create(&self, input: NewProduct) -> Product {
+    pub fn create(&self, input: &NewProduct) -> Product {
         let id = self.next_id();
         // Sanitize inputs defensively
         let name: String = input.name.chars().take(configured_max_name_len()).collect();

@@ -19,7 +19,7 @@ fn test_update_inventory_nonexistent_returns_none() {
 #[test]
 fn test_update_inventory_allows_negative_counts() {
     let svc = ProductService::new();
-    let product = svc.create(build_product(
+    let product = svc.create(&build_product(
         "Test",
         "Negative inventory",
         Decimal::new(100, 2),
@@ -36,19 +36,19 @@ fn test_update_inventory_allows_negative_counts() {
 fn test_filter_price_bounds() {
     let svc = ProductService::new();
 
-    let _ = svc.create(build_product(
+    let _ = svc.create(&build_product(
         "Budget",
         "Affordable option",
         Decimal::new(50, 2),
         5,
     ));
-    let _ = svc.create(build_product(
+    let _ = svc.create(&build_product(
         "Midrange",
         "Balanced choice",
         Decimal::new(1500, 2),
         8,
     ));
-    let _ = svc.create(build_product(
+    let _ = svc.create(&build_product(
         "Premium",
         "High-end product",
         Decimal::new(5000, 2),
@@ -70,19 +70,19 @@ fn test_filter_price_bounds() {
 fn test_filter_combined_criteria() {
     let svc = ProductService::new();
 
-    let _ = svc.create(build_product(
+    let _ = svc.create(&build_product(
         "Apple Juice",
         "Refreshing drink",
         Decimal::new(299, 2),
         15,
     ));
-    let _ = svc.create(build_product(
+    let _ = svc.create(&build_product(
         "Apple Pie",
         "Dessert",
         Decimal::new(599, 2),
         5,
     ));
-    let _ = svc.create(build_product(
+    let _ = svc.create(&build_product(
         "Orange Juice",
         "Citrus",
         Decimal::new(250, 2),
@@ -110,7 +110,7 @@ fn test_delete_nonexistent() {
 #[test]
 fn test_id_auto_increment_starts_at_one() {
     let svc = ProductService::new();
-    let product = svc.create(build_product(
+    let product = svc.create(&build_product(
         "First",
         "First product",
         Decimal::new(100, 2),
@@ -124,19 +124,19 @@ fn test_id_auto_increment_starts_at_one() {
 fn test_id_auto_increment_sequential() {
     let svc = ProductService::new();
 
-    let p1 = svc.create(build_product(
+    let p1 = svc.create(&build_product(
         "First",
         "First product",
         Decimal::new(100, 2),
         10,
     ));
-    let p2 = svc.create(build_product(
+    let p2 = svc.create(&build_product(
         "Second",
         "Second product",
         Decimal::new(200, 2),
         20,
     ));
-    let p3 = svc.create(build_product(
+    let p3 = svc.create(&build_product(
         "Third",
         "Third product",
         Decimal::new(300, 2),
@@ -152,7 +152,7 @@ fn test_id_auto_increment_sequential() {
 fn test_decimal_precision_maintained() {
     let svc = ProductService::new();
 
-    let product = svc.create(build_product(
+    let product = svc.create(&build_product(
         "Precise Item",
         "High precision",
         Decimal::new(12345, 2), // 123.45
@@ -175,7 +175,7 @@ fn test_decimal_precision_maintained() {
 fn test_case_insensitive_name_filter() {
     let svc = ProductService::new();
 
-    let _ = svc.create(build_product("Apple", "Fruit", Decimal::new(100, 2), 10));
+    let _ = svc.create(&build_product("Apple", "Fruit", Decimal::new(100, 2), 10));
 
     let filter = ProductFilter {
         name_contains: Some("APPLE".to_string()),
@@ -200,13 +200,13 @@ fn test_case_insensitive_name_filter() {
 fn test_empty_filter_returns_all() {
     let svc = ProductService::new();
 
-    let _ = svc.create(build_product(
+    let _ = svc.create(&build_product(
         "Product 1",
         "First",
         Decimal::new(100, 2),
         10,
     ));
-    let _ = svc.create(build_product(
+    let _ = svc.create(&build_product(
         "Product 2",
         "Second",
         Decimal::new(200, 2),
@@ -221,7 +221,7 @@ fn test_empty_filter_returns_all() {
 fn test_clone_does_not_expose_internal_state() {
     let svc = ProductService::new();
 
-    let product = svc.create(build_product(
+    let product = svc.create(&build_product(
         "Test",
         "Clone safety",
         Decimal::new(100, 2),
