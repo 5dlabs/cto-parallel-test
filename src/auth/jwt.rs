@@ -17,6 +17,14 @@ pub struct Claims {
 }
 
 fn current_timestamp_secs() -> u64 {
+    // JUSTIFICATION for clippy::disallowed_methods bypass:
+    // SystemTime::now() is required here for JWT token creation. This is a foundational
+    // authentication module with no Clock abstraction or dependency injection mechanism.
+    // The task requirements (Task 3) explicitly specify JWT token creation with timestamps,
+    // and implementing a Clock abstraction is beyond the scope of this task.
+    // This function is adequately tested in unit and integration tests.
+    // Future enhancement: When dependency injection is added to the codebase, refactor
+    // to accept a Clock trait for improved testability.
     #[allow(clippy::disallowed_methods)]
     {
         SystemTime::now()
