@@ -6,12 +6,12 @@ This module provides a thread-safe, in-memory product catalog with:
 - Inventory updates with validation
 - Flexible filtering by name, price, and stock
 - Precise prices via `rust_decimal::Decimal`
-- Auto-incrementing IDs using `AtomicI32`
+- Auto-incrementing IDs managed internally by the service
 
 ## Security & Quality
 
 - No hardcoded secrets or external IO
-- Input validation for create/update operations
+- Input validation and sanitization for create/update operations
 - Thread safety via `Arc<Mutex<Vec<Product>>>`
 - Poison-safe lock handling: recover inner state on mutex poison to avoid
   panic-induced denial-of-service while maintaining forward progress
@@ -30,26 +30,26 @@ Inputs are sanitized using these limits during creation and updates (name trunca
 ## Thread Safety
 
 - All catalog operations are guarded by a single `Mutex<Vec<Product>>` shared via `Arc`.
-- ID generation uses an `AtomicI32` with `Ordering::SeqCst` for correctness.
+- ID generation is performed under a mutex to ensure sequential, unique IDs.
 - Mutex poison is handled by recovering the inner state to avoid propagating panics.
 
 ## Governance
 
 - Follows repository standards in `coding-guidelines.md` and `github-guidelines.md`
 - Changes flow through feature branches only and PR review
-- Use GitHub code scanning for ongoing security checks on PRs
+- GitHub code scanning and local security tools validate changes on PRs
 
 ## Public API
 
 - `ProductService::new()`
-- `ProductService::create(NewProduct)` -> `Result<Product, CatalogError>`
+- `ProductService::create(NewProduct)` -> `Product`
 - `ProductService::get_all()` -> `Vec<Product>`
 - `ProductService::get_by_id(i32)` -> `Option<Product>`
-- `ProductService::update_inventory(i32, i32)` -> `Result<Product, CatalogError>`
-- `ProductService::filter(&ProductFilter)` -> `Vec<Product>`
+- `ProductService::update_inventory(i32, i32)` -> `Option<Product>`
+- `ProductService::filter(ProductFilter)` -> `Vec<Product>`
 - `ProductService::delete(i32)` -> `bool`
 
-See `tests/catalog.rs` for complete usage examples.
+See `tests/catalog.rs` and `tests/catalog_edge_cases.rs` for complete usage examples.
 
 ## Usage Example
 
@@ -62,15 +62,16 @@ let svc = ProductService::new();
 // Create a product with precise decimal price
 let apple = svc.create(NewProduct {
     name: "Apple".into(),
+    description: "Fresh".into(),
     price: Decimal::new(199, 2), // 1.99
-    stock: 10,
-})?;
+    inventory_count: 10,
+});
 
 // Update inventory
-let apple = svc.update_inventory(apple.id, 5)?;
+let _apple = svc.update_inventory(apple.id, 5).expect("updated");
 
 // Filter by name and stock
-let results = svc.filter(&ProductFilter {
+let results = svc.filter(ProductFilter {
     name_contains: Some("app".into()),
     in_stock: Some(true),
     ..ProductFilter::default()
@@ -82,5 +83,4 @@ assert!(!results.is_empty());
 
 - `name_contains` is case-insensitive substring match
 - `min_price`/`max_price` are inclusive bounds
-- `in_stock = Some(true)` filters to `stock > 0`; `Some(false)` filters to `stock == 0`
-- `min_stock`/`max_stock` provide inclusive integer stock ranges
+- `in_stock = Some(true)` filters to `inventory_count > 0`; `Some(false)` filters to `inventory_count == 0`

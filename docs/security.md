@@ -33,12 +33,12 @@ Local verification results (this change set):
 - Secret scan (gitleaks): PASS (no leaks found)
 - Dependency audit (cargo-audit): PASS (no advisories)
 
-Latest verification (Task 4, attempt 10):
+Latest verification (Task 4):
 
-- Timestamp: 2025-11-14 11:46:54 UTC
+- Timestamp: 2025-11-14 23:02:37 UTC
 - Tools: rustfmt, clippy (pedantic, -D warnings), cargo test, cargo-audit (JSON), gitleaks (JSON)
 - Result: All checks PASS; gitleaks findings = 0; cargo-audit vulnerabilities = 0; zero MEDIUM/HIGH/CRITICAL issues in local scans
-- Artifacts: `gitleaks_report_latest.json`, `cargo_audit_report.json`
+- Artifacts: `gitleaks_report.json`, `cargo_audit_report.json`
 
 Notes:
 - GitHub API access for listing Code Scanning alerts from the local environment may be rate-limited or require explicit `GH_TOKEN` export. If unauthenticated locally, rely on CI where CodeQL + SARIF uploads run on pushes/PRs. Use the commands above once a valid token is configured.
