@@ -12,5 +12,7 @@ hooks/
 **/hooks/
 
 # Security and audit reports - do not commit
+# Ignore gitleaks reports (prevent leaking into history)
 gitleaks-report.json
+gitleaks*.json
 audit.json
