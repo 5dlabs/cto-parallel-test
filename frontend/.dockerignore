@@ -1,28 +1,25 @@
-.git
-.github
-.gitignore
-
-# Never include local env files in Docker context
+# Prevent large or sensitive files from being sent to Docker build context
+# Secrets and local environment
 .env
 .env.*
+!.env.example
 
-# Dependencies are installed in the image
+# Node modules and build artifacts
 node_modules
-
-# Build outputs (built in image)
 dist
 build
-.next
 out
 
-# IDE/editor noise
-.vscode
-.idea
-*.swp
-*.log
+# VCS and CI/CD metadata
+.git
+.gitignore
+.github
 
-# Tests and local reports
-coverage
+# Local security scan artifacts
+../security
 security
 gitleaks*.json
 
+# OS files
+.DS_Store
+Thumbs.db

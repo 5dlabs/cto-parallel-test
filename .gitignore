@@ -1,7 +1,5 @@
 # Security scan artifacts (do not commit)
-security/gitleaks-report.json
-security/npm-audit.json
-security/npm-audit-full.json
+security/
 gitleaks*.json
 
 # Local helper binaries
