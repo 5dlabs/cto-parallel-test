@@ -3,13 +3,13 @@
 This repository includes a frontend e‑commerce app with secure defaults. Key practices applied:
 
 - Input validation and encoding
-  - API base URL normalized and path segments encoded in `frontend/lib/config.ts`
+  - API base URL normalized and path segments encoded in `frontend/src/config.js`
   - IDs and route params validated/sanitized where applicable
 - XSS prevention
   - No usage of `dangerouslySetInnerHTML`
   - Strict Content Security Policy added in `frontend/index.html`
   - Next.js headers enforce CSP without `unsafe-inline` for styles in `frontend/next.config.ts`
-  - `connect-src` is restricted to the configured API origin when `NEXT_PUBLIC_API_BASE_URL`/`VITE_API_BASE_URL` is set (see `frontend/next.config.ts`)
+  - `connect-src` restricted to the configured API origin when `NEXT_PUBLIC_API_BASE_URL`/`VITE_API_BASE_URL` is set (see `frontend/next.config.ts`)
 - Sensitive data handling
   - No secrets committed; configuration via environment variables (`.env`)
   - `localStorage` only stores non‑sensitive cart state
@@ -29,10 +29,11 @@ gh api \
 
 Fix all MEDIUM/HIGH/CRITICAL findings before merging.
 
-If GitHub CLI authentication is unavailable in your environment, authenticate and re-run the query:
+If GitHub CLI authentication is unavailable in your environment, authenticate and re-run the query (GitHub App token supported via `GH_TOKEN`):
 
 ```
-gh auth login -h github.com
+export GH_TOKEN=<GITHUB_APP_TOKEN>
+gh auth status || gh auth login -h github.com --with-token <<<"$GH_TOKEN"
 PR_NUM=$(gh pr list --head feature/task-6-implementation --json number -q '.[0].number')
 gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=$PR_NUM" \
   --jq '.[] | {rule: .rule.id, severity: .rule.severity, path: .most_recent_instance.location.path, start: .most_recent_instance.location.start_line}'
