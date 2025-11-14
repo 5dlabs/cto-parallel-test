@@ -39,7 +39,8 @@ let user = User {
 assert!(user.verify_password("super_secret_password"));
 
 // Create and validate a token
-std::env::set_var("JWT_SECRET", "dev_only_secret_min_32_chars________________");
+// Example only: set a development secret via env. Do not hardcode secrets.
+std::env::set_var("JWT_SECRET", "example-secret-min-32-characters-change-me-please");
 let token = create_token("1").expect("token creation");
 let claims = validate_token(&token).expect("token validation");
 assert_eq!(claims.sub, "1");
@@ -52,7 +53,7 @@ assert_eq!(claims.sub, "1");
 - Password hashes are never serialized and never accepted from input (`#[serde(skip_serializing, skip_deserializing)]`).
 - `Debug` for `User` redacts the `password_hash` field to avoid leaking sensitive material in logs.
 - All inbound auth DTOs (`LoginRequest`, `RegisterRequest`, and `User` if ever deserialized) use `#[serde(deny_unknown_fields)]` to prevent mass-assignment or silent acceptance of unexpected fields.
-- Argon2 defaults are used; consider tuning parameters per deployment (increase memory cost and iterations where feasible).
+- Argon2 is configured as Argon2id v0x13 with t=3, m=64 MiB, p=1. Tune upwards if feasible.
 - JWT is strictly validated with `HS256` only to avoid algorithm confusion attacks; 30s leeway is allowed for clock skew.
 - A minimum secret length of 32 bytes is enforced for HMAC keys to reduce risk of weak keys.
 - A `Clock` abstraction is used to bound wall-clock time usage and enable deterministic tests.

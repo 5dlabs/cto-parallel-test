@@ -5,7 +5,7 @@ use argon2::{
     password_hash::{
         Error as PasswordHashError, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
     },
-    Argon2,
+    Algorithm, Argon2, Params, Version,
 };
 use rand_core::OsRng;
 
@@ -44,7 +44,8 @@ impl User {
         }
     }
 
-    /// Hash a password using Argon2 with random salt
+    /// Hash a password using Argon2id with secure, opinionated parameters
+    /// (Argon2 v0x13, t=3, m=64 MiB, p=1) and a random salt.
     ///
     /// # Errors
     /// Returns an error if the Argon2 hashing operation fails due to resource
@@ -52,7 +53,13 @@ impl User {
     /// operating conditions.
     pub fn hash_password(password: &str) -> Result<String, PasswordHashError> {
         let salt = SaltString::generate(&mut OsRng);
-        Argon2::default()
+        // Configure Argon2id with stronger defaults than the crate defaults
+        // to align with current recommendations (OWASP, libsodium guidance).
+        // m_cost is in KiB; 64 MiB = 65536 KiB.
+        let params = Params::new(65_536, 3, 1, None).map_err(|_| PasswordHashError::Password)?;
+        let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
+
+        argon2
             .hash_password(password.as_bytes(), &salt)
             .map(|ph| ph.to_string())
     }

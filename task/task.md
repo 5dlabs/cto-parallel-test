@@ -31,14 +31,13 @@ Refer to `.taskmaster/docs/architecture.md` sections:
 ## Implementation Plan
 
 ### Step 1: Add Authentication Dependencies
-Update `Cargo.toml` with required authentication libraries:
+Update `Cargo.toml` with required authentication libraries (versions aligned with this repo):
 ```toml
 [dependencies]
-jsonwebtoken = "8.3.0"
+jsonwebtoken = "9.3.0"
 argon2 = "0.5.0"
-rand = "0.8.5"
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+rand_core = { version = "0.6", features = ["getrandom"] }
 ```
 
 **Validation:** Run `cargo check` to verify dependency resolution.
@@ -54,62 +53,56 @@ pub use self::models::User;
 ```
 
 ### Step 3: Implement JWT Token Handling
-Create `src/auth/jwt.rs` for JWT operations:
+Create `src/auth/jwt.rs` for JWT operations with secure defaults:
 ```rust
-use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
-use serde::{Serialize, Deserialize};
-use std::time::{SystemTime, UNIX_EPOCH};
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+use serde::{Deserialize, Serialize};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     pub sub: String,  // Subject (user id)
-    pub exp: usize,   // Expiration time
-    pub iat: usize,   // Issued at
+    pub exp: u64,     // Expiration time (seconds since epoch)
+    pub iat: u64,     // Issued at (seconds since epoch)
 }
 
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
-    let expiration = SystemTime::now()
+    let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs() + 24 * 3600; // 24 hours from now
+        .unwrap_or_else(|_| Duration::from_secs(0))
+        .as_secs();
+    let exp = now + 24 * 3600; // 24h
 
-    let claims = Claims {
-        sub: user_id.to_owned(),
-        exp: expiration as usize,
-        iat: SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as usize,
-    };
+    let claims = Claims { sub: user_id.to_owned(), exp: exp, iat: now };
 
-    // In production, load from environment variable
     let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+        .expect("JWT_SECRET must be set and strong (>=32 chars)");
 
-    encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes()))
+    let mut header = Header::new(Algorithm::HS256);
+    header.typ = Some("JWT".to_string());
+    encode(&header, &claims, &EncodingKey::from_secret(secret.as_bytes()))
 }
 
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+        .expect("JWT_SECRET must be set and strong (>=32 chars)");
 
-    let validation = Validation::default();
-    let token_data = decode::<Claims>(
-        token,
-        &DecodingKey::from_secret(secret.as_bytes()),
-        &validation
-    )?;
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.leeway = 30; // seconds of clock skew leeway
 
+    let token_data = decode::<Claims>(token, &DecodingKey::from_secret(secret.as_bytes()), &validation)?;
     Ok(token_data.claims)
 }
 ```
+Security note: never hardcode or fallback to default secrets; fail fast if `JWT_SECRET` is not set.
 
 ### Step 4: Implement User Model with Password Hashing
-Create `src/auth/models.rs` for user authentication logic:
+Create `src/auth/models.rs` for user authentication logic with Argon2id and secure defaults:
 ```rust
-use serde::{Serialize, Deserialize};
-use argon2::{self, Config};
-use rand::Rng;
+use serde::{Deserialize, Serialize};
+use argon2::{password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+             Argon2, Algorithm, Params, Version};
+use rand_core::OsRng;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
@@ -123,26 +116,30 @@ pub struct User {
 impl User {
     /// Verify a password against the stored hash
     pub fn verify_password(&self, password: &str) -> bool {
-        argon2::verify_encoded(&self.password_hash, password.as_bytes())
-            .unwrap_or(false)
+        match PasswordHash::new(&self.password_hash) {
+            Ok(parsed) => Argon2::default().verify_password(password.as_bytes(), &parsed).is_ok(),
+            Err(_) => false,
+        }
     }
 
-    /// Hash a password using Argon2 with random salt
+    /// Hash a password using Argon2id v0x13 with t=3, m=64 MiB, p=1 and random salt
     pub fn hash_password(password: &str) -> String {
-        let salt: [u8; 32] = rand::thread_rng().gen();
-        let config = Config::default();
-        argon2::hash_encoded(password.as_bytes(), &salt, &config)
-            .expect("Failed to hash password")
+        let salt = SaltString::generate(&mut OsRng);
+        let params = Params::new(65_536, 3, 1, None).expect("invalid Argon2 params");
+        let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
+        argon2.hash_password(password.as_bytes(), &salt).expect("hash failed").to_string()
     }
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct LoginRequest {
     pub username: String,
     pub password: String,
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RegisterRequest {
     pub username: String,
     pub email: String,
@@ -256,7 +253,8 @@ println!("JWT: {}", token);
 ```rust
 use crate::auth::jwt::validate_token;
 
-let token = "eyJ0eXAiOiJKV1QiLCJhbGc...";
+// Example placeholder token for documentation; not a real secret.
+let token = "<example-jwt-token>";
 match validate_token(token) {
     Ok(claims) => println!("Valid token for user: {}", claims.sub),
     Err(e) => println!("Invalid token: {}", e),
