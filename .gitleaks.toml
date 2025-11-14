@@ -1,0 +1,12 @@
+# Gitleaks configuration to avoid scanning generated artifacts and build outputs
+# This does not suppress real secrets in source; it only excludes known-safe paths.
+
+[allowlist]
+description = "Exclude generated reports and build outputs"
+paths = [
+  "^\\.reports/",
+  "^target/",
+  "^gitleaks-.*\\.json$",
+  "^gitleaks-.*\\.log$"
+]
+
