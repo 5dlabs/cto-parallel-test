@@ -31,7 +31,7 @@ export default function RegisterPage() {
     }
 
     // Registration logic will be implemented later
-    console.log("Registration attempt:", formData);
+    // Never log registration details or credentials
   };
 
   return (
