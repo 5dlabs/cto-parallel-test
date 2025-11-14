@@ -26,10 +26,16 @@ This crate provides a foundational, secure authentication module:
 use cto_parallel_test::auth::{create_token, validate_token, User};
 
 // Hash a password when creating a user
-let password_hash = User::hash_password("super_secret_password");
+let password_hash = User::hash_password("super_secret_password")
+    .expect("failed to hash password");
 
 // Verify a login attempt
-let user = User { id: 1, username: "alice".into(), email: "a@example.com".into(), password_hash };
+let user = User {
+    id: 1,
+    username: "alice".into(),
+    email: "a@example.com".into(),
+    password_hash,
+};
 assert!(user.verify_password("super_secret_password"));
 
 // Create and validate a token
