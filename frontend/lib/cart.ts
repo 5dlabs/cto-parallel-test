@@ -10,29 +10,7 @@ export interface CartItem {
   image: string;
 }
 
-export const mockCartItems: CartItem[] = [
-  {
-    id: 1,
-    name: "Wireless Headphones",
-    price: 99.99,
-    quantity: 1,
-    image: "https://placehold.co/200x150/e2e8f0/475569?text=Headphones",
-  },
-  {
-    id: 2,
-    name: "Smart Watch",
-    price: 249.99,
-    quantity: 1,
-    image: "https://placehold.co/200x150/e2e8f0/475569?text=Smart+Watch",
-  },
-  {
-    id: 5,
-    name: "Bluetooth Speaker",
-    price: 79.99,
-    quantity: 1,
-    image: "https://placehold.co/200x150/e2e8f0/475569?text=Speaker",
-  },
-];
+// No mock data exports; cart state is managed client-side (e.g., localStorage or API)
 
 // Shopping configuration
 export const shippingConfig = {

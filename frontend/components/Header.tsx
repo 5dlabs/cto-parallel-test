@@ -11,10 +11,23 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function Header() {
-  const [cartItemCount] = useState(3); // Placeholder cart count
+  const [cartItemCount, setCartItemCount] = useState(0);
+
+  useEffect(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('cart_items') : null
+      const items = raw ? JSON.parse(raw) : []
+      const count = Array.isArray(items)
+        ? items.reduce((acc, it) => acc + (it?.quantity || 1), 0)
+        : 0
+      setCartItemCount(count)
+    } catch {
+      setCartItemCount(0)
+    }
+  }, [])
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

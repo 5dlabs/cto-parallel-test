@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getAllProducts } from "@/lib/products";
 
-// Get products from external configuration
-const products = getAllProducts();
-
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const products = await getAllProducts();
   return (
     <div className="container py-8">
       <div className="mb-8">
@@ -24,14 +22,14 @@ export default function ProductsPage() {
             <CardHeader className="p-0">
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
                 <Image
-                  src={product.image}
-                  alt={product.name}
+                  src={String(product.image || '')}
+                  alt={String(product.title || product.name || 'Product')}
                   width={400}
                   height={300}
                   className="h-full w-full object-cover transition-transform hover:scale-105"
                   unoptimized
                 />
-                {!product.inStock && (
+                {product.inStock === false && (
                   <Badge
                     variant="destructive"
                     className="absolute right-2 top-2"
@@ -43,17 +41,17 @@ export default function ProductsPage() {
             </CardHeader>
             <CardContent className="flex-1 p-4">
               <Badge variant="secondary" className="mb-2">
-                {product.category}
+                {product.category || 'General'}
               </Badge>
-              <CardTitle className="mb-2 text-xl">{product.name}</CardTitle>
+              <CardTitle className="mb-2 text-xl">{product.title || product.name}</CardTitle>
               <p className="text-2xl font-bold text-primary">
-                ${product.price.toFixed(2)}
+                ${Number(product.price || 0).toFixed(2)}
               </p>
             </CardContent>
             <CardFooter className="p-4 pt-0">
-              <Link href={`/products/${product.id}`} className="w-full">
-                <Button className="w-full" disabled={!product.inStock}>
-                  {product.inStock ? "View Details" : "Out of Stock"}
+              <Link href={`/products/${encodeURIComponent(String(product.id))}`} className="w-full">
+                <Button className="w-full" disabled={product.inStock === false}>
+                  {product.inStock === false ? "Out of Stock" : "View Details"}
                 </Button>
               </Link>
             </CardFooter>

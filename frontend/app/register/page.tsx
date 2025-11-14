@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { API_BASE_URL, apiUrl } from "@/lib/config";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
   });
+  const [msg, setMsg] = useState("")
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -22,16 +24,34 @@ export default function RegisterPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      setMsg('Passwords do not match')
       return;
     }
 
-    // Registration logic will be implemented later
-    // Never log registration details or credentials
+    setMsg('')
+    if (!API_BASE_URL) {
+      setMsg('Set NEXT_PUBLIC_API_BASE_URL to enable registration.')
+      return
+    }
+    try {
+      const res = await fetch(apiUrl('register'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: String(formData.name).trim(),
+          email: String(formData.email).trim(),
+          password: formData.password,
+        }),
+      })
+      if (!res.ok) throw new Error('Registration failed')
+      setMsg('Registration successful')
+    } catch {
+      setMsg('Registration failed')
+    }
   };
 
   return (
@@ -114,6 +134,9 @@ export default function RegisterPage() {
               </Link>
             </p>
           </CardFooter>
+          {msg && (
+            <p className="px-6 pb-4 text-center text-sm text-muted-foreground">{msg}</p>
+          )}
         </form>
       </Card>
     </div>

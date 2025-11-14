@@ -6,15 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { API_BASE_URL, apiUrl } from "@/lib/config";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [msg, setMsg] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Login logic will be implemented later
-    // Never log credentials or sensitive information
+    setMsg("")
+    if (!API_BASE_URL) {
+      setMsg('Set NEXT_PUBLIC_API_BASE_URL to enable login.')
+      return
+    }
+    try {
+      const res = await fetch(apiUrl('login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: String(email).trim(), password }),
+      })
+      if (!res.ok) throw new Error('Login failed')
+      setMsg('Login successful')
+    } catch {
+      setMsg('Login failed')
+    }
   };
 
   return (
@@ -72,6 +88,9 @@ export default function LoginPage() {
               </Link>
             </p>
           </CardFooter>
+          {msg && (
+            <p className="px-6 pb-4 text-center text-sm text-muted-foreground">{msg}</p>
+          )}
         </form>
       </Card>
     </div>

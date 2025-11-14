@@ -1,19 +1,33 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
-import { mockCartItems, calculateSubtotal, calculateShipping, calculateTotal, shippingConfig } from "@/lib/cart";
+import { calculateSubtotal, calculateShipping, calculateTotal, shippingConfig } from "@/lib/cart";
+
+interface CartItem { id: string | number; name?: string; title?: string; price?: number; quantity?: number; image?: string }
 
 export default function CartPage() {
-  const cartItems = mockCartItems;
-  const subtotal = calculateSubtotal(cartItems);
-  const shipping = calculateShipping(subtotal);
-  const total = calculateTotal(cartItems);
+  const [items, setItems] = useState<CartItem[]>([])
 
-  if (cartItems.length === 0) {
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('cart_items')
+      const parsed = raw ? JSON.parse(raw) : []
+      setItems(Array.isArray(parsed) ? parsed : [])
+    } catch {
+      setItems([])
+    }
+  }, [])
+
+  const subtotal = useMemo(() => calculateSubtotal(items.map(i => ({ id: Number(i.id), name: String(i.title || i.name || ''), price: Number(i.price || 0), quantity: Number(i.quantity || 1), image: String(i.image || '') }))), [items])
+  const shipping = useMemo(() => calculateShipping(subtotal), [subtotal])
+  const total = useMemo(() => calculateTotal(items.map(i => ({ id: Number(i.id), name: String(i.title || i.name || ''), price: Number(i.price || 0), quantity: Number(i.quantity || 1), image: String(i.image || '') }))), [items])
+
+  if (items.length === 0) {
     return (
       <div className="container py-16">
         <Card className="mx-auto max-w-md text-center">
@@ -44,14 +58,14 @@ export default function CartPage() {
         {/* Cart Items */}
         <div className="lg:col-span-2">
           <div className="space-y-4">
-            {cartItems.map((item) => (
+            {items.map((item) => (
               <Card key={item.id}>
                 <CardContent className="p-4">
                   <div className="flex gap-4">
                     <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md bg-muted">
                       <Image
-                        src={item.image}
-                        alt={item.name}
+                        src={String(item.image || '')}
+                        alt={String(item.title || item.name || 'Item')}
                         width={200}
                         height={150}
                         className="h-full w-full object-cover"
@@ -61,9 +75,9 @@ export default function CartPage() {
 
                     <div className="flex flex-1 flex-col justify-between">
                       <div>
-                        <h3 className="font-semibold">{item.name}</h3>
+                        <h3 className="font-semibold">{item.title || item.name}</h3>
                         <p className="mt-1 text-lg font-bold text-primary">
-                          ${item.price.toFixed(2)}
+                          ${Number(item.price || 0).toFixed(2)}
                         </p>
                       </div>
 
@@ -77,9 +91,7 @@ export default function CartPage() {
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
-                          <span className="w-8 text-center font-medium">
-                            {item.quantity}
-                          </span>
+                          <span className="w-8 text-center font-medium">{Number(item.quantity || 1)}</span>
                           <Button
                             variant="outline"
                             size="icon"
@@ -132,9 +144,7 @@ export default function CartPage() {
               <div className="border-t pt-4">
                 <div className="flex justify-between">
                   <span className="font-semibold">Total</span>
-                  <span className="text-xl font-bold text-primary">
-                    ${total.toFixed(2)}
-                  </span>
+                  <span className="text-xl font-bold text-primary">${total.toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>
