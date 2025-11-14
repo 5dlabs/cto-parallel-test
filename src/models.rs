@@ -1,4 +1,5 @@
 use crate::schema::{cart_items, carts, products, users};
+use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -10,6 +11,7 @@ pub struct User {
     pub id: i32,
     pub username: String,
     pub email: String,
+    #[serde(skip_serializing)]
     pub password_hash: String,
     pub created_at: NaiveDateTime,
 }
@@ -30,7 +32,7 @@ pub struct Product {
     pub id: i32,
     pub name: String,
     pub description: Option<String>,
-    pub price: bigdecimal::BigDecimal,
+    pub price: BigDecimal,
     pub inventory_count: i32,
 }
 
@@ -40,7 +42,7 @@ pub struct Product {
 pub struct NewProduct {
     pub name: String,
     pub description: Option<String>,
-    pub price: bigdecimal::BigDecimal,
+    pub price: BigDecimal,
     pub inventory_count: i32,
 }
 
