@@ -22,15 +22,17 @@ jobs:
         language: [ 'rust' ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           fetch-depth: 0
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@f94c9befffa4412c356fb5463a959ab7821dd57e # v3.31.3
         with:
           languages: ${{ matrix.language }}
 
@@ -38,7 +40,7 @@ jobs:
         run: cargo build --workspace --all-targets
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@f94c9befffa4412c356fb5463a959ab7821dd57e # v3.31.3
 
       - name: Enforce zero MEDIUM/HIGH/CRITICAL Code Scanning alerts
         if: ${{ github.event_name == 'pull_request' }}

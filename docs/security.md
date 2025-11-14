@@ -36,10 +36,14 @@ Local verification results (this change set):
 
 Latest verification:
 
- - Timestamp: 2025-11-14 15:53:41 UTC
+ - Timestamp: 2025-11-14 15:58:01 UTC
  - Tools: rustfmt, clippy (pedantic, -D warnings), cargo test, cargo-audit (JSON), gitleaks (JSON), OSV-Scanner (JSON)
  - Result: All checks PASS; gitleaks findings = 0; cargo-audit vulnerabilities = 0; OSV vulnerabilities = 0; zero MEDIUM/HIGH/CRITICAL issues in local scans
  - Artifacts: `gitleaks_report_latest.json`, `cargo_audit_report.json`, `osv_report.json`
+
+CI/CD hardening:
+- All third-party actions in workflows are pinned to immutable commit SHAs to mitigate supply-chain risks.
+- Rust toolchain action is pinned to `dtolnay/rust-toolchain@v1` with `toolchain: stable` for reproducibility.
 
 Notes:
 - GitHub API access for listing Code Scanning alerts from the local environment may be rate-limited or require explicit `GH_TOKEN` export. If unauthenticated locally, rely on CI where CodeQL + SARIF uploads run on pushes/PRs. Use the commands above once a valid token is configured.
