@@ -16,7 +16,6 @@ jobs:
   gitleaks:
     name: Secret Scan (gitleaks)
     runs-on: ubuntu-latest
-    continue-on-error: true  # Allow workflow to pass even if gitleaks requires license
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,6 +38,17 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: gitleaks.sarif
+
+      - name: Enforce no secret leaks
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        run: |
+          # Fail the job if any findings exist in the SARIF
+          count=$(jq -r '[.runs[]?.results[]?] | length' gitleaks.sarif)
+          echo "gitleaks findings: ${count}"
+          if [ "${count}" -gt 0 ]; then
+            echo "Secret leaks detected by gitleaks (${count}). Failing job." >&2
+            exit 1
+          fi
 
   osv-scanner:
     name: Dependency Scan (OSV)
