@@ -36,10 +36,10 @@ Local verification results (this change set):
 
 Latest verification:
 
- - Timestamp: 2025-11-14 16:20:00 UTC
- - Tools: rustfmt, clippy (pedantic, -D warnings), cargo test, cargo-audit (JSON), gitleaks (JSON), OSV-Scanner (JSON)
- - Result: All checks PASS; gitleaks findings = 0; cargo-audit vulnerabilities = 0; OSV vulnerabilities = 0; zero MEDIUM/HIGH/CRITICAL issues in local scans
- - Artifacts: `gitleaks_report_latest.json`, `cargo_audit_report.json`, `osv_report.json`
+ - Timestamp: 2025-11-14 16:45:00 UTC
+ - Tools: rustfmt, clippy (pedantic, -D warnings), cargo test, cargo-audit (JSON), gitleaks (JSON)
+ - Result: All checks PASS; gitleaks findings = 0; cargo-audit vulnerabilities = 0; zero MEDIUM/HIGH/CRITICAL issues in local scans
+ - Artifacts: `gitleaks_report_latest.json`, `cargo_audit_report.json`
 
 CI/CD hardening:
 - All third-party actions in workflows are pinned to immutable commit SHAs to mitigate supply-chain risks.
