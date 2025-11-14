@@ -10,3 +10,6 @@ target/
 gitleaks-report.json
 gitleaks_report_latest.json
 *.sarif
+
+# Local Codex session artifacts
+.codex-session
