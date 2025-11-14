@@ -413,7 +413,7 @@ Attempt 18 Updates
   - `cargo test --workspace --all-features` — pass (4/4)
   - `cargo audit --json > audit.json` — `vulnerabilities.found=false`
   - `gitleaks detect --source . --no-git --report-format json --report-path gitleaks-report.json` — no leaks (`[]`)
-- Repository hardening: removed mistakenly tracked `.env` file (placeholder only) to ensure environment files are not committed. `.gitignore` already excludes `.env`.
+- Repository hardening: ensured `.env` remains untracked and gitignored (placeholder only present locally). `.gitignore` already excludes `.env` and `.env.*`; `.env.example` documents the format safely.
 - GitHub code scanning remains blocked locally due to missing auth. Authenticate, then fetch PR alerts with:
   - `gh auth login -h github.com` or `export GH_TOKEN=<github_app_installation_token>`
   - `PR=$(gh pr view --json number -q .number)`
