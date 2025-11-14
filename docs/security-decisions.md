@@ -58,3 +58,13 @@ Latest Local Scan Refresh
 - fmt/clippy/tests: all passing
 - cargo audit: no advisories found (`vulnerabilities.found=false`)
 - gitleaks: no leaks found (`[]`)
+
+GitHub Code Scanning Check — Attempt 6
+- Timestamp (UTC): 2025-11-14T17:15:33Z
+- Context: `gh` unauthenticated in this environment; repository resolved as `5dlabs/cto-parallel-test`; no PR detected for current branch.
+- Remediation steps to fetch alerts:
+  - `export GH_HOST=github.com`
+  - `gh auth login -h github.com` (or `export GH_TOKEN=<token>`)
+  - `PR=$(gh pr view --json number -q .number || true)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open${PR:+&pr=${PR}}" | jq '.'`
+- Proceeding with local verification only; all MEDIUM/HIGH/CRITICAL issues remain at zero in local scans.
