@@ -18,6 +18,15 @@ This module provides a thread-safe, in-memory product catalog with:
 - Comprehensive linting with Clippy (pedantic) and rustfmt
 - Unit/integration tests: CRUD, filtering, concurrency, precision
 
+## Configuration
+
+The catalog enforces safe bounds with environment-driven configuration:
+
+- `CATALOG_MAX_NAME_LEN` (default: 100, clamp: 1..=10_000)
+- `CATALOG_MAX_STOCK` (default: 1_000_000, clamp: 0..=10_000_000)
+
+Inputs are sanitized using these limits during creation and updates (name truncation; inventory clamped; negative prices coerced to zero).
+
 ## Thread Safety
 
 - All catalog operations are guarded by a single `Mutex<Vec<Product>>` shared via `Arc`.

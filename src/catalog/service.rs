@@ -1,4 +1,6 @@
-use crate::catalog::models::{NewProduct, Product, ProductFilter};
+use crate::catalog::models::{
+    configured_max_name_len, configured_max_stock, NewProduct, Product, ProductFilter,
+};
 use std::sync::{Arc, Mutex};
 
 /// Thread-safe in-memory product catalog service.
@@ -51,12 +53,21 @@ impl ProductService {
     #[must_use]
     pub fn create(&self, input: NewProduct) -> Product {
         let id = self.next_id();
+        // Sanitize inputs defensively
+        let name: String = input.name.chars().take(configured_max_name_len()).collect();
+        let inventory_count = input.inventory_count.clamp(0, configured_max_stock());
+        let price = if input.price.is_sign_negative() {
+            // Avoid negative prices; default to 0
+            rust_decimal::Decimal::new(0, 0)
+        } else {
+            input.price
+        };
         let product = Product {
             id,
-            name: input.name,
+            name,
             description: input.description,
-            price: input.price,
-            inventory_count: input.inventory_count,
+            price,
+            inventory_count,
         };
 
         let mut guard = self.lock_products_mut();
@@ -84,6 +95,9 @@ impl ProductService {
     /// Update inventory count for product id.
     #[must_use]
     pub fn update_inventory(&self, id: i32, new_count: i32) -> Option<Product> {
+        // Allow negative counts (backorders) but clamp to an upper bound
+        // to avoid unrealistic values.
+        let new_count = new_count.min(configured_max_stock());
         let mut guard = self.lock_products_mut();
         guard
             .iter_mut()
@@ -104,7 +118,14 @@ impl ProductService {
             in_stock,
         } = filter;
 
-        let name_contains = name_contains.map(|name| name.to_lowercase());
+        // Bound the substring length to avoid unbounded allocations from
+        // untrusted input. Use the configured name length cap.
+        let name_contains = name_contains.map(|name| {
+            name.chars()
+                .take(configured_max_name_len())
+                .collect::<String>()
+                .to_lowercase()
+        });
 
         self.products
             .lock()

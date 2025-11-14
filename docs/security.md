@@ -45,3 +45,9 @@ Notes:
 - To run the same checks locally with auth, ensure `GH_TOKEN` is exported and use the commands above.
 
 If GitHub auth is unavailable locally, proceed with local verification and push to the feature branch. CI will run CodeQL and upload all SARIF results on the PR.
+
+Hygiene & Parameterization:
+- Introduced environment overrides with safe clamps for catalog limits:
+  - `CATALOG_MAX_NAME_LEN` (1..=10_000; default 100)
+  - `CATALOG_MAX_STOCK` (0..=10_000_000; default 1_000_000)
+- Creation sanitizes inputs (name truncation, non-negative price, stock clamped)

@@ -1,5 +1,7 @@
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+use std::env;
+use std::sync::OnceLock;
 
 /// A product in the catalog.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -25,6 +27,45 @@ pub struct NewProduct {
     pub description: String,
     pub price: Decimal,
     pub inventory_count: i32,
+}
+
+/// Default maximums used for safe bounds.
+pub const MAX_NAME_LEN: usize = 100;
+pub const MAX_STOCK: i32 = 1_000_000;
+
+// Absolute caps to avoid unrealistic values when environment overrides are used.
+const MAX_NAME_LEN_ABSOLUTE_CAP: usize = 10_000;
+const MAX_STOCK_ABSOLUTE_CAP: i32 = 10_000_000;
+
+static CONFIG_NAME_LEN: OnceLock<usize> = OnceLock::new();
+static CONFIG_MAX_STOCK: OnceLock<i32> = OnceLock::new();
+
+/// Effective maximum name length, optionally overridden via the
+/// `CATALOG_MAX_NAME_LEN` environment variable. Values are clamped to
+/// `1..=MAX_NAME_LEN_ABSOLUTE_CAP` and default to `MAX_NAME_LEN`.
+#[must_use]
+pub fn configured_max_name_len() -> usize {
+    *CONFIG_NAME_LEN.get_or_init(|| {
+        let raw = env::var("CATALOG_MAX_NAME_LEN").ok();
+        match raw.and_then(|s| s.parse::<usize>().ok()) {
+            Some(v) if (1..=MAX_NAME_LEN_ABSOLUTE_CAP).contains(&v) => v,
+            _ => MAX_NAME_LEN,
+        }
+    })
+}
+
+/// Effective maximum stock, optionally overridden via the
+/// `CATALOG_MAX_STOCK` environment variable. Values are clamped to
+/// `0..=MAX_STOCK_ABSOLUTE_CAP` and default to `MAX_STOCK`.
+#[must_use]
+pub fn configured_max_stock() -> i32 {
+    *CONFIG_MAX_STOCK.get_or_init(|| {
+        let raw = env::var("CATALOG_MAX_STOCK").ok();
+        match raw.and_then(|s| s.parse::<i32>().ok()) {
+            Some(v) if (0..=MAX_STOCK_ABSOLUTE_CAP).contains(&v) => v,
+            _ => MAX_STOCK,
+        }
+    })
 }
 
 /// Filter criteria to query products.
