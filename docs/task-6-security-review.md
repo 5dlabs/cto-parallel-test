@@ -36,6 +36,28 @@ gh api \
 
 All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
 
+## Verification Snapshot (attempt 12)
+
+- Secrets scan (tracked files): `gitleaks detect --redact --config .gitleaks.toml --report-format json --report-path security/gitleaks-report.json`
+  - Output: `[]` (no leaks) – see `security/gitleaks-report.json`
+- Dependency audit (runtime only): `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../security/npm-audit.json`
+  - Result: 0 moderate/high/critical – see `security/npm-audit.json`
+- Dependency audit (all deps): `cd frontend && npm audit --json > ../security/npm-audit-full.json`
+  - Result: 0 vulnerabilities of any severity – see `security/npm-audit-full.json`
+- Frontend quality: `cd frontend && npm ci && npm run lint && npm run build` all succeeded
+
+GitHub code scanning query is currently blocked by CLI auth in this environment (invalid token). Re-run after authenticating:
+
+```
+gh auth login -h github.com
+PR_NUM=$(gh pr list --head feature/task-6-implementation --json number -q '.[0].number')
+gh api \
+  "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=$PR_NUM" \
+  --jq '.[] | {rule: .rule.id, severity: .rule.severity, path: .most_recent_instance.location.path, start: .most_recent_instance.location.start_line}'
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+
 ## Verification Snapshot (attempt 10)
 
 - Secrets scan (tracked files): `gitleaks detect -f json -r security/gitleaks-report.json`
