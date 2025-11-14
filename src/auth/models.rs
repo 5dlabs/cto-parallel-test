@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use argon2::password_hash::rand_core::OsRng;
 use argon2::{
     password_hash::{
         Error as PasswordHashError, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
     },
     Argon2,
 };
+use rand_core::OsRng;
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
