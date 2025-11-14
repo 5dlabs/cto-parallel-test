@@ -132,3 +132,16 @@ Attempt 10 — Verification Refresh
   - `gh auth login -h github.com` (or set `GH_TOKEN`)
   - `PR=$(gh pr view --json number -q .number)`
   - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
+
+Attempt 11 — Verification Refresh
+- Date (UTC): 2025-11-14T16:03:50Z
+- fmt: `cargo fmt --all -- --check` — pass
+- clippy: `cargo clippy --all-targets --all-features -- -D warnings -W clippy::pedantic` — pass
+- tests: `cargo test --workspace --all-features` — pass (4/4)
+- gitleaks: `gitleaks detect --no-git --redact --report-format json --report-path gitleaks-report.json` — no leaks (`[]`)
+- cargo-audit: `cargo audit --json > audit.json` — `vulnerabilities.found=false`
+- GitHub Code Scanning: `gh auth status -t` shows invalid token in this environment. To check PR alerts when authenticated:
+  - `export GH_HOST=github.com`
+  - `export GH_TOKEN=<github_app_installation_token>` (or `gh auth login -h github.com`)
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
