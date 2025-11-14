@@ -3,58 +3,10 @@ import Image from "next/image";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { getAllProducts } from "@/lib/products";
 
-// Mock product data - will be replaced with real API data later
-const products = [
-  {
-    id: 1,
-    name: "Wireless Headphones",
-    price: 99.99,
-    category: "Electronics",
-    inStock: true,
-    image: "https://placehold.co/400x300/e2e8f0/475569?text=Headphones",
-  },
-  {
-    id: 2,
-    name: "Smart Watch",
-    price: 249.99,
-    category: "Electronics",
-    inStock: true,
-    image: "https://placehold.co/400x300/e2e8f0/475569?text=Smart+Watch",
-  },
-  {
-    id: 3,
-    name: "Laptop Backpack",
-    price: 49.99,
-    category: "Accessories",
-    inStock: true,
-    image: "https://placehold.co/400x300/e2e8f0/475569?text=Backpack",
-  },
-  {
-    id: 4,
-    name: "Portable Charger",
-    price: 29.99,
-    category: "Electronics",
-    inStock: false,
-    image: "https://placehold.co/400x300/e2e8f0/475569?text=Charger",
-  },
-  {
-    id: 5,
-    name: "Bluetooth Speaker",
-    price: 79.99,
-    category: "Electronics",
-    inStock: true,
-    image: "https://placehold.co/400x300/e2e8f0/475569?text=Speaker",
-  },
-  {
-    id: 6,
-    name: "Phone Case",
-    price: 19.99,
-    category: "Accessories",
-    inStock: true,
-    image: "https://placehold.co/400x300/e2e8f0/475569?text=Phone+Case",
-  },
-];
+// Get products from external configuration
+const products = getAllProducts();
 
 export default function ProductsPage() {
   return (

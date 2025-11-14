@@ -5,36 +5,13 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
-
-// Mock cart data - will be replaced with real state management later
-const cartItems = [
-  {
-    id: 1,
-    name: "Wireless Headphones",
-    price: 99.99,
-    quantity: 1,
-    image: "https://placehold.co/200x150/e2e8f0/475569?text=Headphones",
-  },
-  {
-    id: 2,
-    name: "Smart Watch",
-    price: 249.99,
-    quantity: 1,
-    image: "https://placehold.co/200x150/e2e8f0/475569?text=Smart+Watch",
-  },
-  {
-    id: 5,
-    name: "Bluetooth Speaker",
-    price: 79.99,
-    quantity: 1,
-    image: "https://placehold.co/200x150/e2e8f0/475569?text=Speaker",
-  },
-];
+import { mockCartItems, calculateSubtotal, calculateShipping, calculateTotal, shippingConfig } from "@/lib/cart";
 
 export default function CartPage() {
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal > 50 ? 0 : 9.99;
-  const total = subtotal + shipping;
+  const cartItems = mockCartItems;
+  const subtotal = calculateSubtotal(cartItems);
+  const shipping = calculateShipping(subtotal);
+  const total = calculateTotal(cartItems);
 
   if (cartItems.length === 0) {
     return (
@@ -147,9 +124,9 @@ export default function CartPage() {
                   {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
                 </span>
               </div>
-              {subtotal > 0 && subtotal < 50 && (
+              {subtotal > 0 && subtotal < shippingConfig.freeShippingThreshold && (
                 <p className="text-xs text-muted-foreground">
-                  Add ${(50 - subtotal).toFixed(2)} more for free shipping
+                  Add ${(shippingConfig.freeShippingThreshold - subtotal).toFixed(2)} more for free shipping
                 </p>
               )}
               <div className="border-t pt-4">
