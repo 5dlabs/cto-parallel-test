@@ -52,3 +52,14 @@ jobs:
           cargo generate-lockfile || true
           cargo audit --deny warnings
 
+  gitleaks:
+    name: Gitleaks (Secrets Scan)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source . -v -c .gitleaks.toml

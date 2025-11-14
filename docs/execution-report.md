@@ -49,3 +49,8 @@ Completion Criteria (met locally)
 - All quality gates green (fmt, clippy pedantic, tests).
 - Database code follows secure defaults and best practices per coding-guidelines and github-guidelines.
 
+Attempt 2 Updates
+- Enforced `#![forbid(unsafe_code)]` at crate root (`src/lib.rs:1`) to prevent any introduction of unsafe Rust.
+- Extended CI security pipeline to include Gitleaks secret scanning job (`.github/workflows/security.yml:1`).
+- Re-ran local checks: fmt, clippy, tests, gitleaks, cargo-audit — all green and no leaks/vulnerabilities detected.
+- GitHub CLI remains unauthenticated in this environment; PR creation and PR-specific code scanning checks remain pending on auth setup.
