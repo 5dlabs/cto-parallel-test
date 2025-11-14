@@ -1,7 +1,7 @@
-use argon2::password_hash::rand_core::OsRng;
+use rand_core::OsRng;
 use argon2::{
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
-    Argon2,
+    Algorithm, Argon2, Params, Version,
 };
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -45,7 +45,10 @@ impl User {
     /// Panics if the Argon2 hashing operation fails.
     pub fn hash_password(password: &str) -> String {
         let salt = SaltString::generate(&mut OsRng);
-        Argon2::default()
+        // Use strong Argon2id parameters: t=3, m=64 MiB, p=1
+        let params = Params::new(64 * 1024, 3, 1, None).expect("argon2 params should be valid");
+        let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
+        argon2
             .hash_password(password.as_bytes(), &salt)
             .map_or_else(
                 |err| panic!("Failed to hash password: {err}"),
