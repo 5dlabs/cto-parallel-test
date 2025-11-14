@@ -16,3 +16,7 @@ Manual Scanning During PR Review
 
 References
 - See `coding-guidelines.md` and `github-guidelines.md` for required gates and PR workflow.
+
+Local Scan Results (this run)
+- gitleaks: no leaks found
+- cargo audit: no advisories found
