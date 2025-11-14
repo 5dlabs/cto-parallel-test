@@ -30,3 +30,7 @@ Code Scanning
 Notes
 - Dev server bound to port 3000 via `npm start`.
 - Aliases configured: `@` -> `src` (see `vite.config.js`, `jsconfig.json`).
+ 
+Local Validation (this run)
+- `npm ci`, `npm run lint`, and `npm run build` completed successfully.
+- `npm audit --omit=dev` reported 0 vulnerabilities.
