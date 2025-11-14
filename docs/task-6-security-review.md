@@ -299,3 +299,10 @@ All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
 
 Next steps in CI:
 - After PR creation, run: gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=<PR_NUMBER>"
+
+## Verification Snapshot (attempt 34)
+
+- Secrets scan: see security/gitleaks-report.json
+- Audit (runtime): see security/npm-audit.json
+- Audit (full): see security/npm-audit-full.json
+- Lint/build: passed
