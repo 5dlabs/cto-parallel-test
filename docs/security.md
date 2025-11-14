@@ -22,6 +22,8 @@ Local pre-PR checks:
 - `cargo fmt --all -- --check`
 - `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`
 - `cargo test --workspace --all-features`
+- `gitleaks detect -c .gitleaks.toml -r gitleaks_report_latest.json -f json --no-banner`
+- `cargo audit -D warnings`
 
 Local verification results (this change set):
 
@@ -29,6 +31,7 @@ Local verification results (this change set):
 - Clippy (pedantic, deny warnings): PASS
 - Tests: PASS (all unit and integration tests green)
 - Secret scan (gitleaks): PASS (no leaks found)
+- Dependency audit (cargo-audit): PASS (no advisories)
 
 Notes:
 - GitHub API access for listing Code Scanning alerts from the local environment may be rate-limited or require explicit `GH_TOKEN` export. If unauthenticated locally, rely on CI where CodeQL + SARIF uploads run on pushes/PRs.
