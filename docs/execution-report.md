@@ -35,7 +35,7 @@ GitHub PR Creation (requires valid token)
                  --head feature/task-1-implementation \
                  --label task-1 \
                  --label service-cto-parallel-test \
-                 --label run-play-task-1-gzpgj`
+                 --label run-play-task-1-9z9qf`
 
 GitHub Code Scanning Alerts (PR-specific)
 - After the PR is open, check open alerts for the PR:
@@ -97,7 +97,7 @@ Attempt 5 Updates
                    --head feature/task-1-implementation \
                    --label task-1 \
                    --label service-cto-parallel-test \
-                   --label run-play-task-1-gzpgj`
+                   --label run-play-task-1-9z9qf`
   - Fetch open code scanning alerts for the PR:
     `PR=$(gh pr view --json number -q .number); gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
 
