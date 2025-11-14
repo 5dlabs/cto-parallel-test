@@ -19,6 +19,10 @@ This crate provides a foundational, secure authentication module:
   - Example: `export JWT_TTL_SECS=7200`  # 2 hours
 - `JWT_SECRET_MIN_LEN` (optional): Minimum secret length to enforce; cannot be lower than 32.
   - Example: `export JWT_SECRET_MIN_LEN=48`
+ - Argon2 tuning (optional, bounded for safety):
+   - `ARGON2_M_COST_KIB` (memory in KiB). Default `65536` (64 MiB). Bounds: 8192–1048576.
+   - `ARGON2_T_COST` (iterations). Default `3`. Bounds: 1–10.
+   - `ARGON2_P_COST` (parallelism). Default `1`. Bounds: 1–8.
 
 ## Usage
 

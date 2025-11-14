@@ -45,8 +45,36 @@ impl User {
     /// Panics if the Argon2 hashing operation fails.
     pub fn hash_password(password: &str) -> String {
         let salt = SaltString::generate(&mut OsRng);
-        // Use strong Argon2id parameters: t=3, m=64 MiB, p=1
-        let params = Params::new(64 * 1024, 3, 1, None).expect("argon2 params should be valid");
+
+        // Allow runtime tuning via environment while providing secure defaults.
+        // Defaults: t=3, m=64 MiB, p=1. Enforce sane bounds to avoid denial of service.
+        let mem_default_kib: u32 = 64 * 1024; // 64 MiB
+        let mem_min_kib: u32 = 8 * 1024; // 8 MiB
+        let mem_max_kib: u32 = 1024 * 1024; // 1 GiB
+        let t_default: u32 = 3; // iterations
+        let t_min: u32 = 1;
+        let t_max: u32 = 10;
+        let p_default: u32 = 1; // lanes/parallelism
+        let p_min: u32 = 1;
+        let p_max: u32 = 8;
+
+        let m_cost_kib = std::env::var("ARGON2_M_COST_KIB")
+            .ok()
+            .and_then(|v| v.parse::<u32>().ok())
+            .map_or(mem_default_kib, |v| v.clamp(mem_min_kib, mem_max_kib));
+
+        let t_cost = std::env::var("ARGON2_T_COST")
+            .ok()
+            .and_then(|v| v.parse::<u32>().ok())
+            .map_or(t_default, |v| v.clamp(t_min, t_max));
+
+        let p_cost = std::env::var("ARGON2_P_COST")
+            .ok()
+            .and_then(|v| v.parse::<u32>().ok())
+            .map_or(p_default, |v| v.clamp(p_min, p_max));
+
+        let params =
+            Params::new(m_cost_kib, t_cost, p_cost, None).expect("argon2 params should be valid");
         let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
         argon2
             .hash_password(password.as_bytes(), &salt)
