@@ -35,3 +35,37 @@ This module provides a thread-safe, in-memory product catalog with:
 - `ProductService::delete(i32)` -> `bool`
 
 See `tests/catalog.rs` for complete usage examples.
+
+## Usage Example
+
+```
+use cto_parallel_test::catalog::{NewProduct, ProductFilter, ProductService};
+use rust_decimal::Decimal;
+
+let svc = ProductService::new();
+
+// Create a product with precise decimal price
+let apple = svc.create(NewProduct {
+    name: "Apple".into(),
+    price: Decimal::new(199, 2), // 1.99
+    stock: 10,
+})?;
+
+// Update inventory
+let apple = svc.update_inventory(apple.id, 5)?;
+
+// Filter by name and stock
+let results = svc.filter(&ProductFilter {
+    name_contains: Some("app".into()),
+    in_stock: Some(true),
+    ..ProductFilter::default()
+});
+assert!(!results.is_empty());
+```
+
+## Filtering Tips
+
+- `name_contains` is case-insensitive substring match
+- `min_price`/`max_price` are inclusive bounds
+- `in_stock = Some(true)` filters to `stock > 0`; `Some(false)` filters to `stock == 0`
+- `min_stock`/`max_stock` provide inclusive integer stock ranges
