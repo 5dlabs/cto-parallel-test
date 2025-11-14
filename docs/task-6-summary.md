@@ -9,11 +9,12 @@ Summary
 Security
 - No hardcoded secrets; `.env.example` provided.
 - API paths constructed with `encodeURIComponent` to prevent path traversal.
-- IDs validated/normalized in `ProductDetail.jsx`.
+- IDs validated/normalized in React and Next product detail routes.
 - Local storage limited to cart items only; no sensitive data persisted.
 - CodeQL workflow configured; Frontend CI performs lint/build/audit.
-- Removed sensitive console logging in Next login/register pages.
- - CSP hardened in `frontend/index.html` (no `style-src 'unsafe-inline'`, added `object-src 'none'`).
+- Removed sensitive console logging in Next login/register pages; forms now call real API endpoints configured via env.
+- Replaced Next mock product/cart data with live API fetch and client cart state (no mocks left in repo).
+- CSP hardened in `frontend/index.html` (no `style-src 'unsafe-inline'`, added `object-src 'none'`).
 
 How to Run
 - `cd frontend`
