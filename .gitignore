@@ -5,3 +5,6 @@ hooks/
 
 # Rust target dir
 target/
+
+# Local security scan reports
+gitleaks-report.json
