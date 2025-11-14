@@ -13,8 +13,8 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       "script-src 'self'",
-      // Next may inline small styles at runtime; allow only for styles
-      "style-src 'self' 'unsafe-inline'",
+      // Disallow inline styles; all styles must be served from self
+      "style-src 'self'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' https: data:",
       "connect-src 'self' https:",
