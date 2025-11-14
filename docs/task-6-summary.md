@@ -34,3 +34,4 @@ Notes
 Local Validation (this run)
 - `npm ci`, `npm run lint`, and `npm run build` completed successfully.
 - `npm audit --omit=dev` reported 0 vulnerabilities.
+ - `gitleaks` reported no secrets; report: `security/gitleaks-report.json`

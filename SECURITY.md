@@ -26,3 +26,12 @@ gh api \
   --jq '.[] | {rule: .rule.id, severity: .rule.severity, path: .most_recent_instance.location.path, start: .most_recent_instance.location.start_line}'
 
 Fix all MEDIUM/HIGH/CRITICAL findings before merging.
+
+If GitHub CLI authentication is unavailable in your environment, authenticate and re-run the query:
+
+```
+gh auth login -h github.com
+PR_NUM=$(gh pr list --head feature/task-6-implementation --json number -q '.[0].number')
+gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=$PR_NUM" \
+  --jq '.[] | {rule: .rule.id, severity: .rule.severity, path: .most_recent_instance.location.path, start: .most_recent_instance.location.start_line}'
+```

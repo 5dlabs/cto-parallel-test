@@ -14,6 +14,37 @@ This document captures local security validation performed for the Task 6 fronte
   - All deps: `cd frontend && npm audit --json > ../audit-full.json`
     - Result: 0 vulnerabilities across all severities (see `audit-full.json`)
 
+## Verification Snapshot (attempt 8)
+
+- Secrets scan (workspace): `gitleaks detect --no-git -f json -r security/gitleaks-report.json`
+  - Output: `[]` (no leaks) – see `security/gitleaks-report.json`
+- Dependency audit (runtime only): `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../audit.json`
+  - Result: 0 moderate/high/critical – see `audit.json`
+- Dependency audit (all deps): `cd frontend && npm audit --json > ../audit-full.json`
+  - Result: 0 vulnerabilities of any severity – see `audit-full.json`
+- Frontend quality: `npm run lint` and `npm run build` both succeeded
+
+GitHub code scanning query remains blocked by CLI auth in this environment. Re-run after authenticating:
+
+```
+gh auth login -h github.com
+PR_NUM=$(gh pr list --head feature/task-6-implementation --json number -q '.[0].number')
+gh api \
+  "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=$PR_NUM" \
+  --jq '.[] | {rule: .rule.id, severity: .rule.severity, path: .most_recent_instance.location.path, start: .most_recent_instance.location.start_line}'
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+
+## Verification Snapshot (attempt 7)
+
+- Secrets scan: `gitleaks detect --no-git --no-banner --no-color -f json -r security/gitleaks-report.json`
+  - Output: `[]` (no leaks)
+- Dependency audit:
+  - Runtime deps: `security/npm-audit.json` → all zeros for moderate/high/critical
+  - Full audit: `audit.json`, `audit-full.json` → all zeros for all severities
+- Frontend quality: `npm ci`, `npm run lint`, `npm run build` all succeeded
+
 ## Frontend Build & Lint
 
 - `cd frontend && npm ci && npm run lint && npm run build` – all succeeded locally
@@ -21,6 +52,7 @@ This document captures local security validation performed for the Task 6 fronte
 ## Secure Defaults Implemented
 
 - API endpoints are parameterized via `VITE_API_BASE_URL` (`frontend/src/config.js`)
+- API base URL is validated: only `http`/`https` schemes are allowed; others are rejected
 - Route param validation in `frontend/src/pages/ProductDetail.jsx`
 - Content Security Policy and security meta headers in `frontend/index.html`
 - Content Security Policy enforced for Next.js via headers in `frontend/next.config.ts`

@@ -37,6 +37,7 @@ Production-ready e-commerce frontend using React, Vite, Tailwind CSS, and shadcn
   - form-action 'self'
 - Additional meta headers: `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`
 - Path handling: API URLs constructed with encoded path segments (`src/config.js`) to prevent traversal/injection.
+- API base URL validation: only `http`/`https` schemes are allowed; invalid or unsafe schemes are ignored.
 - Route params validated (e.g., `ProductDetail.jsx` allows only safe IDs).
 - No `dangerouslySetInnerHTML`; forms trim inputs; no credentials stored in localStorage.
 - Dependency audit: `npm run audit:ci` fails on issues at `AUDIT_LEVEL` (default: moderate).
