@@ -1,5 +1,5 @@
 use jsonwebtoken::{
-    decode, encode, errors::ErrorKind, DecodingKey, EncodingKey, Header, Validation,
+    decode, encode, errors::ErrorKind, Algorithm, DecodingKey, EncodingKey, Header, Validation,
 };
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
@@ -34,9 +34,18 @@ fn current_timestamp_secs() -> u64 {
     }
 }
 
-fn jwt_secret() -> String {
-    std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "dev_only_signing_key_min_32_chars________".to_string())
+fn read_hmac_secret() -> Result<Vec<u8>, jsonwebtoken::errors::Error> {
+    // Require JWT_SECRET to be set and of sufficient length (>= 32)
+    let secret = std::env::var("JWT_SECRET")
+        .map_err(|_| jsonwebtoken::errors::Error::from(ErrorKind::InvalidToken))?;
+    let min_len_env = std::env::var("JWT_SECRET_MIN_LEN").ok();
+    let min_len = min_len_env
+        .and_then(|v| v.parse::<usize>().ok())
+        .map_or(32, |n| n.max(32));
+    if secret.len() < min_len {
+        return Err(jsonwebtoken::errors::Error::from(ErrorKind::InvalidToken));
+    }
+    Ok(secret.into_bytes())
 }
 
 /// Create a signed JWT for the provided user identifier with a 24-hour expiration.
@@ -45,7 +54,12 @@ fn jwt_secret() -> String {
 /// Returns any signing or encoding error produced by the `jsonwebtoken` crate.
 pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error> {
     let now = current_timestamp_secs();
-    let expiration = now + 24 * 3600; // 24 hours from now
+    // Allow overriding TTL via env for deployments/tests; default 24h
+    let ttl_secs: u64 = std::env::var("JWT_TTL_SECS")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+        .unwrap_or(24 * 3600);
+    let expiration = now + ttl_secs; // expiration from now
 
     let exp = usize::try_from(expiration)
         .map_err(|_| jsonwebtoken::errors::Error::from(ErrorKind::InvalidToken))?;
@@ -58,12 +72,10 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
         iat,
     };
 
-    let secret = jwt_secret();
-    encode(
-        &Header::default(),
-        &claims,
-        &EncodingKey::from_secret(secret.as_bytes()),
-    )
+    let secret = read_hmac_secret()?;
+    let mut header = Header::new(Algorithm::HS256);
+    header.typ = Some("JWT".to_string());
+    encode(&header, &claims, &EncodingKey::from_secret(&secret))
 }
 
 /// Validate a JWT returning its decoded claims when valid.
@@ -71,12 +83,10 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 /// # Errors
 /// Returns an error when the token is malformed, expired, or signed with a different secret.
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
-    let secret = jwt_secret();
-    let token_data = decode::<Claims>(
-        token,
-        &DecodingKey::from_secret(secret.as_bytes()),
-        &Validation::default(),
-    )?;
+    let secret = read_hmac_secret()?;
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.leeway = 30; // allow small clock skew
+    let token_data = decode::<Claims>(token, &DecodingKey::from_secret(&secret), &validation)?;
 
     Ok(token_data.claims)
 }
