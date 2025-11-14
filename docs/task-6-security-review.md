@@ -9,8 +9,10 @@ This document captures local security validation performed for the Task 6 fronte
   - Result: no leaks found (`gitleaks-local.json` contains `[]`)
 
 - Dependency vulnerabilities (npm audit)
-  - Command: `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../audit.json`
-  - Result: 0 moderate/high/critical vulnerabilities in runtime dependencies (see `audit.json`)
+  - Runtime only: `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../audit.json`
+    - Result: 0 moderate/high/critical in production dependencies (see `audit.json`)
+  - All deps: `cd frontend && npm audit --json > ../audit-full.json`
+    - Result: 0 vulnerabilities across all severities (see `audit-full.json`)
 
 ## Frontend Build & Lint
 
@@ -48,3 +50,5 @@ gh api \
 ```
 
 All MEDIUM/HIGH/CRITICAL findings must be fixed before merge.
+
+If authentication is currently unavailable in your environment, complete local scans above and re-run these commands after `gh auth login -h github.com`.
