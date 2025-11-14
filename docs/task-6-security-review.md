@@ -14,6 +14,44 @@ This document captures local security validation performed for the Task 6 fronte
   - All deps: `cd frontend && npm audit --json > ../audit-full.json`
     - Result: 0 vulnerabilities across all severities (see `audit-full.json`)
 
+## Verification Snapshot (attempt 20)
+
+- Secrets scan (workspace): `gitleaks detect --no-git -f json -r security/gitleaks-report.json`
+  - Output: `[]` (no leaks) – see `security/gitleaks-report.json`
+- Dependency audit (runtime only): `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../security/npm-audit.json`
+  - Result: 0 moderate/high/critical – see `security/npm-audit.json`
+- Dependency audit (all deps): `cd frontend && npm audit --json > ../security/npm-audit-full.json`
+  - Result: 0 vulnerabilities of any severity – see `security/npm-audit-full.json`
+- Frontend quality: `cd frontend && npm ci && npm run lint && npm run build` succeeded
+
+GitHub code scanning query is currently blocked by CLI auth in this environment. Re-run after authenticating or use the helper script to append results here:
+
+```
+gh auth login -h github.com
+bash task/gh-code-scan.sh $(git rev-parse --abbrev-ref HEAD) --update-docs
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+
+## Verification Snapshot (attempt 21)
+
+- Secrets scan (workspace): `gitleaks detect --no-git -f json -r security/gitleaks-report.json`
+  - Output: `[]` (no leaks) – see `security/gitleaks-report.json`
+- Dependency audit (runtime only): `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../security/npm-audit.json`
+  - Result: 0 moderate/high/critical – see `security/npm-audit.json`
+- Dependency audit (all deps): `cd frontend && npm audit --json > ../security/npm-audit-full.json`
+  - Result: 0 vulnerabilities of any severity – see `security/npm-audit-full.json`
+- Frontend quality: `cd frontend && npm ci && npm run lint && npm run build` succeeded
+
+GitHub code scanning query remains blocked by CLI auth in this environment. To fetch alerts for the current PR branch and append to this document, run:
+
+```
+gh auth login -h github.com
+bash task/gh-code-scan.sh $(git rev-parse --abbrev-ref HEAD) --update-docs
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+
 ## Verification Snapshot (attempt 9)
 
 - Secrets scan (workspace): `gitleaks detect --no-git -f json -r security/gitleaks-report.json`
@@ -92,6 +130,25 @@ PR_NUM=$(gh pr list --head feature/task-6-implementation --json number -q '.[0].
 gh api \
   "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=$PR_NUM" \
   --jq '.[] | {rule: .rule.id, severity: .rule.severity, path: .most_recent_instance.location.path, start: .most_recent_instance.location.start_line}'
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+
+## Verification Snapshot (2025-11-14T16:19:38Z)
+
+- Secrets scan (workspace): `gitleaks detect --no-git -f json -r security/gitleaks-report.json`
+  - Output: `[]` (no leaks) – see `security/gitleaks-report.json`
+- Dependency audit (runtime only): `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../security/npm-audit.json`
+  - Result: 0 moderate/high/critical – see `security/npm-audit.json`
+- Dependency audit (all deps): `cd frontend && npm audit --json > ../security/npm-audit-full.json`
+  - Result: 0 vulnerabilities of any severity – see `security/npm-audit-full.json`
+- Frontend quality: `cd frontend && npm ci && npm run lint && npm run build` all succeeded
+
+GitHub code scanning is currently blocked by CLI auth in this environment. To fetch and append current PR alerts to this document:
+
+```
+gh auth login -h github.com
+bash task/gh-code-scan.sh $(git rev-parse --abbrev-ref HEAD) --update-docs
 ```
 
 All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
@@ -199,6 +256,25 @@ All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
 ## GitHub Code Scanning Alerts (PR)
 
 With GitHub CLI auth configured, run:
+
+## Verification Snapshot (attempt 19)
+
+- Secrets scan (tracked files): `gitleaks detect --redact --config .gitleaks.toml --report-format json --report-path security/gitleaks-report.json`
+  - Output: `[]` (no leaks) – see `security/gitleaks-report.json`
+- Dependency audit (runtime only): `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../security/npm-audit.json`
+  - Result: 0 moderate/high/critical – see `security/npm-audit.json`
+- Dependency audit (all deps): `cd frontend && npm audit --json > ../security/npm-audit-full.json`
+  - Result: 0 vulnerabilities of any severity – see `security/npm-audit-full.json`
+- Frontend quality: `cd frontend && npm run lint && npm run build` succeeded
+
+GitHub code scanning query remains blocked by CLI auth in this environment. To fetch alerts for the current PR branch and append to this document, run:
+
+```
+gh auth login -h github.com
+bash task/gh-code-scan.sh $(git rev-parse --abbrev-ref HEAD) --update-docs
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
 
 ```bash
 PR_NUM=$(gh pr list --head feature/task-6-implementation --json number -q '.[0].number')
