@@ -12,7 +12,9 @@ pub struct User {
     pub id: i32,
     pub username: String,
     pub email: String,
-    #[serde(skip_serializing, skip_deserializing)]
+    // Do not accept password_hash from input; omit from output.
+    // Ensure deserialization of `User` succeeds by defaulting this field.
+    #[serde(skip_serializing, skip_deserializing, default)]
     pub password_hash: String,
 }
 
