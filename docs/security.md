@@ -4,6 +4,7 @@ Security Scanning Overview
   - Secret scan: gitleaks (uploads SARIF to GitHub Code Scanning and fails the job if any findings are present)
   - Dependency scan: OSV-Scanner (uploads SARIF; fails on findings)
   - RustSec audit: cargo-audit (fails on advisories)
+  - Additionally, CodeQL analysis runs and the workflow enforces zero MEDIUM/HIGH/CRITICAL Code Scanning alerts on PRs.
 
 Checking alerts on a PR (requires gh auth):
 
@@ -35,7 +36,7 @@ Local verification results (this change set):
 
 Latest verification:
 
- - Timestamp: 2025-11-14 15:46:08 UTC
+ - Timestamp: 2025-11-14 15:49:20 UTC
  - Tools: rustfmt, clippy (pedantic, -D warnings), cargo test, cargo-audit (JSON), gitleaks (JSON), OSV-Scanner (JSON)
  - Result: All checks PASS; gitleaks findings = 0; cargo-audit vulnerabilities = 0; OSV vulnerabilities = 0; zero MEDIUM/HIGH/CRITICAL issues in local scans
  - Artifacts: `gitleaks_report_latest.json`, `cargo_audit_report.json`, `osv_report.json`

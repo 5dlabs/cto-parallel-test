@@ -40,3 +40,22 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
+      - name: Enforce zero MEDIUM/HIGH/CRITICAL Code Scanning alerts
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Query open alerts for this PR and fail on MEDIUM/HIGH/CRITICAL
+          resp=$(curl -sSf -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/code-scanning/alerts?state=open&pr=${PR}")
+          echo "$resp" | jq '[.[] | {rule: (.rule.id // .rule.name), sev: ((.rule.severity // .rule.security_severity_level // "unknown")|ascii_downcase), state: .state, url: .html_url}]'
+          count=$(echo "$resp" | jq -r 'map(select(((.rule.severity // .rule.security_severity_level // "unknown")|ascii_downcase) | test("^(medium|high|critical)$"))) | length')
+          if [ "$count" -gt 0 ]; then
+            echo "Found ${count} MEDIUM/HIGH/CRITICAL Code Scanning alerts on this PR. Failing." >&2
+            exit 1
+          else
+            echo "No MEDIUM/HIGH/CRITICAL Code Scanning alerts for PR #${PR}."
+          fi
