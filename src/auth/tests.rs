@@ -56,3 +56,23 @@ fn test_rejects_short_secret() {
     let msg = format!("{err}");
     assert!(msg.contains("InvalidToken") || msg.to_lowercase().contains("invalid token"));
 }
+
+#[test]
+#[serial]
+fn test_jwt_issuer_and_audience_optional_validation() {
+    // Configure secret and optional issuer/audience
+    std::env::set_var("JWT_SECRET", "test_secret_key_minimum_32_chars_long______");
+    std::env::set_var("JWT_ISSUER", "acme-auth");
+    std::env::set_var("JWT_AUDIENCE", "mobile");
+
+    let token = crate::auth::jwt::create_token("user42").expect("token");
+
+    // With matching env, validation should pass
+    let claims = crate::auth::jwt::validate_token(&token).expect("validate ok");
+    assert_eq!(claims.iss.as_deref(), Some("acme-auth"));
+    assert_eq!(claims.aud.as_deref(), Some("mobile"));
+
+    // Changing expected audience should cause validation failure
+    std::env::set_var("JWT_AUDIENCE", "web");
+    assert!(crate::auth::jwt::validate_token(&token).is_err());
+}

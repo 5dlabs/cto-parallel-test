@@ -1,5 +1,6 @@
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 // Token TTL in seconds. Default 24h; configurable via JWT_TTL_SECS.
@@ -16,6 +17,13 @@ pub struct Claims {
     pub exp: u64,
     /// Issued at (as seconds since epoch)
     pub iat: u64,
+    /// Optional issuer
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub iss: Option<String>,
+    /// Optional audience (single value). If you require multiple audiences,
+    /// encode them in a delimiter-separated string and validate accordingly.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aud: Option<String>,
 }
 
 /// Internal abstraction for time to enable testability while keeping clippy happy.
@@ -94,10 +102,14 @@ fn create_token_with_clock(
         sub: user_id.to_owned(),
         exp: expiration,
         iat: now,
+        iss: std::env::var("JWT_ISSUER").ok(),
+        aud: std::env::var("JWT_AUDIENCE").ok(),
     };
 
     let key = encoding_key_from_env()?;
-    let header = Header::new(Algorithm::HS256);
+    // Set explicit JWT header with HS256 and typ=JWT to avoid ambiguity
+    let mut header = Header::new(Algorithm::HS256);
+    header.typ = Some("JWT".to_string());
     encode(&header, &claims, &key)
 }
 
@@ -112,7 +124,24 @@ pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error
     // and allow a small leeway for clock skew when validating exp.
     let mut validation = Validation::new(Algorithm::HS256);
     validation.leeway = 30; // seconds
+                            // If configured, let the library validate iss/aud
+    if let Ok(expected_iss) = std::env::var("JWT_ISSUER") {
+        let mut set = HashSet::new();
+        set.insert(expected_iss);
+        validation.iss = Some(set);
+    }
+    if let Ok(expected_aud) = std::env::var("JWT_AUDIENCE") {
+        // jsonwebtoken 9.x exposes `set_audience` helper
+        #[allow(deprecated)]
+        {
+            validation.set_audience(&[expected_aud]);
+        }
+    }
     let token_data = decode::<Claims>(token, &key, &validation)?;
+
+    // Optional issuer/audience checks when configured
+    // (No-op post checks since Validation handles it if configured)
+
     Ok(token_data.claims)
 }
 

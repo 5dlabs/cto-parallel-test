@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 //! Core library entry for the cto-parallel-test auth module.
 //! Exposes the `auth` module used by services.
 
