@@ -8,7 +8,7 @@ This service ships with hardened authentication primitives. Operators should rev
 - Issuer/Audience (optional):
   - `JWT_ISSUER` and `JWT_AUDIENCE` can be set to embed and validate `iss` and `aud` claims.
   - If configured, validation requires an exact match.
-- Password hashing: Argon2 with a cryptographically secure random salt (OsRng). Verification safely handles malformed hashes.
+- Password hashing: Argon2id v0x13 (t=3, m=64 MiB, p=1) with a cryptographically secure random salt (OsRng). Verification safely handles malformed hashes.
 
 Operational recommendations
 
