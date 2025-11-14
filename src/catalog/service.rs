@@ -1,4 +1,4 @@
-use crate::catalog::models::{NewProduct, Product, ProductFilter};
+use crate::catalog::models::{NewProduct, Product, ProductFilter, MAX_STOCK};
 use rust_decimal::Decimal;
 use std::error::Error as StdError;
 use std::fmt;
@@ -115,6 +115,11 @@ impl ProductService {
     pub fn update_inventory(&self, id: i32, new_stock: i32) -> Result<Product, CatalogError> {
         if new_stock < 0 {
             return Err(CatalogError::InvalidInput("stock must be non-negative"));
+        }
+        if new_stock > MAX_STOCK {
+            return Err(CatalogError::InvalidInput(
+                "stock exceeds maximum allowed value",
+            ));
         }
         let mut guard = self
             .products

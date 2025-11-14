@@ -11,7 +11,9 @@ This module provides a thread-safe, in-memory product catalog with:
 ## Security & Quality
 
 - No hardcoded secrets or external IO
-- Input validation for create/update operations
+- Input validation for create/update operations with defensive bounds:
+  - `name` must be non-empty and ≤ 100 characters
+  - `stock` must be within 0..=1_000_000
 - Thread safety via `Arc<Mutex<Vec<Product>>>`
 - Poison-safe lock handling: recover inner state on mutex poison to avoid
   panic-induced denial-of-service while maintaining forward progress

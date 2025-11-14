@@ -1,6 +1,15 @@
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
+/// Maximum allowed length for a product name to prevent
+/// unbounded allocations from untrusted input.
+pub const MAX_NAME_LEN: usize = 100;
+
+/// Maximum allowed stock count per product to avoid
+/// unrealistic values and potential overflow risks in
+/// downstream consumers.
+pub const MAX_STOCK: i32 = 1_000_000;
+
 /// A product in the catalog.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
@@ -28,16 +37,25 @@ impl NewProduct {
     /// Basic invariant validation.
     ///
     /// # Errors
-    /// Returns an error if name is empty, price is negative, or stock is negative.
+    /// Returns an error if:
+    /// - name is empty or exceeds `MAX_NAME_LEN` characters
+    /// - price is negative
+    /// - stock is negative or exceeds `MAX_STOCK`
     pub fn validate(&self) -> Result<(), &'static str> {
         if self.name.trim().is_empty() {
             return Err("name must not be empty");
+        }
+        if self.name.chars().count() > MAX_NAME_LEN {
+            return Err("name exceeds maximum length");
         }
         if self.price.is_sign_negative() {
             return Err("price must be non-negative");
         }
         if self.stock < 0 {
             return Err("stock must be non-negative");
+        }
+        if self.stock > MAX_STOCK {
+            return Err("stock exceeds maximum allowed value");
         }
         Ok(())
     }

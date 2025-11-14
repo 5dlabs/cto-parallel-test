@@ -1,3 +1,4 @@
+use cto_parallel_test::catalog::models::{MAX_NAME_LEN, MAX_STOCK};
 use cto_parallel_test::catalog::{NewProduct, ProductFilter, ProductService};
 use rust_decimal::Decimal;
 
@@ -53,6 +54,34 @@ fn test_update_inventory_negative_fails() {
 fn test_update_inventory_not_found() {
     let svc = ProductService::new();
     let result = svc.update_inventory(9999, 10);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_validation_name_too_long() {
+    let svc = ProductService::new();
+    // Construct a name that exceeds MAX_NAME_LEN by 1 character
+    let too_long = "a".repeat(MAX_NAME_LEN + 1);
+    let result = svc.create(NewProduct {
+        name: too_long,
+        price: Decimal::new(100, 2),
+        stock: 10,
+    });
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_update_inventory_above_max_fails() {
+    let svc = ProductService::new();
+    let product = svc
+        .create(NewProduct {
+            name: "Test".to_string(),
+            price: Decimal::new(100, 2),
+            stock: 10,
+        })
+        .expect("create product");
+
+    let result = svc.update_inventory(product.id, MAX_STOCK + 1);
     assert!(result.is_err());
 }
 

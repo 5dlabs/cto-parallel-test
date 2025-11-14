@@ -19,6 +19,9 @@ This repository enforces security-by-default. Changes are scanned locally and in
 
 - No unsafe Rust; locks are poison-safe via `PoisonError::into_inner`
 - Input validation for product creation and stock updates
+- Defensive bounds on untrusted input:
+  - `name` must be non-empty and at most 100 chars
+  - `stock` must be between 0 and 1,000,000 (inclusive)
 - Decimal arithmetic uses `rust_decimal` to avoid floating-point rounding errors
 - No external IO, network, or paths; no deserialization of untrusted types beyond `serde` structs
 
@@ -31,4 +34,3 @@ export GH_REPO="5dlabs/cto-parallel-test"
 export PR_NUMBER="<PR_NUMBER>"
 gh api "/repos/${GH_REPO}/code-scanning/alerts?state=open&pr=${PR_NUMBER}"
 ```
-
