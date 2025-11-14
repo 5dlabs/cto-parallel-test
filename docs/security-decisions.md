@@ -8,6 +8,8 @@ Security Decisions and Practices
 - Foreign keys enforce referential integrity with `ON DELETE CASCADE` where appropriate.
 - Connection pooling (r2d2) is parameterized via env with secure defaults (timeouts, sizes) and optional `test_on_check_out`.
 - CI includes CodeQL and `cargo-audit` security scans in `.github/workflows/security.yml`.
+- Crate forbids `unsafe` Rust at the root (`#![forbid(unsafe_code)]`) to eliminate classes of memory-unsafe issues.
+- CI additionally runs Gitleaks secrets scanning to prevent credential leaks.
 - Pre-PR quality gates enforced locally: fmt, clippy (pedantic, deny warnings), and tests.
 
 Manual Scanning During PR Review
