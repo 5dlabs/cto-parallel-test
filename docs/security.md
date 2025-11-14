@@ -12,3 +12,6 @@ Operational Notes
 
 - To run migrations, install Diesel CLI and set a real `DATABASE_URL`.
 - Code avoids panics in runtime paths; initialization uses `.expect()` with clear messages for early failure.
+
+GitHub Code Scanning
+- CodeQL alerts are surfaced on PRs; zero tolerance for MEDIUM/HIGH/CRITICAL severities.
