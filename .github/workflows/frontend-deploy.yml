@@ -56,5 +56,5 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api' }}
-            NEXT_PUBLIC_USE_MOCK_DATA=${{ secrets.NEXT_PUBLIC_USE_MOCK_DATA || 'true' }}
+            VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL || 'http://localhost:8080/api' }}
+            VITE_USE_MOCK_DATA=${{ secrets.VITE_USE_MOCK_DATA || 'true' }}
