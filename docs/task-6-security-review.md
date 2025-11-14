@@ -30,6 +30,10 @@ This document captures local security validation performed for the Task 6 fronte
 - Secrets scan via gitleaks (`.github/workflows/secrets-scan.yml`)
 - Frontend CI runs lint, build, and `npm audit` on PRs/pushes (`.github/workflows/frontend-ci.yml`)
 
+### Secrets Scanning Hardening
+
+- Tightened `.gitleaks.toml` allowlist: removed broad `docs/**` exemption to ensure documentation is scanned for potential secrets. Kept targeted regex allowlist for known placeholders only.
+
 ## GitHub Code Scanning Alerts (PR)
 
 With GitHub CLI auth configured, run:
@@ -42,4 +46,3 @@ gh api \
 ```
 
 All MEDIUM/HIGH/CRITICAL findings must be fixed before merge.
-
