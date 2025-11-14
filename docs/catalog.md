@@ -18,6 +18,12 @@ This module provides a thread-safe, in-memory product catalog with:
 - Comprehensive linting with Clippy (pedantic) and rustfmt
 - Unit/integration tests: CRUD, filtering, concurrency, precision
 
+## Governance
+
+- Follows repository standards in `coding-guidelines.md` and `github-guidelines.md`
+- Changes flow through feature branches only and PR review
+- Use GitHub code scanning for ongoing security checks on PRs
+
 ## Public API
 
 - `ProductService::new()`
