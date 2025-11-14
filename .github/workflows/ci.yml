@@ -22,8 +22,8 @@ jobs:
       - name: Cargo fmt (check)
         run: cargo fmt --all -- --check
 
-      - name: Cargo clippy (deny warnings)
-        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - name: Cargo clippy (deny warnings, pedantic)
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic
 
       - name: Cargo test
         run: cargo test --workspace --all-features -- --nocapture

@@ -61,6 +61,5 @@ jobs:
 
       - name: Run gitleaks
         uses: gitleaks/gitleaks-action@v2
-        with:
-          # Use built-in default rules. Do not rely on a missing local config.
-          args: detect --source . -v
+        env:
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
