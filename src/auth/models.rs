@@ -1,8 +1,8 @@
-use rand_core::OsRng;
 use argon2::{
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Algorithm, Argon2, Params, Version,
 };
+use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
