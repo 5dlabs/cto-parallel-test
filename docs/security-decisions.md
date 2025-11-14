@@ -21,7 +21,7 @@ References
 - See `coding-guidelines.md` and `github-guidelines.md` for required gates and PR workflow.
 
 Local Scan Results (this run)
-- Timestamp (UTC): 2025-11-14T11:47:25Z
+- Timestamp (UTC): 2025-11-14T11:50:20Z
 - fmt/clippy/tests: all passing
 - cargo audit: no advisories found (`vulnerabilities.found=false`)
 - gitleaks: no leaks found (`[]`)
