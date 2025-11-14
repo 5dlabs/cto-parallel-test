@@ -11,7 +11,7 @@ Checking alerts on a PR (requires gh auth):
   - Example: `export GH_TOKEN=ghp_xxx` (or rely on CI-provided token)
 - Alternatively, interactive auth: `gh auth login --hostname github.com`
 - Ensure a PR exists for the current branch (feature branch only):
-  - `gh pr view --json number -q .number || gh pr create --fill --head feature/task-4-implementation --base main --label task-4 --label service-cto-parallel-test --label run-play-task-4-l4m2j`
+  - `gh pr view --json number -q .number || gh pr create --fill --head feature/task-4-implementation --base main --label task-4 --label service-cto-parallel-test --label run-play-task-4-n98rn`
 - Get PR number: `PR=$(gh pr view --json number -q .number)`
 - List open alerts: `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '[.[] | {rule: (.rule.id // .rule.name), severity: ((.rule.severity // .rule.security_severity_level // "unknown")|ascii_downcase), state: .state, url: .html_url}]'`
 - Enforce policy (MEDIUM/HIGH/CRITICAL):
@@ -35,7 +35,7 @@ Local verification results (this change set):
 
 Latest verification:
 
- - Timestamp: 2025-11-14 15:22:07 UTC
+ - Timestamp: 2025-11-14 15:33:30 UTC
  - Tools: rustfmt, clippy (pedantic, -D warnings), cargo test, cargo-audit (JSON), gitleaks (JSON), OSV-Scanner (JSON)
  - Result: All checks PASS; gitleaks findings = 0; cargo-audit vulnerabilities = 0; OSV vulnerabilities = 0; zero MEDIUM/HIGH/CRITICAL issues in local scans
  - Artifacts: `gitleaks_report_latest.json`, `cargo_audit_report.json`, `osv_report.json`
