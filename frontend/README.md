@@ -5,6 +5,7 @@ Production-ready e-commerce frontend using React, Vite, Tailwind CSS, and shadcn
 ## Quick Start
 
 - cp .env.example .env and set `VITE_API_BASE_URL` (e.g., `https://api.example.com`)
+- Optionally set `VITE_PORT`/`PORT` to change dev port (default: 3000)
 - npm ci
 - npm start
 - Open http://localhost:3000
@@ -21,10 +22,11 @@ Production-ready e-commerce frontend using React, Vite, Tailwind CSS, and shadcn
 - Content Security Policy (CSP) set in `index.html` to restrict sources:
   - default-src 'self'
   - script-src 'self'
-  - style-src 'self' 'unsafe-inline'
+  - style-src 'self'
   - img-src 'self' data: blob: https:
   - font-src 'self' https: data:
   - connect-src 'self' https:
+  - object-src 'none'
   - frame-ancestors 'none'
   - base-uri 'self'
   - form-action 'self'
@@ -32,14 +34,14 @@ Production-ready e-commerce frontend using React, Vite, Tailwind CSS, and shadcn
 - Path handling: API URLs constructed with encoded path segments (`src/config.js`) to prevent traversal/injection.
 - Route params validated (e.g., `ProductDetail.jsx` allows only safe IDs).
 - No `dangerouslySetInnerHTML`; forms trim inputs; no credentials stored in localStorage.
-- Dependency audit: `npm run audit:ci` fails on moderate/high/critical.
+- Dependency audit: `npm run audit:ci` fails on issues at `AUDIT_LEVEL` (default: moderate).
 
 ## Scripts
 
-- `npm start` – Dev server on port 3000
+- `npm start` – Dev server on configurable port (`VITE_PORT`/`PORT`, default 3000)
 - `npm run build` – Production build to `dist/`
 - `npm run lint` – ESLint checks
-- `npm run audit:ci` – Dependency audit (runtime deps only)
+- `npm run audit:ci` – Dependency audit (runtime deps only); set `AUDIT_LEVEL` to choose severity threshold
 
 ## Configuration
 
@@ -53,4 +55,3 @@ CodeQL and CI are configured in `.github/workflows`. Once the PR is open, check 
 ```
 gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=<PR_NUMBER>"
 ```
-
