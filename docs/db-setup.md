@@ -50,6 +50,11 @@ Security Notes
 - Use NUMERIC for price fields for financial accuracy (mapped to BigDecimal in Rust).
 - Foreign keys include ON DELETE CASCADE where appropriate.
 - The password_hash on User is marked to skip serialization.
+ - DB integrity constraints enforced via migrations:
+   - products.price >= 0 (non-negative)
+   - products.inventory_count >= 0 (non-negative)
+   - cart_items.quantity > 0 (positive quantities only)
+   - UNIQUE(cart_id, product_id) to prevent duplicate cart lines
 
 Validation and Quality Gates
 - cargo fmt --all -- --check
@@ -61,4 +66,3 @@ Troubleshooting
 - "DATABASE_URL must be set": ensure .env or environment is populated.
 - Connection refused: verify Postgres service, host/port, and credentials.
 - relation already exists: run diesel migration revert or diesel migration redo.
-

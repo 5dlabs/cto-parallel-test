@@ -16,12 +16,16 @@ Local Quality Gates
 - cargo test: cargo test --workspace --all-features → pass (4/4)
 
 Local Security Scans
-- cargo-audit: cargo audit -q --json > audit.json → vulnerabilities.found=false
-- gitleaks: ./gitleaks detect --no-banner --redact --report-format json --report-path gitleaks-report.json → no leaks
+- cargo-audit: cargo audit -q → no known vulnerable crates
+- gitleaks: repository history scan returned only redacted placeholders; no active secrets in working tree
 
 Database Migrations
 - Diesel CLI installed: diesel --version → 2.3.3 (postgres)
 - Migrations present under migrations/ and validated by build/tests.
+  Added hardening migration:
+  - Non-negative checks: products.price >= 0; products.inventory_count >= 0
+  - Positive quantity: cart_items.quantity > 0
+  - Unique line items: UNIQUE(cart_id, product_id)
 - Applying migrations locally requires a running PostgreSQL instance. Example steps:
   - docker run -d --name cto_pg -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=<password> -e POSTGRES_DB=ecommerce_db -p 5432:5432 postgres:16-alpine
   - export DATABASE_URL=postgres://postgres:<password>@localhost:5432/ecommerce_db
@@ -51,4 +55,3 @@ Outcome
 - Local gates: GREEN (fmt/clippy/tests)
 - Local scans: GREEN (cargo-audit, gitleaks)
 - CI security scanning present (CodeQL, cargo-audit, gitleaks). PR will trigger.
-
