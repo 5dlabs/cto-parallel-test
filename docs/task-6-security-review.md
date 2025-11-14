@@ -289,3 +289,13 @@ bash task/gh-code-scan.sh feature/task-6-implementation
 ```
 
 All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+## Local Snapshot (attempt 33)
+
+- Frontend npm ci, lint, and build succeeded.
+- npm audit (runtime only): 0 moderate/high/critical (see security/npm-audit.json)
+- npm audit (all deps): 0 vulnerabilities (see security/npm-audit-full.json)
+- gitleaks: no leaks (see security/gitleaks-report.json)
+- Hardened workflow: removed `VITE_USE_MOCK_DATA` build arg and set `VITE_API_BASE_URL` default to empty in `.github/workflows/frontend-deploy.yml` to avoid implicit mock usage and enforce secure defaults.
+
+Next steps in CI:
+- After PR creation, run: gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=<PR_NUMBER>"
