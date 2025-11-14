@@ -126,6 +126,7 @@ Attempt 7 Updates
 - Re-ran dependency and secrets scans and saved artifacts:
   - `cargo audit --json > audit.json` — `vulnerabilities.found=false`
   - `gitleaks detect --no-git -s . -f json -r gitleaks-report.json` — no leaks (`[]`)
+ - Fixed CI Gitleaks configuration to use built-in default rules instead of a missing `.gitleaks.toml`, preventing silent misconfiguration: `.github/workflows/security.yml` now runs `gitleaks detect --source . -v`.
 - GitHub authentication remains invalid (401). Exact commands when credentials are available:
   - `gh auth login -h github.com` or set `GH_TOKEN`
   - Create PR (if needed):
@@ -140,3 +141,82 @@ Attempt 7 Updates
     `PR=$(gh pr view --json number -q .number); gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
 -
 Status (unchanged): zero MEDIUM/HIGH/CRITICAL issues in local scans; all quality gates pass; CI security scanning enforced via `.github/workflows/security.yml`.
+
+Attempt 8 Updates
+- Re-ran local verification gates:
+  - Formatting: `cargo fmt --all -- --check` — pass
+  - Linting: `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic` — pass
+  - Tests: `cargo test --workspace --all-features` — pass (4/4)
+- Dependency audit: `cargo audit --json > audit.json` — `vulnerabilities.found=false`
+- Secrets scan: `gitleaks detect --no-git -f json -r gitleaks-report.json` — no leaks (`[]`)
+- Manual review reconfirmed:
+  - No raw SQL; Diesel ORM only
+  - No command execution or filesystem path risks
+  - No insecure crypto usage; no hardcoded secrets
+  - Crate forbids unsafe (`src/lib.rs:1`)
+- GitHub code scanning fetch still blocked by auth in this environment. Use:
+  - `export GH_HOST=github.com`
+  - `export GH_TOKEN=<github_app_installation_token>`
+  - `gh auth status -t`
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
+
+Artifacts
+- `audit.json:1` — confirms no advisories found
+- `gitleaks-report.json:1` — empty array `[]`
+
+Attempt 8 Updates
+- Re-ran local quality gates:
+  - `cargo fmt --all -- --check` — pass
+  - `cargo clippy --all-targets --all-features -- -D warnings -W clippy::pedantic` — pass
+  - `cargo test --workspace --all-features` — pass (4/4)
+- Re-ran dependency and secrets scans and refreshed artifacts:
+  - `cargo audit --json > audit.json` — `vulnerabilities.found=false`
+  - `gitleaks detect --no-git -s . -f json -r gitleaks-report.json` — no leaks (`[]`)
+- Validated CI security workflow is intact: CodeQL, cargo-audit, and Gitleaks jobs present with minimal permissions.
+- Attempted GitHub alert retrieval; `gh auth status -h github.com` indicates invalid token (401) in this environment. Use the following once credentials are available:
+  - `gh auth login -h github.com` (or set `GH_TOKEN`)
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
+
+Status
+- Zero MEDIUM/HIGH/CRITICAL issues in local scans.
+- All quality checks passing.
+- CI/CD includes security scanning and will enforce on PR.
+- GitHub alert retrieval pending auth; exact commands documented above.
+
+Attempt 9 Updates
+- Re-verified local quality gates (clean):
+  - `cargo fmt --all -- --check` — pass
+  - `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic` — pass
+  - `cargo test --workspace --all-features` — pass (4/4)
+- Dependency audit refreshed: `cargo audit --json > audit.json` — `vulnerabilities.found=false`.
+- Secrets scan refreshed: `gitleaks detect --no-git -s . -f json -r gitleaks-report.json` — no leaks (`[]`).
+- CI security workflow remains intact with minimal permissions and three scanners: CodeQL, cargo-audit, and Gitleaks (`.github/workflows/security.yml:1`).
+- GitHub code scanning alerts retrieval still blocked by auth in this environment. Run when creds available:
+  - `gh auth login -h github.com` or set `GH_TOKEN=<github_app_installation_token>`
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
+
+Artifacts (Attempt 9)
+- `audit.json:1` — `false` (no advisories)
+- `gitleaks-report.json:1` — `[]`
+
+Attempt 9 Updates
+- Re-ran local verification gates:
+  - Formatting: `cargo fmt --all -- --check` — pass
+  - Linting: `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic` — pass
+  - Tests: `cargo test --workspace --all-features` — pass (4/4)
+- Dependency audit refreshed: `cargo audit --json > audit.json` — `vulnerabilities.found=false`
+- Secrets scan refreshed: `gitleaks detect --no-git -s . -f json -r gitleaks-report.json` — no leaks (`[]`)
+- Confirmed CI security workflow intact: CodeQL, cargo-audit, Gitleaks; minimal permissions set (`contents: read`, `security-events: write`).
+- GitHub Code Scanning fetch still blocked by auth in this environment. Use these once credentials are present:
+  - `export GH_HOST=github.com`
+  - `export GH_TOKEN=<github_app_installation_token>`
+  - `gh auth status -t`
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
+
+Artifacts (Attempt 9)
+- `audit.json:1` — confirms no advisories (`vulnerabilities.found=false`)
+- `gitleaks-report.json:1` — `[]`

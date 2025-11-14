@@ -62,4 +62,5 @@ jobs:
       - name: Run gitleaks
         uses: gitleaks/gitleaks-action@v2
         with:
-          args: detect --source . -v -c .gitleaks.toml
+          # Use built-in default rules. Do not rely on a missing local config.
+          args: detect --source . -v
