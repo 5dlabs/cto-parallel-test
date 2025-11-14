@@ -1,0 +1,95 @@
+name: Security Scans
+
+on:
+  push:
+    branches: [ main, feature/task-4-implementation ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  gitleaks:
+    name: Secret Scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+          GITLEAKS_FORMAT: sarif
+          GITLEAKS_REPORT_PATH: gitleaks.sarif
+          # Fail the job on any findings (enforces zero-tolerance in CI)
+          GITLEAKS_EXIT_CODE: "1"
+
+      - name: Upload SARIF (gitleaks)
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks.sarif
+
+  osv-scanner:
+    name: Dependency Scan (OSV)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install OSV-Scanner
+        uses: google/osv-scanner/actions/install@v1
+
+      - name: Run OSV-Scanner (repo)
+        run: |
+          osv-scanner --repo . --format sarif --output osv-results.sarif || true
+          # If vulnerabilities are found, fail after upload to surface alerts
+          if jq -e '.runs[]?.results? | length > 0' osv-results.sarif >/dev/null 2>&1; then
+            echo "OSV vulnerabilities detected" >&2
+            export OSV_FAIL=1
+          fi
+          echo "OSV_FAIL=${OSV_FAIL:-0}" >> "$GITHUB_ENV"
+
+      - name: Upload SARIF (OSV)
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: osv-results.sarif
+
+      - name: Enforce no vulns
+        if: env.OSV_FAIL == '1'
+        run: |
+          echo "Failing due to OSV vulnerabilities" >&2
+          exit 1
+
+  cargo-audit:
+    name: RustSec Audit (cargo-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: Audit dependencies
+        run: cargo audit -D warnings
+
