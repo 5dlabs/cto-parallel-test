@@ -82,16 +82,16 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
             .as_secs() as usize,
     };
 
-    // In production, load from environment variable
-    let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+    // Load from environment only; no insecure fallbacks
+    let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET not set");
+    assert!(secret.len() >= 32, "JWT_SECRET too short; require >= 32 chars");
 
     encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes()))
 }
 
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
-    let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
+    let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET not set");
+    assert!(secret.len() >= 32, "JWT_SECRET too short; require >= 32 chars");
 
     let validation = Validation::default();
     let token_data = decode::<Claims>(
