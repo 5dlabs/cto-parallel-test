@@ -36,3 +36,4 @@ hooks/
 
 # Security scan artifacts (do not commit)
 gitleaks*.json
+.bin/
