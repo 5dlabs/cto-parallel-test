@@ -73,14 +73,14 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
 
     // In production, load from environment variable
     let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "dev_only_signing_key_min_32_chars________".to_string());
+        .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
 
     encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes()))
 }
 
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let secret = std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| "dev_only_signing_key_min_32_chars________".to_string());
+        .unwrap_or_else(|_| "test_secret_key_change_in_production".to_string());
 
     let validation = Validation::default();
     let token_data = decode::<Claims>(
