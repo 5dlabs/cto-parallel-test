@@ -306,3 +306,9 @@ Attempt 14 Updates
 Artifacts (Attempt 14)
 - `audit.json:1` — `"vulnerabilities":{"found":false}`
 - `gitleaks-report.json:1` — `[]`
+
+This Run (automated summary)
+- Quality gates: fmt, clippy (pedantic, deny warnings), tests — all passing locally.
+- Security scans: gitleaks — no leaks; cargo-audit — no advisories (audit.json updated).
+- DB layer verified: schema matches constraints; models use BigDecimal for NUMERIC; FKs with cascade; pool parameterized via env.
+- GitHub CLI authentication missing; PR creation and PR-specific code scanning commands are documented above for execution once `GH_TOKEN` is configured.
