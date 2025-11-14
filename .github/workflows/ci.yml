@@ -1,0 +1,30 @@
+name: rust-ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+      - feature/**
+
+jobs:
+  build-test-lint:
+    name: Build, Lint, and Test (Rust)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cargo fmt (check)
+        run: cargo fmt --all -- --check
+
+      - name: Cargo clippy (deny warnings)
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Cargo test
+        run: cargo test --workspace --all-features -- --nocapture
+

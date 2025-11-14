@@ -237,3 +237,36 @@ Attempt 10 Updates
   - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
 - CI security workflows (CodeQL, cargo-audit, Gitleaks) verified intact in `.github/workflows/security.yml:1`.
 - No code changes required; security posture remains clean. Artifacts updated in `audit.json` and `gitleaks-report.json`.
+
+Attempt 11 Updates
+- Added CI workflow `.github/workflows/ci.yml` to enforce quality gates (fmt check, clippy with `-D warnings`, and tests) on PRs and pushes.
+- Re-ran local gates after adding the workflow:
+  - `cargo fmt --all -- --check` — pass
+  - `cargo clippy --workspace --all-targets --all-features -- -D warnings` — pass
+  - `cargo test --workspace --all-features` — pass (4/4)
+- Re-validated scanners:
+  - `cargo audit` — no advisories (`vulnerabilities.found=false`)
+  - `gitleaks` — no leaks (`[]`)
+- GitHub authentication remains invalid here. Once configured, create PR and query alerts with:
+  - `gh pr create --title "Task 1: Diesel/Postgres DB layer + security checks" --body-file docs/execution-report.md --base main --head feature/task-1-implementation --label task-1 --label service-cto-parallel-test --label run-play-task-1-gzpgj`
+  - `PR=$(gh pr view --json number -q .number); gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
+
+Attempt 12 Updates
+- Re-ran local quality gates and scanners — all clean:
+  - `cargo fmt --all -- --check` — pass
+  - `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic` — pass
+  - `cargo test --workspace --all-features` — pass (4/4)
+  - `cargo audit --json > audit.json` — `vulnerabilities.found=false`
+  - `gitleaks detect --no-git -s . -f json -r gitleaks-report.json` — no leaks (`[]`)
+- Verified CI workflows present and correct:
+  - `.github/workflows/ci.yml` — enforces fmt/clippy/tests on PRs and pushes.
+  - `.github/workflows/security.yml` — runs CodeQL (Rust), cargo-audit, and Gitleaks with minimal permissions.
+- Staged and committed changes for this attempt; attempted push to `origin feature/task-1-implementation`.
+- GitHub code scanning alerts remain blocked without auth in this environment. Use:
+  - `gh auth login -h github.com` or set `GH_TOKEN=<github_app_installation_token>`
+  - `PR=$(gh pr view --json number -q .number)`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq '.'`
+
+Artifacts (Attempt 12)
+- `audit.json:1` — confirms no advisories (`vulnerabilities.found=false`).
+- `gitleaks-report.json:1` — `[]` (no secrets detected).
