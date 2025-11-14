@@ -57,21 +57,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
-      - name: Install OSV-Scanner
-        run: |
-          curl -LO https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64
-          chmod +x osv-scanner_linux_amd64
-          sudo mv osv-scanner_linux_amd64 /usr/local/bin/osv-scanner
-
       - name: Run OSV-Scanner (repo)
+        uses: google/osv-scanner-action@9bb69575e74019c2ad085a1860787043adf47ccb # v1.8.0
+        with:
+          scan-args: >-
+            --lockfile=Cargo.lock
+            --format sarif
+            --output osv-results.sarif
+
+      - name: Set OSV_FAIL if vulnerabilities found
         run: |
-          osv-scanner --lockfile=Cargo.lock --format sarif --output osv-results.sarif || true
-          # If vulnerabilities are found, fail after upload to surface alerts
           if [ -f osv-results.sarif ] && jq -e '.runs[]?.results? | length > 0' osv-results.sarif >/dev/null 2>&1; then
             echo "OSV vulnerabilities detected" >&2
-            export OSV_FAIL=1
+            echo "OSV_FAIL=1" >> "$GITHUB_ENV"
+          else
+            echo "OSV_FAIL=0" >> "$GITHUB_ENV"
           fi
-          echo "OSV_FAIL=${OSV_FAIL:-0}" >> "$GITHUB_ENV"
 
       - name: Upload SARIF (OSV)
         if: always() && hashFiles('osv-results.sarif') != ''
@@ -93,7 +94,7 @@ jobs:
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@v1
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: stable
 
