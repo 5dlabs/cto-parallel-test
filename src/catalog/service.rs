@@ -151,8 +151,14 @@ impl ProductService {
                 }
 
                 if let Some(flag) = in_stock {
-                    let available = product.inventory_count > 0;
-                    if flag != available {
+                    // Align with acceptance criteria:
+                    // - in_stock = true  => inventory_count > 0
+                    // - in_stock = false => inventory_count == 0 (not < 0)
+                    if flag {
+                        if product.inventory_count <= 0 {
+                            return false;
+                        }
+                    } else if product.inventory_count != 0 {
                         return false;
                     }
                 }
