@@ -5,8 +5,8 @@ use serial_test::serial;
 #[serial]
 fn test_password_hashing() {
     let password = "test_password_123";
-    let hash1 = User::hash_password(password);
-    let hash2 = User::hash_password(password);
+    let hash1 = User::hash_password(password).expect("hash1");
+    let hash2 = User::hash_password(password).expect("hash2");
 
     // Hashes should be different (due to random salt)
     assert_ne!(hash1, hash2);
