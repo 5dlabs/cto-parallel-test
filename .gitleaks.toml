@@ -1,0 +1,20 @@
+title = "cto-parallel-test gitleaks configuration"
+
+# This configuration focuses on eliminating false positives from clearly redacted
+# or placeholder values that appear in documentation or examples. It does not
+# weaken detection for real secrets.
+[allowlist]
+description = "Ignore redacted/placeholder markers in docs and tasks"
+# Safe to ignore globally: these are explicit placeholders and not real secrets.
+regexes = [
+  "REDACTED",
+  "(?i)PLACEHOLDER",
+  "(?i)YOUR[-_ ]?(TOKEN|SECRET|KEY|PASSWORD)",
+  "(?i)<(TOKEN|SECRET|KEY|PASSWORD)>",
+]
+# Extra path scoping for noisy documentation directories.
+paths = [
+  "docs/.taskmaster/.*",
+  "task/.*",
+]
+

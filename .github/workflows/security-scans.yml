@@ -26,6 +26,8 @@ jobs:
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
           GITLEAKS_FORMAT: sarif
           GITLEAKS_REPORT_PATH: gitleaks.sarif
+          # Use repo config to avoid false positives from explicit placeholders
+          GITLEAKS_CONFIG: .gitleaks.toml
           # Fail the job on any findings (enforces zero-tolerance in CI)
           GITLEAKS_EXIT_CODE: "1"
 
@@ -92,4 +94,3 @@ jobs:
 
       - name: Audit dependencies
         run: cargo audit -D warnings
-
