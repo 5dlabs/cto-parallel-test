@@ -8,3 +8,5 @@ target/
 
 # Local security scan reports
 gitleaks-report.json
+gitleaks_report_latest.json
+*.sarif
