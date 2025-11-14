@@ -251,3 +251,22 @@ bash task/gh-code-scan.sh feature/task-6-implementation
 ```
 
 All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+
+## Verification Snapshot (attempt 17)
+
+- Secrets scan (tracked files): `gitleaks detect --redact --config .gitleaks.toml --report-format json --report-path security/gitleaks-report.json`
+  - Output: `[]` (no leaks) – see `security/gitleaks-report.json`
+- Dependency audit (runtime only): `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../security/npm-audit.json`
+  - Result: 0 moderate/high/critical – see `security/npm-audit.json`
+- Dependency audit (all deps): `cd frontend && npm audit --json > ../security/npm-audit-full.json`
+  - Result: 0 vulnerabilities of any severity – see `security/npm-audit-full.json`
+- Frontend quality: `cd frontend && npm ci && npm run lint && npm run build` all succeeded
+
+GitHub code scanning query remains blocked by CLI auth in this environment. Re-run after authenticating or use the helper script:
+
+```
+gh auth login -h github.com
+bash task/gh-code-scan.sh feature/task-6-implementation
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
