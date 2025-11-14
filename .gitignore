@@ -4,6 +4,9 @@ security/npm-audit.json
 security/npm-audit-full.json
 gitleaks*.json
 
+# Local helper binaries
+bin/
+
 # Environment files (prevent accidental secret commits)
 .env
 .env.*
