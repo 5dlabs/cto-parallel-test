@@ -17,7 +17,12 @@ pub struct User {
 }
 
 /// New user for insertion into the database.
-#[derive(Insertable, Deserialize, Debug)]
+///
+/// Security: Do not derive `Deserialize` to prevent mass-assignment attacks
+/// from directly binding untrusted input into a DB insertable struct. The
+/// application layer should define a request DTO and perform explicit mapping
+/// + password hashing.
+#[derive(Insertable, Debug)]
 #[diesel(table_name = users)]
 pub struct NewUser {
     pub username: String,

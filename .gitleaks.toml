@@ -1,0 +1,20 @@
+title = "cto-parallel-test gitleaks config"
+
+[allowlist]
+description = "Allow sanitized artifacts and redacted placeholders; not real secrets"
+# Ignore tool-generated leak reports and working tree captures that may have redacted strings
+files = [
+  '''^gitleaks[_-].*\.json$''',
+  '''^gitleaks.*\.json$''',
+]
+# Ignore explicit redacted placeholders commonly used in docs and reports
+regexes = [
+  '''REDACTED''',
+]
+# Ignore documentation paths known to include placeholders, not secrets
+paths = [
+  '''^docs/\.taskmaster/''',
+  '''^task/''',
+]
+commits = []
+
