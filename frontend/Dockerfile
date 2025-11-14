@@ -21,8 +21,8 @@ FROM nginx:alpine
 # Copy built assets from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration (if you have one, otherwise use default)
-# COPY nginx.conf /etc/nginx/nginx.conf
+# Copy hardened nginx configuration (security headers, CSP)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80
 EXPOSE 80
