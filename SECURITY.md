@@ -3,7 +3,7 @@
 This service ships with hardened authentication primitives. Operators should review and configure the following environment variables and defaults.
 
 - JWT secret: set `JWT_SECRET` to a high-entropy value (minimum enforced length 32 characters). Optionally set `JWT_SECRET_MIN_LEN` (>= 32) to raise the floor.
-- Token TTL: `JWT_TTL_SECS` controls token lifetime. Values are clamped to the range (0, 7 days]; default is 24 hours.
+- Token TTL: `JWT_TTL_SECS` controls token lifetime. Values are clamped to the range (0, 24 hours]; default is 24 hours.
 - Algorithm: JWTs are signed and validated with HS256 only; algorithm is pinned to prevent confusion attacks.
 - Issuer/Audience (optional):
   - `JWT_ISSUER` and `JWT_AUDIENCE` can be set to embed and validate `iss` and `aud` claims.

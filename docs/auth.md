@@ -57,7 +57,7 @@ assert_eq!(claims.sub, "1");
 - Argon2 defaults are used; consider tuning parameters per deployment (increase memory cost and iterations where feasible).
 - JWT is strictly validated with `HS256` only to avoid algorithm confusion attacks; 30s leeway is allowed for clock skew.
 - A minimum secret length of 32 bytes is enforced for HMAC keys to reduce risk of weak keys.
-- Token lifetime (`JWT_TTL_SECS`) defaults to 24h and is capped at 7 days to limit exposure of leaked tokens.
+- Token lifetime (`JWT_TTL_SECS`) defaults to 24h and is capped at 24 hours to limit exposure of leaked tokens.
 - If `JWT_ISSUER` and/or `JWT_AUDIENCE` are set, tokens include `iss`/`aud` claims and validation enforces matching issuer/audience.
 
 ## Testing
