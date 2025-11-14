@@ -33,14 +33,14 @@ Local verification results (this change set):
 - Secret scan (gitleaks): PASS (no leaks found)
 - Dependency audit (cargo-audit): PASS (no advisories)
 
-Latest verification (Task 4, attempt 5):
+Latest verification (Task 4, attempt 6):
 
-- Timestamp: 2025-11-14 11:05:39 UTC
+- Timestamp: 2025-11-14 11:08:30 UTC
 - Tools: rustfmt, clippy (pedantic, -D warnings), cargo test, cargo-audit, gitleaks (configured), regex-based secret sweep
 - Result: All checks PASS, zero MEDIUM/HIGH/CRITICAL issues found locally
 
 Notes:
-- GitHub API access for listing Code Scanning alerts from the local environment may be rate-limited or require explicit `GH_TOKEN` export. If unauthenticated locally, rely on CI where CodeQL + SARIF uploads run on pushes/PRs. In this environment `gh` is unauthenticated; use the commands above with a valid token to query PR alerts.
+- GitHub API access for listing Code Scanning alerts from the local environment may be rate-limited or require explicit `GH_TOKEN` export. If unauthenticated locally, rely on CI where CodeQL + SARIF uploads run on pushes/PRs. In this environment the configured `gh` token is invalid; use the commands above with a valid token to query PR alerts.
 - To run the same checks locally with auth, ensure `GH_TOKEN` is exported and use the commands above.
  - Local regex-based secret sweep flagged only documentation examples under `docs/.taskmaster` (false positives). No source files or configuration contained secrets.
 
