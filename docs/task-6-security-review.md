@@ -188,6 +188,18 @@ gh api \
   --jq '.[] | {rule: .rule.id, severity: .rule.severity, path: .most_recent_instance.location.path, start: .most_recent_instance.location.start_line}'
 ```
 
+Or use the helper script (optionally append results to this document):
+
+```
+# Prints concise JSON to stdout
+bash task/gh-code-scan.sh feature/task-6-implementation
+
+# Also appends a snapshot section to docs/task-6-security-review.md
+bash task/gh-code-scan.sh feature/task-6-implementation --update-docs
+# or
+UPDATE_DOCS=1 bash task/gh-code-scan.sh feature/task-6-implementation
+```
+
 All MEDIUM/HIGH/CRITICAL findings must be fixed before merge.
 
 If authentication is currently unavailable in your environment, complete local scans above and re-run these commands after `gh auth login -h github.com`.

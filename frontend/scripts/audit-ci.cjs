@@ -7,8 +7,8 @@
 const { execSync } = require('child_process');
 
 try {
-  // Run npm audit with JSON output
-  const output = execSync('npm audit --production --json', { encoding: 'utf8' });
+  // Run npm audit with JSON output (omit dev deps; fail threshold handled below)
+  const output = execSync('npm audit --omit=dev --json', { encoding: 'utf8' });
   const audit = JSON.parse(output);
   
   // Check for vulnerabilities
