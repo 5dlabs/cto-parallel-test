@@ -7,6 +7,4 @@ regexes = [
 ]
 files = [
   "task/task.md",
-  "docs/.*",
 ]
-
