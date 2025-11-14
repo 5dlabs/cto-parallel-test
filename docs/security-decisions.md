@@ -12,6 +12,7 @@ Security Decisions and Practices
 - Crate forbids `unsafe` Rust at the root (`#![forbid(unsafe_code)]`) to eliminate classes of memory-unsafe issues.
 - CI additionally runs Gitleaks secrets scanning to prevent credential leaks.
 - Pre-PR quality gates enforced locally: fmt, clippy (pedantic, deny warnings), and tests.
+ - Dependency hygiene: replaced unmaintained `dotenv` with `dotenvy` to address RUSTSEC-2021-0141 and keep config loading maintained and audited.
 
 Manual Scanning During PR Review
 - Query open alerts for the current PR via GitHub CLI:
@@ -36,6 +37,18 @@ Latest Local Scan Refresh
  
 Latest Local Scan Refresh
 - Timestamp (UTC): 2025-11-14T16:48:36Z
+- fmt/clippy/tests: all passing
+- cargo audit: no advisories found (`vulnerabilities.found=false`)
+- gitleaks: no leaks found (`[]`)
+
+Latest Local Scan Refresh
+- Timestamp (UTC): 2025-11-14T16:59:00Z
+- fmt/clippy/tests: all passing
+- cargo audit: no advisories found (`vulnerabilities.found=false`)
+- gitleaks: no leaks found (`[]`)
+
+Latest Local Scan Refresh
+- Timestamp (UTC): 2025-11-14T17:05:27Z
 - fmt/clippy/tests: all passing
 - cargo audit: no advisories found (`vulnerabilities.found=false`)
 - gitleaks: no leaks found (`[]`)

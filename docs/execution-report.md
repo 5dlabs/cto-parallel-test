@@ -5,6 +5,11 @@ Summary
 - Performed local security scans and quality gates. No actionable vulnerabilities found.
 - GitHub API authentication is unavailable in this environment; provided exact commands to create a PR and query code scanning alerts once credentials are fixed.
 
+Latest Updates
+- Replaced deprecated/unmaintained `dotenv` with `dotenvy` to satisfy cargo-audit (RUSTSEC-2021-0141) and eliminate a MEDIUM-severity dependency risk.
+- Re-ran gates: fmt, clippy (pedantic, deny warnings), tests — all passing.
+- Re-ran security scans: cargo-audit (no advisories), gitleaks (no leaks).
+
 Local Security Scans
 - gitleaks: no leaks found (see `gitleaks-report.json`).
 - cargo-audit: no vulnerable dependencies detected.
@@ -48,6 +53,24 @@ Completion Criteria (met locally)
 - Zero MEDIUM/HIGH/CRITICAL issues in local scans (gitleaks, cargo-audit).
 - All quality gates green (fmt, clippy pedantic, tests).
 - Database code follows secure defaults and best practices per coding-guidelines and github-guidelines.
+
+Attempt 30 Updates
+- Timestamp (UTC): 2025-11-14T16:59:00Z
+- Re-ran local gates: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`, and `cargo test --workspace --all-features -- --nocapture` — all passing (4/4).
+- Refreshed dependency audit: `cargo audit -q --json > audit.json` → `"vulnerabilities.found": false`.
+- Refreshed secrets scan (existing local binary): `./gitleaks detect --source . --no-git --config .gitleaks.toml --report-format json --report-path gitleaks-report.json --no-banner --log-level error` → `[]`.
+- GitHub code scanning query attempted but blocked due to unauthenticated `gh` CLI. Resolve and check with:
+  - `export GH_HOST=github.com`
+  - `gh auth login -h github.com` (or `export GH_TOKEN=<github_app_installation_token>`)
+  - `PR_NUMBER=$(gh pr list --repo 5dlabs/cto-parallel-test --json number -q '.[0].number')`
+  - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR_NUMBER}" | jq '.'`
+
+Attempt 31 Updates
+- Timestamp (UTC): 2025-11-14T17:05:27Z
+- Re-ran local gates: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`, and `cargo test --workspace --all-features -- --nocapture` — all passing (4/4).
+- Refreshed dependency audit: `cargo audit -q --json > audit.json` → `"vulnerabilities.found": false`.
+- Refreshed secrets scan: `./gitleaks detect --no-git --source . --report-format json --report-path gitleaks-report.json --no-banner --log-level error` → `[]`.
+- GitHub code scanning remains blocked without auth — use the commands above to authenticate and query alerts when running on a machine with credentials.
 
 Attempt 29 Updates
 - Re-ran local gates: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`, and `cargo test --workspace --all-features -- --nocapture` — all passing (4/4).
