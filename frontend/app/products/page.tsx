@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getAllProducts } from "@/lib/products";
+import { safeImageSrc } from "@/lib/config";
 
 export default async function ProductsPage() {
   const products = await getAllProducts();
@@ -22,7 +23,7 @@ export default async function ProductsPage() {
             <CardHeader className="p-0">
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
                 <Image
-                  src={String(product.image || '')}
+                  src={safeImageSrc(product.image)}
                   alt={String(product.title || product.name || 'Product')}
                   width={400}
                   height={300}

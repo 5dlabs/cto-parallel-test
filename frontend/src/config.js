@@ -25,3 +25,20 @@ export function apiUrl(path) {
     .join('/')
   return `${API_BASE_URL}/${safe}`
 }
+
+// Sanitize image URLs to allow only safe http/https or root-relative paths
+export function safeImageSrc(raw) {
+  const val = String(raw || '').trim()
+  if (!val) return ''
+  if (val.startsWith('/')) {
+    if (val.startsWith('//')) return ''
+    return val
+  }
+  try {
+    const u = new URL(val)
+    if (!/^https?:$/.test(u.protocol)) return ''
+    return u.toString()
+  } catch {
+    return ''
+  }
+}

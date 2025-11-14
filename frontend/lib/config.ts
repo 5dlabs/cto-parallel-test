@@ -33,3 +33,21 @@ export function safeId(raw: unknown): string {
   const id = String(raw || '')
   return /^[-_a-zA-Z0-9]+$/.test(id) ? id : ''
 }
+
+// Sanitize image URLs to prevent dangerous schemes or protocol-relative URLs
+export function safeImageSrc(raw: unknown): string {
+  const val = String(raw || '').trim()
+  if (!val) return ''
+  // Allow root-relative paths but disallow protocol-relative ("//example.com")
+  if (val.startsWith('/')) {
+    if (val.startsWith('//')) return ''
+    return val
+  }
+  try {
+    const u = new URL(val)
+    if (!/^https?:$/.test(u.protocol)) return ''
+    return u.toString()
+  } catch {
+    return ''
+  }
+}
