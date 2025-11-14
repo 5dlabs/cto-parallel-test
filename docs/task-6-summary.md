@@ -12,6 +12,7 @@ Security
 - IDs validated/normalized in `ProductDetail.jsx`.
 - Local storage limited to cart items only; no sensitive data persisted.
 - CodeQL workflow configured; Frontend CI performs lint/build/audit.
+- Removed sensitive console logging in Next login/register pages.
 
 How to Run
 - `cd frontend`

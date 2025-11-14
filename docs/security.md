@@ -9,6 +9,9 @@ Local Checks
 - Build: `npm run build`
 - Audit: `npm run audit:ci` (fails on moderate/high/critical)
 
+Recent Fixes
+- Removed credential logging from Next `app/login` and `app/register` pages (no sensitive data in logs).
+
 GitHub Code Scanning
 - CodeQL workflow in `.github/workflows/codeql.yml` runs on pushes and PRs.
 - Frontend CI in `.github/workflows/frontend-ci.yml` runs lint/build/audit per PR.
