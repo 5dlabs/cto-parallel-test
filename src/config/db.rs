@@ -23,21 +23,24 @@ pub fn establish_connection_pool() -> Pool {
         .expect("DATABASE_URL must be set; refer to docs/db-setup.md for format guidance");
 
     // Optional pool configuration via env vars (secure defaults)
+    // Clamp pool size to a sane, non-zero range to prevent DoS via misconfig
     let max_size: u32 = env::var("DB_POOL_MAX_SIZE")
         .ok()
         .and_then(|v| v.parse().ok())
-        .unwrap_or(15);
+        .unwrap_or(15)
+        .clamp(1, 100);
 
     let min_idle: Option<u32> = env::var("DB_POOL_MIN_IDLE")
         .ok()
         .and_then(|v| v.parse().ok());
 
-    let conn_timeout = Duration::from_secs(
-        env::var("DB_POOL_CONNECTION_TIMEOUT_SECS")
-            .ok()
-            .and_then(|v| v.parse().ok())
-            .unwrap_or(30),
-    );
+    // Enforce a reasonable timeout window [1s, 300s]
+    let conn_timeout_secs: u64 = env::var("DB_POOL_CONNECTION_TIMEOUT_SECS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(30)
+        .clamp(1, 300);
+    let conn_timeout = Duration::from_secs(conn_timeout_secs);
 
     let max_lifetime = env::var("DB_POOL_MAX_LIFETIME_SECS")
         .ok()
@@ -64,7 +67,8 @@ pub fn establish_connection_pool() -> Pool {
         .connection_timeout(conn_timeout);
 
     if let Some(min_idle) = min_idle {
-        builder = builder.min_idle(Some(min_idle));
+        // Ensure min_idle does not exceed max_size
+        builder = builder.min_idle(Some(min_idle.min(max_size)));
     }
 
     if let Some(max_lifetime) = max_lifetime {
