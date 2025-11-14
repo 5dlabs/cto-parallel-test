@@ -5,6 +5,7 @@ Summary
 - Pages include: Home, Product List, Product Detail, Cart, Login, Register.
 - Routing via `react-router-dom`; Header includes cart badge; Footer present on all pages.
 - Environment-driven configuration: API base URL parameterized via `VITE_API_BASE_URL`.
+- Dev server port parameterized via `VITE_PORT`/`PORT`; audit threshold via `AUDIT_LEVEL`.
 
 Security
 - No hardcoded secrets; `.env.example` provided.

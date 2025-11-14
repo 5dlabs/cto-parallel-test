@@ -8,7 +8,7 @@
     "start": "vite --port 3000",
     "build": "vite build",
     "lint": "eslint .",
-    "audit:ci": "npm audit --omit=dev --audit-level=moderate",
+    "audit:ci": "sh -c 'npm audit --omit=dev --audit-level=${AUDIT_LEVEL:-moderate}'",
     "preview": "vite preview"
   },
   "dependencies": {

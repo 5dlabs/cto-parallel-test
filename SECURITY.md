@@ -12,7 +12,7 @@ This repository includes a frontend e‑commerce app with secure defaults. Key p
   - No secrets committed; configuration via environment variables (`.env`)
   - `localStorage` only stores non‑sensitive cart state
 - Dependency hygiene
-  - `npm audit` workflow included (`npm run audit:ci`) to check prod dependencies
+  - `npm audit` workflow included (`npm run audit:ci`) to check prod dependencies; threshold configurable via `AUDIT_LEVEL` env
 - Secure defaults
   - CSP, Referrer‑Policy, X‑Content‑Type‑Options, X‑Frame‑Options set via meta tags
 
@@ -26,4 +26,3 @@ gh api \
   --jq '.[] | {rule: .rule.id, severity: .rule.severity, path: .most_recent_instance.location.path, start: .most_recent_instance.location.start_line}'
 
 Fix all MEDIUM/HIGH/CRITICAL findings before merging.
-
