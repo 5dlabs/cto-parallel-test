@@ -12,6 +12,7 @@
 - Hardened security: strict CSP, safe id validation, URL encoding.
 - Frontend CI workflow: lint, build, npm audit (threshold configurable).
 - CodeQL workflow present.
+- Secrets scanning in CI using gitleaks (fails on any finding).
 
 ## Testing Performed
 
