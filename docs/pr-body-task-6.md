@@ -13,11 +13,13 @@
 - Frontend CI workflow: lint, build, npm audit (threshold configurable).
 - CodeQL workflow present.
 - Secrets scanning in CI using gitleaks (fails on any finding).
+- Added ESLint security hardening: disallow eval/new Function/implied eval, forbid dangerous HTML sinks (`react/no-danger`), enforce no-unsanitized DOM methods.
+  - Configured to avoid noisy Node-only rules in browser context.
 
 ## Testing Performed
 
-- npm ci, npm run lint, npm run build.
-- npm audit: 0 vulnerabilities (runtime).
+- npm ci, npm run lint, npm run build: ✅ Passed
+- npm audit (runtime, `--audit-level=moderate`): ✅ 0 vulnerabilities
 
 ## Notes
 

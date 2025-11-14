@@ -1,0 +1,5 @@
+# Security scan artifacts (do not commit)
+security/gitleaks-report.json
+security/npm-audit.json
+gitleaks*.json
+
