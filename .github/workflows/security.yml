@@ -49,4 +49,4 @@ jobs:
       - name: Cargo audit
         env:
           RUSTSEC_LOG: warn
-        run: cargo audit --deny warnings --config .cargo/audit.toml
+        run: cargo audit --deny warnings
