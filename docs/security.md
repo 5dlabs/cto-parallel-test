@@ -11,6 +11,8 @@ Local Checks
 
 Recent Fixes
 - Removed credential logging from Next `app/login` and `app/register` pages (no sensitive data in logs).
+- Added secure default HTTP headers in `frontend/next.config.ts` (HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy).
+ - Tightened CSP in `frontend/index.html`: removed `style-src 'unsafe-inline'` and added `object-src 'none'` to reduce XSS and plugin attack surface.
 
 GitHub Code Scanning
 - CodeQL workflow in `.github/workflows/codeql.yml` runs on pushes and PRs.

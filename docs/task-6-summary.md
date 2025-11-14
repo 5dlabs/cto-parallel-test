@@ -13,6 +13,7 @@ Security
 - Local storage limited to cart items only; no sensitive data persisted.
 - CodeQL workflow configured; Frontend CI performs lint/build/audit.
 - Removed sensitive console logging in Next login/register pages.
+ - CSP hardened in `frontend/index.html` (no `style-src 'unsafe-inline'`, added `object-src 'none'`).
 
 How to Run
 - `cd frontend`
