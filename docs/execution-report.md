@@ -10,6 +10,12 @@ Latest Updates
 - Re-ran gates: fmt, clippy (pedantic, deny warnings), tests — all passing.
 - Re-ran security scans: cargo-audit (no advisories), gitleaks (no leaks).
 
+Latest Local Scan Refresh
+- Timestamp (UTC): 2025-11-14T17:10:16Z
+- fmt/clippy/tests: all passing
+- cargo audit: no advisories found
+- gitleaks: no leaks found
+
 Local Security Scans
 - gitleaks: no leaks found (see `gitleaks-report.json`).
 - cargo-audit: no vulnerable dependencies detected.
