@@ -36,7 +36,7 @@ Local verification results (this change set):
 
 Latest verification:
 
- - Timestamp: 2025-11-14 16:45:00 UTC
+ - Timestamp: 2025-11-14 17:04:24 UTC
  - Tools: rustfmt, clippy (pedantic, -D warnings), cargo test, cargo-audit (JSON), gitleaks (JSON)
  - Result: All checks PASS; gitleaks findings = 0; cargo-audit vulnerabilities = 0; zero MEDIUM/HIGH/CRITICAL issues in local scans
  - Artifacts: `gitleaks_report_latest.json`, `cargo_audit_report.json`
@@ -45,6 +45,9 @@ CI/CD hardening:
 - All third-party actions in workflows are pinned to immutable commit SHAs to mitigate supply-chain risks.
 - Rust toolchain action is pinned to `dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9` (# v1) with `toolchain: stable` for reproducibility.
 - OSV dependency scan uses `google/osv-scanner-action@9bb69575e74019c2ad085a1860787043adf47ccb` with SARIF upload and job failure enforced on any findings.
+
+Update history:
+- 2025-11-14: Pinned `dtolnay/rust-toolchain` to a commit SHA in CI audit job to eliminate tag drift in the supply chain.
 
 Notes:
 - GitHub API access for listing Code Scanning alerts from the local environment may be rate-limited or require explicit `GH_TOKEN` export. If unauthenticated locally, rely on CI where CodeQL + SARIF uploads run on pushes/PRs. Use the commands above once a valid token is configured.
@@ -56,3 +59,4 @@ Additional hardening applied:
 - Capped product name length to 100 chars
 - Capped stock to 1,000,000 with validation on create and update
  - Prevented integer overflow of auto-incrementing IDs using atomic `fetch_update` with `checked_add`; returns `IdExhausted` instead of wrapping
+ - Bounded `ProductFilter.name_contains` length (truncated to `MAX_NAME_LEN`) to avoid unbounded allocations from untrusted input during filtering

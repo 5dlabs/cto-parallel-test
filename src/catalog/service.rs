@@ -148,7 +148,14 @@ impl ProductService {
     /// recovering the inner state instead of panicking.
     #[must_use]
     pub fn filter(&self, f: &ProductFilter) -> Vec<Product> {
-        let lower = f.name_contains.as_ref().map(|s| s.to_lowercase());
+        // Bound the substring length to avoid unbounded allocations from
+        // untrusted input. Reuse MAX_NAME_LEN as a conservative cap.
+        let lower = f.name_contains.as_ref().map(|s| {
+            s.chars()
+                .take(crate::catalog::models::MAX_NAME_LEN)
+                .collect::<String>()
+                .to_lowercase()
+        });
 
         let apply_name = |p: &Product| match &lower {
             Some(sub) => p.name.to_lowercase().contains(sub),
