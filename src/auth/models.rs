@@ -1,35 +1,17 @@
-use serde::{Deserialize, Serialize};
-use std::fmt;
-
+use argon2::password_hash::rand_core::OsRng;
 use argon2::{
-    password_hash::{
-        Error as PasswordHashError, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
-    },
-    Algorithm, Argon2, Params, Version,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
 };
-use rand_core::OsRng;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
     pub id: i32,
     pub username: String,
     pub email: String,
-    // Never serialize or deserialize password hashes from untrusted input.
-    // This avoids clients injecting arbitrary hashes.
-    #[serde(skip_serializing, skip_deserializing)]
+    #[serde(skip_serializing)]
     pub password_hash: String,
-}
-
-impl fmt::Debug for User {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("User")
-            .field("id", &self.id)
-            .field("username", &self.username)
-            .field("email", &self.email)
-            .field("password_hash", &"<redacted>")
-            .finish()
-    }
 }
 
 impl User {
@@ -44,36 +26,28 @@ impl User {
         }
     }
 
-    /// Hash a password using Argon2id with secure, opinionated parameters
-    /// (Argon2 v0x13, t=3, m=64 MiB, p=1) and a random salt.
+    /// Hash a password using Argon2 with random salt
     ///
-    /// # Errors
-    /// Returns an error if the Argon2 hashing operation fails due to resource
-    /// limitations or internal errors. This should not happen under normal
-    /// operating conditions.
-    pub fn hash_password(password: &str) -> Result<String, PasswordHashError> {
+    /// # Panics
+    /// Panics if the Argon2 hashing operation fails.
+    pub fn hash_password(password: &str) -> String {
         let salt = SaltString::generate(&mut OsRng);
-        // Configure Argon2id with stronger defaults than the crate defaults
-        // to align with current recommendations (OWASP, libsodium guidance).
-        // m_cost is in KiB; 64 MiB = 65536 KiB.
-        let params = Params::new(65_536, 3, 1, None).map_err(|_| PasswordHashError::Password)?;
-        let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
-
-        argon2
+        Argon2::default()
             .hash_password(password.as_bytes(), &salt)
-            .map(|ph| ph.to_string())
+            .map_or_else(
+                |err| panic!("Failed to hash password: {err}"),
+                |hash| hash.to_string(),
+            )
     }
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct LoginRequest {
     pub username: String,
     pub password: String,
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct RegisterRequest {
     pub username: String,
     pub email: String,

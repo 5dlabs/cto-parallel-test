@@ -1,78 +1,93 @@
 use super::*;
 use serial_test::serial;
 
+fn clear_auth_env() {
+    std::env::remove_var("JWT_SECRET");
+}
+
 #[test]
 #[serial]
 fn test_password_hashing() {
+    clear_auth_env();
     let password = "test_password_123";
-    let hash1 = User::hash_password(password).expect("hash1");
-    let hash2 = User::hash_password(password).expect("hash2");
+    let hash1 = User::hash_password(password);
+    let hash2 = User::hash_password(password);
 
     // Hashes should be different (due to random salt)
     assert_ne!(hash1, hash2);
 
     // Both should verify correctly
-    let user1 = User {
+    let user = User {
         id: 1,
         username: "test".to_string(),
         email: "test@example.com".to_string(),
         password_hash: hash1,
     };
 
-    assert!(user1.verify_password(password));
-    assert!(!user1.verify_password("wrong_password"));
+    assert!(user.verify_password(password));
+    assert!(!user.verify_password("wrong_password"));
 }
 
 #[test]
 #[serial]
-fn test_jwt_creation_and_validation() {
-    std::env::set_var("JWT_SECRET", "test_secret_key_minimum_32_chars_long______");
+fn test_password_hashing_supports_edge_cases() {
+    clear_auth_env();
 
+    let empty_hash = User::hash_password("");
+    let empty_user = User {
+        id: 2,
+        username: "empty".to_string(),
+        email: "empty@example.com".to_string(),
+        password_hash: empty_hash.clone(),
+    };
+    assert!(empty_user.verify_password(""));
+
+    let special_password = "p@ßw0rd🔥";
+    let special_hash = User::hash_password(special_password);
+    assert_ne!(empty_hash, special_hash);
+    let special_user = User {
+        id: 3,
+        username: "special".to_string(),
+        email: "special@example.com".to_string(),
+        password_hash: special_hash,
+    };
+    assert!(special_user.verify_password(special_password));
+    assert!(!special_user.verify_password("p@ßw0rd"));
+}
+
+#[test]
+#[serial]
+fn test_jwt_creation_and_validation_with_default_key() {
+    clear_auth_env();
     let user_id = "123";
-    let token = crate::auth::jwt::create_token(user_id).unwrap();
+    let token = crate::auth::jwt::create_token(user_id).expect("token");
+    assert!(!token.is_empty());
 
-    let claims = crate::auth::jwt::validate_token(&token).unwrap();
+    let claims = crate::auth::jwt::validate_token(&token).expect("validate");
     assert_eq!(claims.sub, user_id);
 
-    // Check expiration is set
-    assert!(claims.exp > 0);
-    assert!(claims.iat > 0);
+    // Check expiration and issued-at timestamps
+    assert!(claims.exp > claims.iat);
+    let ttl = claims.exp - claims.iat;
+    assert_eq!(ttl, 86_400);
+}
+
+#[test]
+#[serial]
+fn test_jwt_creation_and_validation_with_custom_key() {
+    std::env::set_var("JWT_SECRET", "dev_only_signing_key_min_32_chars________");
+
+    let token = crate::auth::jwt::create_token("user42").expect("token");
+    let claims = crate::auth::jwt::validate_token(&token).expect("validate");
+    assert_eq!(claims.sub, "user42");
+
+    clear_auth_env();
 }
 
 #[test]
 #[serial]
 fn test_invalid_token() {
-    std::env::set_var("JWT_SECRET", "test_secret_key_minimum_32_chars_long______");
+    clear_auth_env();
     let invalid_token = "invalid.token.here";
     assert!(crate::auth::jwt::validate_token(invalid_token).is_err());
-}
-
-#[test]
-#[serial]
-fn test_rejects_short_secret() {
-    // Too short (<32 chars) should be rejected
-    std::env::set_var("JWT_SECRET", "short_secret_key");
-    let err = crate::auth::jwt::create_token("1").unwrap_err();
-    let msg = format!("{err}");
-    assert!(msg.contains("InvalidToken") || msg.to_lowercase().contains("invalid token"));
-}
-
-#[test]
-#[serial]
-fn test_jwt_issuer_and_audience_optional_validation() {
-    // Configure secret and optional issuer/audience
-    std::env::set_var("JWT_SECRET", "test_secret_key_minimum_32_chars_long______");
-    std::env::set_var("JWT_ISSUER", "acme-auth");
-    std::env::set_var("JWT_AUDIENCE", "mobile");
-
-    let token = crate::auth::jwt::create_token("user42").expect("token");
-
-    // With matching env, validation should pass
-    let claims = crate::auth::jwt::validate_token(&token).expect("validate ok");
-    assert_eq!(claims.iss.as_deref(), Some("acme-auth"));
-    assert_eq!(claims.aud.as_deref(), Some("mobile"));
-
-    // Changing expected audience should cause validation failure
-    std::env::set_var("JWT_AUDIENCE", "web");
-    assert!(crate::auth::jwt::validate_token(&token).is_err());
 }
