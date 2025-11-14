@@ -22,7 +22,7 @@ jobs:
       - name: Run cargo audit
         env:
           RUSTSEC_LOG: warn
-        run: cargo audit --deny warnings
+        run: cargo audit --deny warnings --config .cargo/audit.toml
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
