@@ -18,6 +18,7 @@ Operational recommendations
   - CodeQL static analysis (GitHub code scanning)
   - `cargo audit` for vulnerable dependencies
   - `gitleaks` for secret scanning (tree) to prevent new leaks
+    - Tip: when running locally, prefer a tree-only scan of the tracked source (e.g., `gitleaks dir src` and `gitleaks dir docs`) or `gitleaks detect --no-git --source . --redact`. Avoid scanning ephemeral artifacts under `.reports/` to prevent self-reporting of prior scan outputs.
 - Quality gates in CI: `cargo fmt --check`, `cargo clippy -D warnings`, and `cargo test`.
 
 Local verification
