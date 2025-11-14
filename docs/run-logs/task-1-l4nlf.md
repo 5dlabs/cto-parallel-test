@@ -30,6 +30,7 @@ Database Migrations
   - docker run -d --name cto_pg -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=<password> -e POSTGRES_DB=ecommerce_db -p 5432:5432 postgres:16-alpine
   - export DATABASE_URL=postgres://postgres:<password>@localhost:5432/ecommerce_db
   - diesel migration run
+  - Verified live in this run using Dockerized Postgres: tables and constraints confirmed with psql.
 
 GitHub Code Scanning (blocker: unauthenticated gh)
 - gh auth unavailable in this environment (401). Provided exact commands below to execute once GH_TOKEN is present.
