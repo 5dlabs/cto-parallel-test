@@ -1,3 +1,9 @@
-[90m11:48PM[0m [32mINF[0m [1m360 commits scanned.[0m
-[90m11:48PM[0m [32mINF[0m [1mscanned ~1009799601 bytes (1.01 GB) in 50.1s[0m
-[90m11:48PM[0m [32mINF[0m [1mno leaks found[0m
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+[90m11:55PM[0m [32mINF[0m [1mscanned ~389559393 bytes (389.56 MB) in 5.61s[0m
+[90m11:55PM[0m [32mINF[0m [1mno leaks found[0m
