@@ -10,3 +10,6 @@ gitleaks*.json
 
 # Local binaries/tools (do not commit)
 bin/
+gitleaks
+gitleaks.exe
+gitleaks_*.tar.gz
