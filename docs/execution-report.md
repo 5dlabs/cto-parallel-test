@@ -284,3 +284,25 @@ Attempt 13 Updates
   - Repo alerts: `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&per_page=100" | jq '.'`
   - PR alerts: `PR=$(gh pr view --json number -q .number); gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&per_page=100&pr=${PR}" | jq '.'`
 - No code changes required; CI security workflows unchanged and valid (`.github/workflows/security.yml`).
+
+Attempt 14 Updates
+- Re-ran quality gates:
+  - `cargo fmt --all -- --check` — clean
+  - `cargo clippy --all-targets --all-features -- -D warnings` — clean
+  - `cargo test --all` — all tests pass (4/4)
+- Local security scans refreshed:
+  - `cargo audit --json > audit.json` — `vulnerabilities.found=false`
+  - `gitleaks detect --no-git -s . -f json -r gitleaks-report.json` — no leaks (`[]`)
+- GitHub code scanning:
+  - `gh auth status` shows invalid token; unauthenticated API calls return HTTP 403 rate limit
+  - Authenticate then query alerts:
+    - `gh auth login -h github.com` or `export GH_TOKEN=<github_app_installation_token>`
+    - Repo alerts: `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&per_page=100" | jq '.'`
+    - PR alerts:
+      - `PR=$(gh pr view --json number -q .number)`
+      - `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&per_page=100&pr=${PR}" | jq '.'`
+- CI security workflow remains intact: CodeQL, cargo-audit, and Gitleaks with minimal permissions (`.github/workflows/security.yml:1`).
+
+Artifacts (Attempt 14)
+- `audit.json:1` — `"vulnerabilities":{"found":false}`
+- `gitleaks-report.json:1` — `[]`
