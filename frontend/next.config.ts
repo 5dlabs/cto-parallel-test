@@ -7,6 +7,25 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "geolocation=(), camera=(), microphone=()" },
   // 180 days HSTS; assumes HTTPS in deployment
   { key: "Strict-Transport-Security", value: "max-age=15552000; includeSubDomains" },
+  // Mitigate XSS, clickjacking, and data exfiltration risks
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      "script-src 'self'",
+      // Next may inline small styles at runtime; allow only for styles
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' https: data:",
+      "connect-src 'self' https:",
+      "object-src 'none'",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; '),
+  },
+  // Process isolation hardening
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 
 const nextConfig: NextConfig = {

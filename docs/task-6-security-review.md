@@ -5,12 +5,12 @@ This document captures local security validation performed for the Task 6 fronte
 ## Local Scans
 
 - Secrets (gitleaks)
-  - Command: `gitleaks detect --no-git -v --report-format json --report-path gitleaks-local.json`
-  - Result: no leaks found
+  - Command: `gitleaks detect --no-git --no-banner --no-color --log-level warn -f json -r gitleaks-local.json`
+  - Result: no leaks found (`gitleaks-local.json` contains `[]`)
 
 - Dependency vulnerabilities (npm audit)
   - Command: `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../audit.json`
-  - Result: 0 moderate/high/critical vulnerabilities in runtime dependencies
+  - Result: 0 moderate/high/critical vulnerabilities in runtime dependencies (see `audit.json`)
 
 ## Frontend Build & Lint
 
@@ -21,6 +21,7 @@ This document captures local security validation performed for the Task 6 fronte
 - API endpoints are parameterized via `VITE_API_BASE_URL` (`frontend/src/config.js`)
 - Route param validation in `frontend/src/pages/ProductDetail.jsx`
 - Content Security Policy and security meta headers in `frontend/index.html`
+- Content Security Policy enforced for Next.js via headers in `frontend/next.config.ts`
 - No usage of `dangerouslySetInnerHTML`; forms trim and validate inputs
 - ESLint security plugins: `eslint-plugin-security`, `eslint-plugin-no-unsanitized`
 
@@ -33,6 +34,7 @@ This document captures local security validation performed for the Task 6 fronte
 ### Secrets Scanning Hardening
 
 - Tightened `.gitleaks.toml` allowlist: removed broad `docs/**` exemption to ensure documentation is scanned for potential secrets. Kept targeted regex allowlist for known placeholders only.
+- Added `.env` patterns to `.gitignore` to prevent accidental secret commits.
 
 ## GitHub Code Scanning Alerts (PR)
 
