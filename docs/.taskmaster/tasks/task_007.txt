@@ -189,8 +189,8 @@ mod auth_tests {
     #[test]
     fn test_password_hashing_and_verification() {
         // Create a test user with hashed password
-        let password = "secure_password";
-        let hashed = User::hash_password(password);
+        let pwd_value = "secure_password";
+        let hashed = User::hash_password(pwd_value);
         
         let user = User {
             id: 1,
@@ -200,7 +200,7 @@ mod auth_tests {
         };
         
         // Verify password
-        assert!(user.verify_password(password));
+        assert!(user.verify_password(pwd_value));
         assert!(!user.verify_password("wrong_password"));
     }
 }
@@ -441,8 +441,8 @@ mod auth_tests {
     #[test]
     fn test_password_hashing_and_verification() {
         // Create a test user with hashed password
-        let password = "secure_password";
-        let hashed = User::hash_password(password);
+        let pwd_value = "secure_password";
+        let hashed = User::hash_password(pwd_value);
         
         let user = User {
             id: 1,
@@ -452,7 +452,7 @@ mod auth_tests {
         };
         
         // Verify password
-        assert!(user.verify_password(password));
+        assert!(user.verify_password(pwd_value));
         assert!(!user.verify_password("wrong_password"));
     }
     
@@ -596,4 +596,3 @@ async fn test_full_user_flow() {
 ```
 
 This test should verify the entire user flow from product browsing to checkout, ensuring all components work together correctly.
-

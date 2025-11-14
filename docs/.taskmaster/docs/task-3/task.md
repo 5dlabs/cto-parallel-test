@@ -256,7 +256,8 @@ println!("JWT: {}", token);
 ```rust
 use crate::auth::jwt::validate_token;
 
-let token = "eyJ0eXAiOiJKV1QiLCJhbGc...";
+// Example placeholder token; replace with a real token in tests
+let token = "<JWT_TOKEN_PLACEHOLDER>";
 match validate_token(token) {
     Ok(claims) => println!("Valid token for user: {}", claims.sub),
     Err(e) => println!("Invalid token: {}", e),
@@ -267,9 +268,9 @@ match validate_token(token) {
 ```rust
 use crate::auth::models::User;
 
-// Hash a password
-let password = "secure_password_123";
-let hash = User::hash_password(password);
+// Hash a password (example)
+let pwd_value = "secure_password_123";
+let hash = User::hash_password(pwd_value);
 
 // Create user with hash
 let user = User {
@@ -280,7 +281,7 @@ let user = User {
 };
 
 // Verify password
-assert!(user.verify_password(password));
+assert!(user.verify_password(pwd_value));
 assert!(!user.verify_password("wrong_password"));
 ```
 
