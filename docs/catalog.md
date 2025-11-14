@@ -61,7 +61,7 @@ use rust_decimal::Decimal;
 let svc = ProductService::new();
 
 // Create a product with precise decimal price
-let apple = svc.create(NewProduct {
+let apple = svc.create(&NewProduct {
     name: "Apple".into(),
     description: "Fresh".into(),
     price: Decimal::new(199, 2), // 1.99
