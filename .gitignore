@@ -10,3 +10,7 @@ Cargo.lock
 hooks/
 .hooks/
 **/hooks/
+
+# Security and audit reports - do not commit
+gitleaks-report.json
+audit.json
