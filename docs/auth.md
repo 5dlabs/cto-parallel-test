@@ -67,3 +67,8 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic
 cargo test --workspace --all-features
 ```
+
+## References
+
+- See `coding-guidelines.md` for clippy, testing, and security patterns enforced project-wide (Clock abstraction, deny_unknown_fields, no hardcoded secrets).
+- See `github-guidelines.md` for mandatory PR workflow, branch policy, and required pre-PR quality gates.
