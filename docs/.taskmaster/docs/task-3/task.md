@@ -256,7 +256,8 @@ println!("JWT: {}", token);
 ```rust
 use crate::auth::jwt::validate_token;
 
-let token = "eyJ0eXAiOiJKV1QiLCJhbGc...";
+// For examples, avoid hardcoding secrets. Use environment or a placeholder.
+let token = std::env::var("JWT_TOKEN").unwrap_or_else(|_| "<jwt-token>".to_string());
 match validate_token(token) {
     Ok(claims) => println!("Valid token for user: {}", claims.sub),
     Err(e) => println!("Invalid token: {}", e),
@@ -267,9 +268,9 @@ match validate_token(token) {
 ```rust
 use crate::auth::models::User;
 
-// Hash a password
-let password = "secure_password_123";
-let hash = User::hash_password(password);
+// Hash a password (example value)
+let pw = "example-password";
+let hash = User::hash_password(pw);
 
 // Create user with hash
 let user = User {
