@@ -1,0 +1,28 @@
+.git
+.github
+.gitignore
+
+# Never include local env files in Docker context
+.env
+.env.*
+
+# Dependencies are installed in the image
+node_modules
+
+# Build outputs (built in image)
+dist
+build
+.next
+out
+
+# IDE/editor noise
+.vscode
+.idea
+*.swp
+*.log
+
+# Tests and local reports
+coverage
+security
+gitleaks*.json
+

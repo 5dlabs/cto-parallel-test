@@ -17,6 +17,7 @@ This repository includes a frontend e‑commerce app with secure defaults. Key p
 - Secure defaults
   - CSP, Referrer‑Policy, X‑Content‑Type‑Options, X‑Frame‑Options enforced
   - Docker nginx adds HSTS, COOP/CORP, and denies object/embed; runs as non‑root user
+  - Docker build hardening: `.dockerignore` excludes `.env*`, `node_modules`, VCS/CI files to prevent secrets from entering images
 
 ## Code Scanning
 
