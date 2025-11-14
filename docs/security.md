@@ -30,4 +30,8 @@ Local verification results (this change set):
 - Tests: PASS (all unit and integration tests green)
 - Secret scan (gitleaks): PASS (no leaks found)
 
+Notes:
+- GitHub API access for listing Code Scanning alerts from the local environment may be rate-limited or require explicit `GH_TOKEN` export. If unauthenticated locally, rely on CI where CodeQL + SARIF uploads run on pushes/PRs.
+- To run the same checks locally with auth, ensure `GH_TOKEN` is exported and use the commands above.
+
 If GitHub auth is unavailable locally, proceed with local verification and push to the feature branch. CI will run CodeQL and upload all SARIF results on the PR.

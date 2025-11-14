@@ -18,6 +18,12 @@ This module provides a thread-safe, in-memory product catalog with:
 - Comprehensive linting with Clippy (pedantic) and rustfmt
 - Unit/integration tests: CRUD, filtering, concurrency, precision
 
+## Thread Safety
+
+- All catalog operations are guarded by a single `Mutex<Vec<Product>>` shared via `Arc`.
+- ID generation uses an `AtomicI32` with `Ordering::SeqCst` for correctness.
+- Mutex poison is handled by recovering the inner state to avoid propagating panics.
+
 ## Governance
 
 - Follows repository standards in `coding-guidelines.md` and `github-guidelines.md`
