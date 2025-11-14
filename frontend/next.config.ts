@@ -31,6 +31,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Reduce server fingerprinting
   poweredByHeader: false,
+  // Enable standalone output for Docker deployment
+  output: 'standalone',
   async headers() {
     return [
       {
