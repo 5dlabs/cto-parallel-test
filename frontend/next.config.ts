@@ -1,5 +1,19 @@
 import type { NextConfig } from "next";
 
+// Derive a tight connect-src from configured API base URL when available.
+// Falls back to allowing HTTPS anywhere if not set to avoid breaking local usage.
+function connectSrc(): string {
+  const raw = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.VITE_API_BASE_URL || "";
+  try {
+    const u = new URL(String(raw));
+    if (!/^https?:$/.test(u.protocol)) return "connect-src 'self' https:";
+    const origin = `${u.protocol}//${u.host}`;
+    return `connect-src 'self' ${origin}`;
+  } catch {
+    return "connect-src 'self' https:";
+  }
+}
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "no-referrer" },
@@ -17,7 +31,7 @@ const securityHeaders = [
       "style-src 'self'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' https: data:",
-      "connect-src 'self' https:",
+      connectSrc(),
       "object-src 'none'",
       "frame-ancestors 'none'",
       "base-uri 'self'",

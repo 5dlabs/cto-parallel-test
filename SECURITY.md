@@ -3,19 +3,20 @@
 This repository includes a frontend e‑commerce app with secure defaults. Key practices applied:
 
 - Input validation and encoding
-  - API paths normalized and path segments encoded in `frontend/src/config.js`
-  - Route params validated in `frontend/src/pages/ProductDetail.jsx`
+  - API base URL normalized and path segments encoded in `frontend/lib/config.ts`
+  - IDs and route params validated/sanitized where applicable
 - XSS prevention
   - No usage of `dangerouslySetInnerHTML`
   - Strict Content Security Policy added in `frontend/index.html`
-  - Next.js headers enforce CSP without `unsafe-inline` for styles in `frontend/next.config.ts:16`
+  - Next.js headers enforce CSP without `unsafe-inline` for styles in `frontend/next.config.ts`
+  - `connect-src` is restricted to the configured API origin when `NEXT_PUBLIC_API_BASE_URL`/`VITE_API_BASE_URL` is set (see `frontend/next.config.ts`)
 - Sensitive data handling
   - No secrets committed; configuration via environment variables (`.env`)
   - `localStorage` only stores non‑sensitive cart state
 - Dependency hygiene
-  - `npm audit` workflow included (`npm run audit:ci`) to check prod dependencies; threshold configurable via `AUDIT_LEVEL` env
+  - `npm audit` executed in CI (see `.github/workflows/frontend-ci.yml`) to check prod dependencies; threshold set to fail on moderate+
 - Secure defaults
-  - CSP, Referrer‑Policy, X‑Content‑Type‑Options, X‑Frame‑Options set via meta tags
+  - CSP, Referrer‑Policy, X‑Content‑Type‑Options, X‑Frame‑Options set via headers/meta
 
 ## Code Scanning
 
