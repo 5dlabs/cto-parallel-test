@@ -14,6 +14,12 @@ pub struct Claims {
     pub exp: usize,
     /// Issued at time (seconds since UNIX epoch)
     pub iat: usize,
+    /// Optional issuer claim
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub iss: Option<String>,
+    /// Optional audience claim (single audience value)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aud: Option<String>,
 }
 
 fn current_timestamp_secs() -> u64 {
@@ -58,7 +64,9 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
     let ttl_secs: u64 = std::env::var("JWT_TTL_SECS")
         .ok()
         .and_then(|s| s.parse::<u64>().ok())
-        .unwrap_or(24 * 3600);
+        .unwrap_or(24 * 3600)
+        // Enforce a maximum TTL of 7 days to reduce risk of long-lived tokens
+        .min(7 * 24 * 3600);
     let expiration = now + ttl_secs; // expiration from now
 
     let exp = usize::try_from(expiration)
@@ -66,10 +74,16 @@ pub fn create_token(user_id: &str) -> Result<String, jsonwebtoken::errors::Error
     let iat = usize::try_from(now)
         .map_err(|_| jsonwebtoken::errors::Error::from(ErrorKind::InvalidToken))?;
 
+    // Optional issuer/audience for stronger validation if configured
+    let iss = std::env::var("JWT_ISSUER").ok();
+    let aud = std::env::var("JWT_AUDIENCE").ok();
+
     let claims = Claims {
         sub: user_id.to_owned(),
         exp,
         iat,
+        iss,
+        aud,
     };
 
     let secret = read_hmac_secret()?;
@@ -86,6 +100,12 @@ pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error
     let secret = read_hmac_secret()?;
     let mut validation = Validation::new(Algorithm::HS256);
     validation.leeway = 30; // allow small clock skew
+    if let Ok(iss) = std::env::var("JWT_ISSUER") {
+        validation.set_issuer(&[iss]);
+    }
+    if let Ok(aud) = std::env::var("JWT_AUDIENCE") {
+        validation.set_audience(&[aud]);
+    }
     let token_data = decode::<Claims>(token, &DecodingKey::from_secret(&secret), &validation)?;
 
     Ok(token_data.claims)
