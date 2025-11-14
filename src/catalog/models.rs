@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 /// A product in the catalog.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct Product {
     /// Auto-incremented unique identifier.
     pub id: i32,
@@ -16,6 +17,7 @@ pub struct Product {
 
 /// Input payload for creating a new product.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct NewProduct {
     pub name: String,
     pub price: Decimal,
@@ -43,6 +45,7 @@ impl NewProduct {
 
 /// Filter criteria to query products.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct ProductFilter {
     /// Case-insensitive substring check on the name.
     pub name_contains: Option<String>,
