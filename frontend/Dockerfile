@@ -40,7 +40,7 @@ RUN rm -rf ./*
 # Copy built files from builder
 COPY --from=builder /app/dist .
 
-# Copy nginx configuration
+# Copy nginx configuration with strict security headers
 COPY <<'EOF' /etc/nginx/conf.d/default.conf
 server {
     listen 3000;
@@ -53,6 +53,14 @@ server {
     add_header X-Frame-Options "DENY" always;
     add_header Referrer-Policy "no-referrer" always;
     add_header Permissions-Policy "geolocation=(), camera=(), microphone=()" always;
+    # Encourage HTTPS usage (ensure behind TLS proxy in production)
+    add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
+    # Mitigate XSS, clickjacking, data injection
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' https: data:; connect-src 'self' https:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+    # Process isolation hardening
+    add_header Cross-Origin-Opener-Policy "same-origin" always;
+    add_header Cross-Origin-Resource-Policy "same-origin" always;
+    add_header X-Permitted-Cross-Domain-Policies "none" always;
 
     # SPA routing - serve index.html for all routes
     location / {
@@ -79,5 +87,8 @@ EXPOSE 3000
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
+# Drop privileges: run as non-root user (nginx user in base image)
+USER 101
 
 CMD ["nginx", "-g", "daemon off;"]
