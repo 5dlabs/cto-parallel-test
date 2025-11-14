@@ -32,12 +32,16 @@ pub struct NewProduct {
 /// Default maximums used for safe bounds.
 pub const MAX_NAME_LEN: usize = 100;
 pub const MAX_STOCK: i32 = 1_000_000;
+/// Default maximum description length used for safe bounds.
+pub const MAX_DESCRIPTION_LEN: usize = 1_000;
 
 // Absolute caps to avoid unrealistic values when environment overrides are used.
 const MAX_NAME_LEN_ABSOLUTE_CAP: usize = 10_000;
+const MAX_DESCRIPTION_LEN_ABSOLUTE_CAP: usize = 50_000;
 const MAX_STOCK_ABSOLUTE_CAP: i32 = 10_000_000;
 
 static CONFIG_NAME_LEN: OnceLock<usize> = OnceLock::new();
+static CONFIG_DESCRIPTION_LEN: OnceLock<usize> = OnceLock::new();
 static CONFIG_MAX_STOCK: OnceLock<i32> = OnceLock::new();
 
 /// Effective maximum name length, optionally overridden via the
@@ -50,6 +54,20 @@ pub fn configured_max_name_len() -> usize {
         match raw.and_then(|s| s.parse::<usize>().ok()) {
             Some(v) if (1..=MAX_NAME_LEN_ABSOLUTE_CAP).contains(&v) => v,
             _ => MAX_NAME_LEN,
+        }
+    })
+}
+
+/// Effective maximum description length, optionally overridden via the
+/// `CATALOG_MAX_DESCRIPTION_LEN` environment variable. Values are clamped to
+/// `1..=MAX_DESCRIPTION_LEN_ABSOLUTE_CAP` and default to `MAX_DESCRIPTION_LEN`.
+#[must_use]
+pub fn configured_max_description_len() -> usize {
+    *CONFIG_DESCRIPTION_LEN.get_or_init(|| {
+        let raw = env::var("CATALOG_MAX_DESCRIPTION_LEN").ok();
+        match raw.and_then(|s| s.parse::<usize>().ok()) {
+            Some(v) if (1..=MAX_DESCRIPTION_LEN_ABSOLUTE_CAP).contains(&v) => v,
+            _ => MAX_DESCRIPTION_LEN,
         }
     })
 }

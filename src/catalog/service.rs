@@ -1,5 +1,6 @@
 use crate::catalog::models::{
-    configured_max_name_len, configured_max_stock, NewProduct, Product, ProductFilter,
+    configured_max_description_len, configured_max_name_len, configured_max_stock, NewProduct,
+    Product, ProductFilter,
 };
 use std::sync::{Arc, Mutex};
 
@@ -65,7 +66,12 @@ impl ProductService {
         let product = Product {
             id,
             name,
-            description: input.description,
+            // Cap description length to avoid unbounded memory usage from untrusted inputs
+            description: input
+                .description
+                .chars()
+                .take(configured_max_description_len())
+                .collect(),
             price,
             inventory_count,
         };
