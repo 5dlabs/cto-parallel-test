@@ -13,6 +13,13 @@ dist
 dist-ssr
 coverage
 
+# Next.js
+.next/
+out/
+build
+*.d.ts
+!*.d.ts.template
+
 # Local environment files
 .env
 .env*.local
