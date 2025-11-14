@@ -14,5 +14,17 @@ Operational recommendations
 
 - Store secrets in a secret manager or environment management system; never commit to source control.
 - Rotate `JWT_SECRET` periodically and on any suspicion of compromise.
-- Run `cargo audit` in CI to detect vulnerable dependencies.
-- Ensure CI runs `cargo fmt --check`, `cargo clippy -D warnings`, and `cargo test`.
+- CI security scans:
+  - CodeQL static analysis (GitHub code scanning)
+  - `cargo audit` for vulnerable dependencies
+  - `gitleaks` for secret scanning (tree) to prevent new leaks
+- Quality gates in CI: `cargo fmt --check`, `cargo clippy -D warnings`, and `cargo test`.
+
+Local verification
+
+- Format: `cargo fmt --all --check`
+- Lint: `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`
+- Test: `cargo test --workspace --all-features -q`
+- Build (reproducible): `cargo build --workspace --all-features --locked`
+- Dependencies: `cargo install cargo-audit --locked && cargo audit --deny warnings`
+- Secrets: `gitleaks detect --no-git --source . --redact`

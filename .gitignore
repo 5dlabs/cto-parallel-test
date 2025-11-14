@@ -33,3 +33,6 @@ hooks/
 
 # GitHub CLI auth files (do not commit tokens)
 .config/gh/
+
+# Security scan artifacts (do not commit)
+gitleaks*.json
