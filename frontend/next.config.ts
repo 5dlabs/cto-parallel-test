@@ -13,8 +13,8 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       "script-src 'self'",
-      // Next may inline small styles at runtime; allow only for styles
-      "style-src 'self' 'unsafe-inline'",
+      // Disallow inline styles; align with nginx and meta CSP
+      "style-src 'self'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' https: data:",
       "connect-src 'self' https:",
@@ -26,6 +26,8 @@ const securityHeaders = [
   },
   // Process isolation hardening
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
 ];
 
 const nextConfig: NextConfig = {

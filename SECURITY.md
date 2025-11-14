@@ -7,7 +7,7 @@ This repository includes a frontend e‑commerce app with secure defaults. Key p
   - Route params validated and user input trimmed in pages under `frontend/app/**` and `frontend/src/pages/**`
 - XSS prevention
   - No usage of `dangerouslySetInnerHTML` or unsafe DOM sinks
-  - Strict Content Security Policy via meta tag in `frontend/index.html` and via headers in `frontend/Dockerfile` (nginx)
+  - Strict Content Security Policy via meta tag in `frontend/index.html`, via headers in `frontend/Dockerfile` (nginx), and mirrored in `frontend/next.config.ts` (no `unsafe-inline` for styles)
 - Sensitive data handling
   - No secrets committed; configuration via environment variables (`.env`, `.env.example` provided)
   - `localStorage` only stores non‑sensitive cart state
@@ -17,6 +17,7 @@ This repository includes a frontend e‑commerce app with secure defaults. Key p
 - Secure defaults
   - CSP, Referrer‑Policy, X‑Content‑Type‑Options, X‑Frame‑Options enforced
   - Docker nginx adds HSTS, COOP/CORP, and denies object/embed; runs as non‑root user
+  - Next.js headers also include COOP, CORP, and X‑Permitted‑Cross‑Domain‑Policies to match nginx hardening
   - Docker build hardening: `.dockerignore` excludes `.env*`, `node_modules`, VCS/CI files to prevent secrets from entering images
 
 ## Code Scanning
