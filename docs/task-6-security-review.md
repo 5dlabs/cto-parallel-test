@@ -53,6 +53,25 @@ bash task/gh-code-scan.sh $(git rev-parse --abbrev-ref HEAD) --update-docs
 
 All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
 
+## Verification Snapshot (attempt 25)
+
+- Secrets scan (full history): `gitleaks detect --config .gitleaks.toml --redact --report-format json --report-path security/gitleaks-report.json`
+  - Result: no leaks found across 416 commits – see `security/gitleaks-report.json`
+- Dependency audit (runtime only): `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../security/npm-audit.json`
+  - Result: 0 moderate/high/critical – see `security/npm-audit.json`
+- Dependency audit (all deps): `cd frontend && npm audit --json > ../security/npm-audit-full.json`
+  - Result: 0 vulnerabilities – see `security/npm-audit-full.json`
+- Frontend quality gates: `cd frontend && npm ci && npm run lint && npm run build` all passed
+
+GitHub code scanning retrieval remains blocked by CLI auth in this environment. Once authenticated, append a snapshot to this document with:
+
+```
+gh auth login -h github.com
+bash task/gh-code-scan.sh $(git rev-parse --abbrev-ref HEAD) --update-docs
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+
 ## Verification Snapshot (attempt 21)
 
 - Secrets scan (workspace): `gitleaks detect --no-git -f json -r security/gitleaks-report.json`
