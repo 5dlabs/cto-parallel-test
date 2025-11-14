@@ -13,6 +13,8 @@ This module provides a thread-safe, in-memory product catalog with:
 - No hardcoded secrets or external IO
 - Input validation for create/update operations
 - Thread safety via `Arc<Mutex<Vec<Product>>>`
+- Poison-safe lock handling: recover inner state on mutex poison to avoid
+  panic-induced denial-of-service while maintaining forward progress
 - Comprehensive linting with Clippy (pedantic) and rustfmt
 - Unit/integration tests: CRUD, filtering, concurrency, precision
 
@@ -27,4 +29,3 @@ This module provides a thread-safe, in-memory product catalog with:
 - `ProductService::delete(i32)` -> `bool`
 
 See `tests/catalog.rs` for complete usage examples.
-

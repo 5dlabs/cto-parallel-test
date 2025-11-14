@@ -53,8 +53,9 @@ impl ProductService {
     /// # Errors
     /// Returns `CatalogError::InvalidInput` when the provided `NewProduct` fails validation.
     ///
-    /// # Panics
-    /// Panics if the internal mutex is poisoned.
+    /// # Poison handling
+    /// If the internal mutex has been poisoned by a prior panic, continue by
+    /// recovering the inner state instead of panicking.
     pub fn create(&self, input: NewProduct) -> Result<Product, CatalogError> {
         input.validate().map_err(CatalogError::InvalidInput)?;
 
@@ -69,32 +70,34 @@ impl ProductService {
         let mut guard = self
             .products
             .lock()
-            .expect("mutex poisoned: ProductService.products");
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         guard.push(product.clone());
         Ok(product)
     }
 
     /// Return a snapshot of all products.
     ///
-    /// # Panics
-    /// Panics if the internal mutex is poisoned.
+    /// # Poison handling
+    /// If the internal mutex has been poisoned by a prior panic, continue by
+    /// recovering the inner state instead of panicking.
     #[must_use]
     pub fn get_all(&self) -> Vec<Product> {
         self.products
             .lock()
-            .expect("mutex poisoned: ProductService.products")
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
             .clone()
     }
 
     /// Return product with matching id if present.
     ///
-    /// # Panics
-    /// Panics if the internal mutex is poisoned.
+    /// # Poison handling
+    /// If the internal mutex has been poisoned by a prior panic, continue by
+    /// recovering the inner state instead of panicking.
     #[must_use]
     pub fn get_by_id(&self, id: i32) -> Option<Product> {
         self.products
             .lock()
-            .expect("mutex poisoned: ProductService.products")
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
             .iter()
             .find(|p| p.id == id)
             .cloned()
@@ -106,8 +109,9 @@ impl ProductService {
     /// Returns `CatalogError::InvalidInput` when `new_stock` is negative.
     /// Returns `CatalogError::NotFound` when the `id` does not exist.
     ///
-    /// # Panics
-    /// Panics if the internal mutex is poisoned.
+    /// # Poison handling
+    /// If the internal mutex has been poisoned by a prior panic, continue by
+    /// recovering the inner state instead of panicking.
     pub fn update_inventory(&self, id: i32, new_stock: i32) -> Result<Product, CatalogError> {
         if new_stock < 0 {
             return Err(CatalogError::InvalidInput("stock must be non-negative"));
@@ -115,7 +119,7 @@ impl ProductService {
         let mut guard = self
             .products
             .lock()
-            .expect("mutex poisoned: ProductService.products");
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let product = guard
             .iter_mut()
             .find(|p| p.id == id)
@@ -126,8 +130,9 @@ impl ProductService {
 
     /// Filter products using the provided criteria.
     ///
-    /// # Panics
-    /// Panics if the internal mutex is poisoned.
+    /// # Poison handling
+    /// If the internal mutex has been poisoned by a prior panic, continue by
+    /// recovering the inner state instead of panicking.
     #[must_use]
     pub fn filter(&self, f: &ProductFilter) -> Vec<Product> {
         let lower = f.name_contains.as_ref().map(|s| s.to_lowercase());
@@ -165,7 +170,7 @@ impl ProductService {
 
         self.products
             .lock()
-            .expect("mutex poisoned: ProductService.products")
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
             .iter()
             .filter(|&p| {
                 apply_name(p)
@@ -181,14 +186,15 @@ impl ProductService {
 
     /// Delete product by id; returns true if one was removed.
     ///
-    /// # Panics
-    /// Panics if the internal mutex is poisoned.
+    /// # Poison handling
+    /// If the internal mutex has been poisoned by a prior panic, continue by
+    /// recovering the inner state instead of panicking.
     #[must_use]
     pub fn delete(&self, id: i32) -> bool {
         let mut guard = self
             .products
             .lock()
-            .expect("mutex poisoned: ProductService.products");
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let len_before = guard.len();
         guard.retain(|p| p.id != id);
         guard.len() != len_before
