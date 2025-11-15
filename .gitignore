@@ -13,3 +13,4 @@ hooks/
  
 # Security scan artifacts
 gitleaks-report.json
+gitleaks.sarif
