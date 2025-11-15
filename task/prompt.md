@@ -128,7 +128,7 @@ Create `src/config/db.rs`:
 ```rust
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use std::env;
 
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;

@@ -9,7 +9,7 @@ mod tests {
 
     /// Helper function to check if database is available
     fn is_database_available() -> bool {
-        dotenv::dotenv().ok();
+        dotenvy::dotenv().ok();
         if let Ok(database_url) = std::env::var("DATABASE_URL") {
             use diesel::pg::PgConnection;
             use diesel::Connection;
