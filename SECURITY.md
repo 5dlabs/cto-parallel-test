@@ -21,7 +21,7 @@ cargo test --workspace --all-features
 
 # Secrets and dependencies
 gitleaks detect --no-banner -s . -f json -r gitleaks_report.json
-cargo install cargo-audit --locked && cargo audit -F json -o cargo_audit_report.json
+cargo install cargo-audit --locked && cargo audit --json > cargo_audit_report.json
 ```
 
 ## GitHub Code Scanning on PRs
