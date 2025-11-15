@@ -36,6 +36,7 @@ Secure Defaults & Practices
   - Non-negative price and inventory
   - Positive cart item quantity
   - Unique (cart_id, product_id)
+ - Dependencies kept maintained: replaced unmaintained `dotenv` with `dotenvy` (RUSTSEC-2021-0141)
 
 Quality Gates (must pass before PR)
 ```bash
@@ -45,4 +46,3 @@ cargo test --workspace --all-features
 cargo audit
 gitleaks detect --no-banner --no-git --source .
 ```
-
