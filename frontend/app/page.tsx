@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingBag, Truck, Shield, Clock } from "lucide-react";
+import { ShoppingBag, Truck, Shield, Clock } from "@/components/icons";
 
 export default function HomePage() {
   const features = [
