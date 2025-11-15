@@ -61,6 +61,7 @@ Validation and Quality Gates
 - cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic
 - cargo test --workspace --all-features
 - cargo audit (ensure no known vulnerable crates)
+ - CI enforces CodeQL (GitHub code scanning) and gitleaks secret scanning
 
 Troubleshooting
 - "DATABASE_URL must be set": ensure .env or environment is populated.
