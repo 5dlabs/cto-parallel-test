@@ -35,10 +35,10 @@ Local verification results (this change set):
 
 Latest verification (Task 4):
 
- - Timestamp: 2025-11-15 02:55:15 UTC
+ - Timestamp: 2025-11-15 03:46:34 UTC
  - Tools: rustfmt, clippy (pedantic, -D warnings), cargo test, cargo-audit, gitleaks
  - Result: All checks PASS; gitleaks findings = 0; cargo-audit vulnerabilities = 0; zero MEDIUM/HIGH/CRITICAL issues in local scans. Clippy pedantic clean.
- - Artifacts: `gitleaks_report.json`, `cargo_audit_report.json`, `cargo_audit_report.txt`
+ - Artifacts: `gitleaks_report.json`, `cargo_audit.stdout`, `cargo_audit.stderr`
 
 Notes:
 - GitHub API access for listing Code Scanning alerts from the local environment may be rate-limited or require explicit `GH_TOKEN` export. If unauthenticated locally, rely on CI where CodeQL + SARIF uploads run on pushes/PRs. Use the commands above once a valid token is configured.
