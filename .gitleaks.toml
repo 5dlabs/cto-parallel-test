@@ -1,0 +1,10 @@
+[allowlist]
+description = "Allow placeholder tokens and non-secret examples in docs"
+regexes = [
+  "(?i)REDACTED",
+  "(?i)example(_|-)token",
+  "(?i)dummy(_|-)key",
+]
+files = [
+  "task/task.md",
+]

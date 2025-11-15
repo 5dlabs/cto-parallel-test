@@ -1,0 +1,15 @@
+# Security scan artifacts (do not commit)
+security/gitleaks-report.json
+security/npm-audit.json
+gitleaks*.json
+
+# Environment files (prevent accidental secret commits)
+.env
+.env.*
+!.env.example
+
+# Local binaries/tools (do not commit)
+bin/
+gitleaks
+gitleaks.exe
+gitleaks_*.tar.gz
