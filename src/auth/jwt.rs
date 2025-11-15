@@ -2,6 +2,7 @@ use jsonwebtoken::{
     decode, encode, errors::ErrorKind, Algorithm, DecodingKey, EncodingKey, Header, Validation,
 };
 use serde::{Deserialize, Serialize};
+use rand::{rngs::OsRng, RngCore};
 use std::convert::TryFrom;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -59,11 +60,10 @@ fn read_hmac_secret() -> Result<Vec<u8>, jsonwebtoken::errors::Error> {
     let dev_fallback_allowed = cfg!(debug_assertions)
         || matches!(std::env::var("JWT_ALLOW_DEV_FALLBACK").as_deref(), Ok("1"));
     if dev_fallback_allowed {
-        // Chosen to exceed the minimum length requirement.
-        let fallback = "dev_only_signing_key_min_32_chars________"
-            .as_bytes()
-            .to_vec();
-        return Ok(fallback);
+        // Use a cryptographically random fallback key in development to avoid predictable tokens.
+        let mut key = vec![0u8; min_len.max(64)];
+        OsRng.fill_bytes(&mut key);
+        return Ok(key);
     }
 
     Err(jsonwebtoken::errors::Error::from(ErrorKind::InvalidToken))
