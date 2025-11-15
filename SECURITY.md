@@ -29,7 +29,7 @@ gh api \
 
 Fix all MEDIUM/HIGH/CRITICAL findings before merging.
 
-If GitHub CLI authentication is unavailable in your environment, authenticate and re-run the query (GitHub App token supported via `GH_TOKEN`):
+If GitHub CLI authentication is unavailable in your environment (e.g., `HTTP 401`), authenticate and re‑run the query (GitHub App token supported via `GH_TOKEN`):
 
 ```
 export GH_TOKEN=<GITHUB_APP_TOKEN>
