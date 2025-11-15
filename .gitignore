@@ -9,6 +9,7 @@ target/
 # Local security scan reports
 gitleaks-report.json
 gitleaks_report_latest.json
+gitleaks_report.json
 *.sarif
 
 # Local Codex session artifacts
