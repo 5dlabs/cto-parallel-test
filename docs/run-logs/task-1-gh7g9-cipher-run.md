@@ -20,6 +20,10 @@ Schema and safety checks
 - Constraints hardened: non-negative price/inventory, positive quantity, unique (cart_id, product_id), length bounds, CI-unique username/email
 - Pooling via r2d2 with secure, parameterized env configuration (no hardcoded secrets)
 
+PostgreSQL validation
+- Launched local Postgres with Docker and applied all migrations via psql
+- Verified tables exist: users, products, carts, cart_items — OK
+
 GitHub code scanning (PR alerts)
 - Blocked locally: GH_TOKEN not present in this environment; gh returns 401
 - To check alerts once token is available:
@@ -33,4 +37,3 @@ Next actions (per github-guidelines.md)
 - Create PR from `feature/task-1-implementation` with labels:
   task-1, service-cto-parallel-test, run-play-task-1-gh7g9
 - Post-PR: verify CodeQL results and address any MEDIUM/HIGH/CRITICAL alerts immediately
-
