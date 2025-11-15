@@ -75,6 +75,6 @@ cargo test --workspace --all-features
 When a pull request is open, fetch open security alerts for the PR using GitHub CLI:
 
 - Create PR from `feature/task-3-implementation` to `main`:
-  `gh pr create --title "Task 3: Secure Auth Module (JWT + Argon2)" --body-file PR_BODY.md --base main --head feature/task-3-implementation --label task-3 --label service-cto-parallel-test --label run-play-task-3-mh78m`
+  `gh pr create --title "Task 3: Secure Auth Module (JWT + Argon2)" --body-file PR_BODY.md --base main --head feature/task-3-implementation --label task-3 --label service-cto-parallel-test --label run-play-task-3-hfxlh`
 - List alerts for the PR (replace `<PR_NUMBER>`):
   `gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&per_page=100&pr=<PR_NUMBER>" -H "Accept: application/sarif+json, application/json" | jq .`
