@@ -41,4 +41,4 @@ diesel::joinable!(cart_items -> carts (cart_id));
 diesel::joinable!(cart_items -> products (product_id));
 diesel::joinable!(carts -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(cart_items, carts, products, users,);
+diesel::allow_tables_to_appear_in_same_query!(users, products, carts, cart_items);
