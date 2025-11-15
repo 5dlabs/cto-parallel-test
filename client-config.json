@@ -1,0 +1,8 @@
+{
+  "localServers": {},
+  "remoteTools": [
+    "memory_create_entities",
+    "memory_add_observations",
+    "brave_search_brave_web_search"
+  ]
+}

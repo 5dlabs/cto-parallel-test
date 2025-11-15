@@ -1,0 +1,20 @@
+# Hook files - never commit
+hooks/
+.hooks/
+**/hooks/
+
+# Rust target dir
+target/
+
+# Local security scan reports
+gitleaks-report.json
+gitleaks_report_latest.json
+gitleaks_report.json
+*.sarif
+
+# Local Codex session artifacts
+.codex-session
+
+# Local run artifacts (not source code)
+*.stdout
+*.stderr
