@@ -36,7 +36,7 @@ Secure Defaults & Practices
   - Non-negative price and inventory
   - Positive cart item quantity
   - Unique (cart_id, product_id)
- - Dependencies kept maintained: replaced unmaintained `dotenv` with `dotenvy` (RUSTSEC-2021-0141)
+ - Dependencies maintained; local `cargo-audit` reports no advisories. If a future advisory flags `dotenv`, prefer `dotenvy` as a drop-in replacement.
 
 Quality Gates (must pass before PR)
 ```bash
@@ -46,3 +46,6 @@ cargo test --workspace --all-features
 cargo audit
 gitleaks detect --no-banner --no-git --source .
 ```
+
+Environment
+- Ensure `GH_TOKEN` is exported for GitHub API access when running `gh` or `curl` commands that query code scanning alerts.
