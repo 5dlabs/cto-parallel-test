@@ -35,14 +35,21 @@ Local verification results (this change set):
 
 Latest verification (Task 4):
 
- - Timestamp: 2025-11-15 01:28:41 UTC
+ - Timestamp: 2025-11-15 02:48:00 UTC
  - Tools: rustfmt, clippy (pedantic, -D warnings), cargo test, cargo-audit, gitleaks
  - Result: All checks PASS; gitleaks findings = 0; cargo-audit vulnerabilities = 0; zero MEDIUM/HIGH/CRITICAL issues in local scans. Clippy pedantic clean.
- - Artifacts: `gitleaks_report.json`, `cargo_audit_report.json`
+ - Artifacts: `gitleaks_report.json`, `cargo_audit_report.json`, `cargo_audit_report.txt`
 
 Notes:
 - GitHub API access for listing Code Scanning alerts from the local environment may be rate-limited or require explicit `GH_TOKEN` export. If unauthenticated locally, rely on CI where CodeQL + SARIF uploads run on pushes/PRs. Use the commands above once a valid token is configured.
 - To run the same checks locally with auth, ensure `GH_TOKEN` is exported and use the commands above.
+
+Blocking external prerequisite (documented):
+- Local `gh` auth is not currently valid in this environment (HTTP 401). PR creation and Code Scanning alert retrieval require a valid `GH_TOKEN`.
+- To resolve and continue from this workspace without interaction:
+  - Export a valid token with repo scope: `export GH_TOKEN=***`
+  - Create/update PR: `gh pr create --base main --head feature/task-4-implementation --title "feat: product catalog module with thread-safe storage, filtering, and tests" --body-file docs/pr-body-task-4.md --label task-4 --label service-cto-parallel-test --label run-play-task-4-zfnqr`
+  - Fetch open alerts for the PR: `PR=$(gh pr view --json number -q .number); gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=${PR}" | jq -e 'map(select(((.rule.severity // .rule.security_severity_level // "unknown")|ascii_downcase) | test("^(medium|high|critical)$"))) | if length==0 then empty else . end' || echo "No MEDIUM/HIGH/CRITICAL alerts"`
 
 If GitHub auth is unavailable locally, proceed with local verification and push to the feature branch. CI will run CodeQL and upload all SARIF results on the PR.
 
