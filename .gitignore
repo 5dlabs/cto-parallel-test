@@ -15,3 +15,6 @@ hooks/
 gitleaks-report.json
 gitleaks.sarif
 audit.json
+
+# Local agent session artifacts
+.codex-session
