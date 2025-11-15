@@ -45,7 +45,7 @@ gh pr create \
   --title "feat(cto-parallel-test): implement task 6 - [brief summary]" \
   --label "task-6" \
   --label "service-cto-parallel-test" \
-  --label "run-play-task-6-wcw5b" \
+  --label "run-play-task-6-7lz5h" \
   --body "## Implementation Summary
 [Your detailed implementation notes]
 
