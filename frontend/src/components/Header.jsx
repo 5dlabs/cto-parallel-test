@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart } from '@/components/icons'
 import { Badge } from '@/components/ui/badge'
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu'
 import { useCart } from '@/context/CartContext'
@@ -35,4 +35,3 @@ export default function Header() {
     </header>
   )
 }
-
