@@ -12,7 +12,7 @@ This service ships with hardened authentication primitives. Operators should rev
 
 Dependencies and crypto implementations
 
-- JSON Web Tokens: `jsonwebtoken` is built with default features disabled and a minimal set of algorithms enabled (`hmac` + `sha2`) via the `rust_crypto` backend. RSA/ECDSA features are intentionally not compiled to shrink the attack surface and avoid transitive vulnerable crates (e.g., `rsa` RUSTSEC-2023-0071). If asymmetric algorithms are required in the future, enable them explicitly and re-run `cargo audit`.
+- JSON Web Tokens: `jsonwebtoken` is built with default features disabled and the `aws_lc_rs` backend enabled. Only HMAC-SHA2 (HS256) is compiled to shrink the attack surface and avoid transitive vulnerable crates (e.g., `ring` < 0.17 and `rsa` known advisories). If asymmetric algorithms are required in the future, enable them explicitly and re-run `cargo audit`.
 
 Operational recommendations
 
