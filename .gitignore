@@ -13,3 +13,7 @@ gitleaks_report_latest.json
 
 # Local Codex session artifacts
 .codex-session
+
+# Local run artifacts (not source code)
+*.stdout
+*.stderr
