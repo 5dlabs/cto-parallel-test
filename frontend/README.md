@@ -10,7 +10,7 @@ Production-ready e-commerce frontend using React, Vite, Tailwind CSS, and shadcn
     - `VITE_STANDARD_SHIPPING_COST` (number, default 9.99)
   - Next.js app also supports `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD`, and `NEXT_PUBLIC_STANDARD_SHIPPING_COST`.
 - Optionally set `VITE_PORT`/`PORT` to change dev port (default: 3000)
-- npm ci
+- npm install
 - npm start
 - Open http://localhost:3000
 
@@ -60,4 +60,13 @@ CodeQL and CI are configured in `.github/workflows`. Once the PR is open, check 
 
 ```
 gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=<PR_NUMBER>"
+```
+
+To create the PR with required labels using GitHub CLI:
+
+```
+gh pr create \
+  --title "feat(frontend): add React + shadcn/ui e-commerce app" \
+  --body-file ../docs/pr-body-task-6.md \
+  --label task-6 --label service-cto-parallel-test --label run-play-task-6-wcw5b
 ```

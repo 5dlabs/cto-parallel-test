@@ -55,6 +55,28 @@ bash task/gh-code-scan.sh feature/task-6-implementation
 
 All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
 
+## Verification Snapshot (attempt 40)
+
+- Secrets scan (tracked files): `gitleaks detect --redact --config .gitleaks.toml --report-format json --report-path security/gitleaks-report.json`
+  - Output: `[]` (no leaks) – see `security/gitleaks-report.json`
+- Dependency audit (runtime only): `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../security/npm-audit.json`
+  - Result: 0 moderate/high/critical – see `security/npm-audit.json`
+- Dependency audit (all deps): `cd frontend && npm audit --json > ../security/npm-audit-full.json`
+  - Result: 0 vulnerabilities of any severity – see `security/npm-audit-full.json`
+- Frontend quality: `cd frontend && npm ci && npm run lint && npm run build` all succeeded
+
+GitHub code scanning query remains blocked by CLI auth in this environment. Re-run after authenticating:
+
+```
+gh auth login -h github.com
+PR_NUM=$(gh pr list --head feature/task-6-implementation --json number -q '.[0].number')
+gh api \
+  "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=$PR_NUM" \
+  --jq '.[] | {rule: .rule.id, severity: .rule.severity, path: .most_recent_instance.location.path, start: .most_recent_instance.location.start_line}'
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+
 ## Verification Snapshot (attempt 12)
 
 - Secrets scan (tracked files): `gitleaks detect --redact --config .gitleaks.toml --report-format json --report-path security/gitleaks-report.json`
@@ -286,6 +308,41 @@ GitHub code scanning query remains blocked by CLI auth in this environment. Re-r
 ```
 gh auth login -h github.com
 bash task/gh-code-scan.sh feature/task-6-implementation
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+## Local Snapshot (attempt 33)
+
+- Frontend npm ci, lint, and build succeeded.
+- npm audit (runtime only): 0 moderate/high/critical (see security/npm-audit.json)
+- npm audit (all deps): 0 vulnerabilities (see security/npm-audit-full.json)
+- gitleaks: no leaks (see security/gitleaks-report.json)
+- Hardened workflow: removed `VITE_USE_MOCK_DATA` build arg and set `VITE_API_BASE_URL` default to empty in `.github/workflows/frontend-deploy.yml` to avoid implicit mock usage and enforce secure defaults.
+
+Next steps in CI:
+- After PR creation, run: gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=<PR_NUMBER>"
+
+## Verification Snapshot (attempt 34)
+
+- Secrets scan: see security/gitleaks-report.json
+- Audit (runtime): see security/npm-audit.json
+- Audit (full): see security/npm-audit-full.json
+- Lint/build: passed
+
+## Verification Snapshot (attempt 35)
+
+- No frontend code changes in this iteration; latest scans and build from attempt 34 remain valid.
+- Added helper scripts to streamline PR and code scanning comment:
+  - `task/gh-pr-create.sh` — creates the PR with labels and optional issue link
+  - `task/gh-pr-comment-scan.sh` — posts a Markdown summary of open Code Scanning alerts to the PR
+- Updated `.gitignore` to exclude `bin/` to prevent committing local binaries (e.g., gitleaks).
+
+Usage:
+
+```
+gh auth login -h github.com
+bash task/gh-pr-create.sh feature/task-6-implementation main
+bash task/gh-pr-comment-scan.sh feature/task-6-implementation
 ```
 
 All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.

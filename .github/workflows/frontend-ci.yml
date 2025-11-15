@@ -1,3 +1,4 @@
+---
 name: Frontend CI
 
 on:
@@ -40,3 +41,6 @@ jobs:
       - name: Audit (fail on moderate/high/critical)
         run: |
           npm audit --omit=dev --audit-level=moderate
+      - name: Audit (dev+prod; fail on moderate/high/critical)
+        run: |
+          npm audit --audit-level=moderate
