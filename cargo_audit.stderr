@@ -1,4 +1,5 @@
-[0m[0m[1m[32m    Fetching[0m advisory database from `https://github.com/RustSec/advisory-db.git`
-[0m[0m[1m[32m      Loaded[0m 867 security advisories (from /root/.cargo/advisory-db)
-[0m[0m[1m[32m    Updating[0m crates.io index
-[0m[0m[1m[32m    Scanning[0m Cargo.lock for vulnerabilities (67 crate dependencies)
+error: unexpected argument '-F' found
+
+Usage: cargo audit [OPTIONS] [COMMAND]
+
+For more information, try '--help'.

@@ -1,4 +1,5 @@
-[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 0.06s
+[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 0.05s
 [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/cto_parallel_test-15885d223a142f67)
 [1m[92m     Running[0m tests/catalog.rs (target/debug/deps/catalog-14a2e3d4dc0a4330)
 [1m[92m     Running[0m tests/catalog_edge_cases.rs (target/debug/deps/catalog_edge_cases-fcd2988a8eae58ef)
+[1m[92m   Doc-tests[0m cto_parallel_test
