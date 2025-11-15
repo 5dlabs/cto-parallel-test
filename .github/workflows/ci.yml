@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master, feature/** ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-test-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (pedantic, deny warnings)
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic
+
+      - name: Tests
+        env:
+          # Tests are designed to skip DB-dependent checks if DATABASE_URL is unset
+          RUST_BACKTRACE: 1
+        run: cargo test --workspace --all-features -- --nocapture
+
+      - name: Install cargo-audit
+        run: |
+          if ! command -v cargo-audit >/dev/null 2>&1; then
+            cargo install cargo-audit --locked
+          fi
+
+      - name: Cargo audit
+        run: cargo audit
+
+      - name: Install gitleaks
+        run: |
+          if ! command -v gitleaks >/dev/null 2>&1; then
+            curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz \
+              | tar -xz && sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+          fi
+
+      - name: Gitleaks (working tree)
+        run: |
+          # Scan current working tree (not full history) to prevent false positives from legacy redacted content
+          gitleaks detect --no-banner --no-git --source .
