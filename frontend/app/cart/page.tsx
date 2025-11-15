@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { safeImageSrc } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Minus, Plus, Trash2, ShoppingBag } from "@/components/icons";
@@ -63,7 +64,7 @@ export default function CartPage() {
                   <div className="flex gap-4">
                     <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md bg-muted">
                       <Image
-                        src={String(item.image || '')}
+                        src={safeImageSrc(item.image) || ''}
                         alt={String(item.title || item.name || 'Item')}
                         width={200}
                         height={150}

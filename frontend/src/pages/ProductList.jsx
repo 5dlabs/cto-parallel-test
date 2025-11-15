@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { API_BASE_URL, apiUrl } from '@/config'
+import { safeImageSrc } from '@/lib/utils'
 
 export default function ProductList() {
   const [products, setProducts] = useState([])
@@ -61,7 +62,7 @@ export default function ProductList() {
             </CardHeader>
             <CardContent className="flex-1 flex flex-col">
               {p.image && (
-                <img src={p.image} alt={p.title} className="h-40 object-contain mx-auto mb-3" loading="lazy" />
+                <img src={safeImageSrc(p.image)} alt={String(p.title || 'Product')} className="h-40 object-contain mx-auto mb-3" loading="lazy" />
               )}
               <div className="mt-auto flex items-center justify-between">
                 <span className="font-semibold">${p.price}</span>
@@ -76,4 +77,3 @@ export default function ProductList() {
     </div>
   )
 }
-

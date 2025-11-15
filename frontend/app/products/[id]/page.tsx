@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, ShoppingCart, Star } from "@/components/icons";
 import { getProductById } from "@/lib/products";
+import { safeImageSrc } from "@/lib/utils";
 import { safeId } from "@/lib/config";
 
 interface Params { params: { id: string } }
@@ -38,7 +39,7 @@ export default async function ProductDetailPage({ params }: Params) {
         {/* Product Image */}
         <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-muted">
           <Image
-            src={String(product.image || '')}
+            src={safeImageSrc(product.image) || ''}
             alt={String(product.title || product.name || 'Product')}
             width={800}
             height={600}
