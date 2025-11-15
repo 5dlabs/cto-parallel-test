@@ -15,8 +15,6 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
-        // Route lucide-react to its ESM build to avoid package export resolution issues
-        'lucide-react': 'lucide-react/dist/esm',
       },
     },
     server: {

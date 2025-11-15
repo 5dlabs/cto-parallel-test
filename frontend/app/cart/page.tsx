@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag } from "@/components/icons";
 import { calculateSubtotal, calculateShipping, calculateTotal, shippingConfig } from "@/lib/cart";
 
 interface CartItem { id: string | number; name?: string; title?: string; price?: number; quantity?: number; image?: string }
