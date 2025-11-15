@@ -41,17 +41,22 @@ impl User {
         }
     }
 
-    /// Hash a password using Argon2 with random salt
+    /// Hash a password using Argon2 with random salt.
     ///
-    /// # Panics
-    /// Panics if the Argon2 hashing operation fails.
-    #[must_use]
-    pub fn hash_password(password: &str) -> String {
+    /// Returns the encoded hash when successful. This function never panics
+    /// and uses secure defaults if environment overrides are invalid.
+    ///
+    /// # Errors
+    /// Returns a `password_hash::Error` if the hashing operation fails.
+    pub fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error> {
         // Generate a 32-byte random salt (acceptance requires 32 bytes)
         let mut salt_bytes = [0u8; 32];
         OsRng.fill_bytes(&mut salt_bytes);
-        let salt =
-            SaltString::encode_b64(&salt_bytes).expect("salt length should be valid (<= 64 bytes)");
+        let salt = match SaltString::encode_b64(&salt_bytes) {
+            Ok(s) => s,
+            // Fallback to RNG-generated salt if encoding fails for any reason.
+            Err(_) => SaltString::generate(&mut OsRng),
+        };
 
         // Allow runtime tuning via environment while providing secure defaults.
         // Defaults: t=3, m=64 MiB, p=1. Enforce sane bounds to avoid denial of service.
@@ -80,15 +85,15 @@ impl User {
             .and_then(|v| v.parse::<u32>().ok())
             .map_or(p_default, |v| v.clamp(p_min, p_max));
 
-        let params =
-            Params::new(m_cost_kib, t_cost, p_cost, None).expect("argon2 params should be valid");
-        let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
-        argon2
-            .hash_password(password.as_bytes(), &salt)
-            .map_or_else(
-                |err| panic!("Failed to hash password: {err}"),
-                |hash| hash.to_string(),
-            )
+        // If provided parameters are invalid, fall back to secure defaults
+        let argon2 = match Params::new(m_cost_kib, t_cost, p_cost, None) {
+            Ok(params) => Argon2::new(Algorithm::Argon2id, Version::V0x13, params),
+            Err(_) => Argon2::default(),
+        };
+
+        Ok(argon2
+            .hash_password(password.as_bytes(), &salt)?
+            .to_string())
     }
 }
 

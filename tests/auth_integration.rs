@@ -9,7 +9,7 @@ fn test_complete_auth_flow() {
 
     // 1. Hash password
     let password = "MySecureP@ssw0rd123";
-    let hash = User::hash_password(password);
+    let hash = User::hash_password(password).expect("hash");
 
     // 2. Create user with hashed password
     let user = User {
@@ -49,9 +49,9 @@ fn test_complete_auth_flow() {
 #[serial]
 fn test_password_hash_uniqueness() {
     let password = "same_password";
-    let hash1 = User::hash_password(password);
-    let hash2 = User::hash_password(password);
-    let hash3 = User::hash_password(password);
+    let hash1 = User::hash_password(password).expect("hash1");
+    let hash2 = User::hash_password(password).expect("hash2");
+    let hash3 = User::hash_password(password).expect("hash3");
 
     // All hashes should be different due to random salt
     assert_ne!(hash1, hash2);
@@ -86,7 +86,7 @@ fn test_password_hash_uniqueness() {
 #[test]
 #[serial]
 fn test_user_serialization_safety() {
-    let hash = User::hash_password("secret_password");
+    let hash = User::hash_password("secret_password").expect("hash");
     let user = User {
         id: 1,
         username: "testuser".to_string(),
@@ -148,7 +148,7 @@ fn test_token_validation_edge_cases() {
 #[serial]
 fn test_password_edge_cases() {
     // Empty password
-    let empty_hash = User::hash_password("");
+    let empty_hash = User::hash_password("").expect("empty hash");
     let user = User {
         id: 1,
         username: "test".to_string(),
@@ -160,7 +160,7 @@ fn test_password_edge_cases() {
 
     // Very long password
     let long_password = "a".repeat(1000);
-    let long_hash = User::hash_password(&long_password);
+    let long_hash = User::hash_password(&long_password).expect("long hash");
     let user2 = User {
         id: 2,
         username: "test2".to_string(),
@@ -172,7 +172,7 @@ fn test_password_edge_cases() {
 
     // Special characters
     let special_password = "P@$$w0rd!#%^&*()[]{}|;':\"<>,.?/~`";
-    let special_hash = User::hash_password(special_password);
+    let special_hash = User::hash_password(special_password).expect("special hash");
     let user3 = User {
         id: 3,
         username: "test3".to_string(),
@@ -184,7 +184,7 @@ fn test_password_edge_cases() {
 
     // Unicode/emoji
     let unicode_password = "🔐🔑密码🚀";
-    let unicode_hash = User::hash_password(unicode_password);
+    let unicode_hash = User::hash_password(unicode_password).expect("unicode hash");
     let user4 = User {
         id: 4,
         username: "test4".to_string(),
@@ -205,21 +205,21 @@ fn test_multiple_users_do_not_interfere() {
         id: 1,
         username: "user1".to_string(),
         email: "user1@test.com".to_string(),
-        password_hash: User::hash_password("password1"),
+        password_hash: User::hash_password("password1").expect("u1"),
     };
 
     let user2 = User {
         id: 2,
         username: "user2".to_string(),
         email: "user2@test.com".to_string(),
-        password_hash: User::hash_password("password2"),
+        password_hash: User::hash_password("password2").expect("u2"),
     };
 
     let user3 = User {
         id: 3,
         username: "user3".to_string(),
         email: "user3@test.com".to_string(),
-        password_hash: User::hash_password("password3"),
+        password_hash: User::hash_password("password3").expect("u3"),
     };
 
     // Verify each user's password

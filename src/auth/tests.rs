@@ -12,8 +12,8 @@ fn clear_auth_env() {
 fn test_password_hashing() {
     clear_auth_env();
     let password = "test_password_123";
-    let hash1 = User::hash_password(password);
-    let hash2 = User::hash_password(password);
+    let hash1 = User::hash_password(password).expect("hash");
+    let hash2 = User::hash_password(password).expect("hash");
 
     // Hashes should be different (due to random salt)
     assert_ne!(hash1, hash2);
@@ -35,7 +35,7 @@ fn test_password_hashing() {
 fn test_password_hashing_supports_edge_cases() {
     clear_auth_env();
 
-    let empty_hash = User::hash_password("");
+    let empty_hash = User::hash_password("").expect("hash");
     let empty_user = User {
         id: 2,
         username: "empty".to_string(),
@@ -45,7 +45,7 @@ fn test_password_hashing_supports_edge_cases() {
     assert!(empty_user.verify_password(""));
 
     let special_password = "p@ßw0rd🔥";
-    let special_hash = User::hash_password(special_password);
+    let special_hash = User::hash_password(special_password).expect("hash");
     assert_ne!(empty_hash, special_hash);
     let special_user = User {
         id: 3,
