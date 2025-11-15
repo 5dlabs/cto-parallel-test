@@ -1,0 +1,52 @@
+name: Security and Quality
+
+on:
+  push:
+    branches:
+      - main
+      - feature/*
+      - feature/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  checks:
+    name: Lint, Test, Audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo builds
+        uses: Swatinem/rust-cache@v2
+
+      # Note: gitleaks-action requires GITLEAKS_LICENSE secret for organization repos
+      # Skipping gitleaks scan as no license is available
+      # Alternative: Use 'gitleaks detect' via bash with gitleaks binary if needed
+      # - name: Secret scan (gitleaks)
+      #   uses: gitleaks/gitleaks-action@v2
+      #   with:
+      #     args: detect --no-git --source . --redact -c .gitleaks.toml
+
+      - name: Rustfmt check
+        run: cargo fmt --all --check
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run tests
+        run: cargo test --all --quiet
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: Cargo audit
+        env:
+          RUSTSEC_LOG: warn
+        run: cargo audit --deny warnings

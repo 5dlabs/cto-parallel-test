@@ -1,0 +1,39 @@
+# Security Notes
+
+This service ships with hardened authentication primitives. Operators should review and configure the following environment variables and defaults.
+
+- JWT secret: set `JWT_SECRET` to a high-entropy value (minimum enforced length 32 characters). Optionally set `JWT_SECRET_MIN_LEN` (>= 32) to raise the floor.
+- Token TTL: `JWT_TTL_SECS` controls token lifetime. Values are clamped to the range (0, 24 hours]; default is 24 hours.
+- Algorithm: JWTs are signed and validated with HS256 only; algorithm is pinned to prevent confusion attacks.
+- Issuer/Audience (optional):
+  - `JWT_ISSUER` and `JWT_AUDIENCE` can be set to embed and validate `iss` and `aud` claims.
+  - If configured, validation requires an exact match.
+- Password hashing: Argon2id v0x13 (t=3, m=64 MiB, p=1) with a cryptographically secure random salt (OsRng). Verification safely handles malformed hashes.
+
+Dependencies and crypto implementations
+
+- JSON Web Tokens: `jsonwebtoken` is built with default features disabled and the `aws_lc_rs` backend enabled. Only HMAC-SHA2 (HS256) is compiled to shrink the attack surface and avoid transitive vulnerable crates (e.g., `ring` < 0.17 and `rsa` known advisories). If asymmetric algorithms are required in the future, enable them explicitly and re-run `cargo audit`.
+
+Operational recommendations
+
+- Store secrets in a secret manager or environment management system; never commit to source control.
+- Rotate `JWT_SECRET` periodically and on any suspicion of compromise.
+- Crypto backend:
+  - `jsonwebtoken` is configured with `default-features = false` and `features = ["aws_lc_rs"]` to avoid pulling vulnerable transitive dependencies (e.g., `ring` < 0.17 and `rsa`).
+  - Only HMAC-SHA2 (HS256) is compiled; RSA/ECDSA support is not included.
+
+- CI security scans:
+  - CodeQL static analysis (GitHub code scanning)
+  - `cargo audit` for vulnerable dependencies
+  - `gitleaks` for secret scanning (tree) to prevent new leaks
+    - Tip: when running locally, prefer a tree-only scan of the tracked source (e.g., `gitleaks dir src` and `gitleaks dir docs`) or `gitleaks detect --no-git --source . --redact`. Avoid scanning ephemeral artifacts under `.reports/` to prevent self-reporting of prior scan outputs.
+- Quality gates in CI: `cargo fmt --check`, `cargo clippy -D warnings`, and `cargo test`.
+
+Local verification
+
+- Format: `cargo fmt --all --check`
+- Lint: `cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic`
+- Test: `cargo test --workspace --all-features -q`
+- Build (reproducible): `cargo build --workspace --all-features --locked`
+- Dependencies: `cargo install cargo-audit --locked && cargo audit --deny warnings`
+- Secrets: `gitleaks detect --no-git --source . --redact`

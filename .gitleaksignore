@@ -1,0 +1,23 @@
+# Task documentation - contains example secrets and JWT tokens for illustration
+# These are example JWT tokens in documentation, not real secrets
+docs/.taskmaster/docs/task-3/task.md:generic-api-key:259
+task/task.md:generic-api-key:259
+
+docs/auth.md:generic-api-key:16
+docs/auth.md:generic-api-key:29
+docs/auth.md:generic-api-key:39
+docs/auth.md:generic-api-key:42
+task/prompt.md:generic-api-key:76
+task/prompt.md:generic-api-key:83
+task/prompt.md:generic-api-key:175
+task/prompt.md:generic-api-key:279
+task/task.md:generic-api-key:87
+task/task.md:generic-api-key:94
+task/task.md:generic-api-key:169
+task/task.xml:generic-api-key:188
+task/task.xml:generic-api-key:195
+src/auth/tests.rs:generic-api-key:78
+
+# Example JWT token in old version of src/auth/models.rs from commit history
+# This was a test example that was later removed
+338826ef548c914e7e9b64d50db75a00174ec933:src/auth/models.rs:generic-api-key:162

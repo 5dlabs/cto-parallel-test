@@ -1,0 +1,43 @@
+# Rust build outputs
+/target/
+
+# Common editor/OS cruft
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.log
+.idea/
+.vscode/
+*~
+
+# Environment files (never commit secrets)
+.env
+.env.local
+
+# Git hooks - never commit
+hooks/
+.hooks/
+**/hooks/
+
+# Test artifacts
+*.profraw
+*.profdata
+
+# Documentation build artifacts
+/doc/
+
+# Backup/temporary files
+*.bak
+*.tmp
+
+# GitHub CLI auth files (do not commit tokens)
+.config/gh/
+
+# Security scan artifacts (do not commit)
+gitleaks*.json
+.bin/
+
+# Local reports and PR scaffold (ephemeral)
+.reports/
+PR_BODY.md
