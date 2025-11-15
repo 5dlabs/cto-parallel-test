@@ -10,10 +10,18 @@ This service ships with hardened authentication primitives. Operators should rev
   - If configured, validation requires an exact match.
 - Password hashing: Argon2id v0x13 (t=3, m=64 MiB, p=1) with a cryptographically secure random salt (OsRng). Verification safely handles malformed hashes.
 
+Dependencies and crypto implementations
+
+- JSON Web Tokens: `jsonwebtoken` is built with default features disabled and a minimal set of algorithms enabled (`hmac` + `sha2`) via the `rust_crypto` backend. RSA/ECDSA features are intentionally not compiled to shrink the attack surface and avoid transitive vulnerable crates (e.g., `rsa` RUSTSEC-2023-0071). If asymmetric algorithms are required in the future, enable them explicitly and re-run `cargo audit`.
+
 Operational recommendations
 
 - Store secrets in a secret manager or environment management system; never commit to source control.
 - Rotate `JWT_SECRET` periodically and on any suspicion of compromise.
+- Crypto backend:
+  - `jsonwebtoken` is configured with `default-features = false` and `features = ["aws_lc_rs"]` to avoid pulling vulnerable transitive dependencies (e.g., `ring` < 0.17 and `rsa`).
+  - Only HMAC-SHA2 (HS256) is compiled; RSA/ECDSA support is not included.
+
 - CI security scans:
   - CodeQL static analysis (GitHub code scanning)
   - `cargo audit` for vulnerable dependencies

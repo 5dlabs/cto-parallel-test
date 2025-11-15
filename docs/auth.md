@@ -63,6 +63,11 @@ assert_eq!(claims.sub, "1");
 - Token lifetime (`JWT_TTL_SECS`) defaults to 24h and is capped at 24 hours to limit exposure of leaked tokens.
 - If `JWT_ISSUER` and/or `JWT_AUDIENCE` are set, tokens include `iss`/`aud` claims and validation enforces matching issuer/audience.
 
+## Cryptography Backend
+
+- The crate uses `jsonwebtoken` 10.x with the `aws_lc_rs` backend enabled and default features disabled. This configuration avoids `ring` 0.16.x and the `rsa` crate entirely to eliminate known advisories surfaced by `cargo audit`.
+- Only HMAC-SHA2 (HS256) is compiled and used by this module. RSA/ECDSA algorithms are not required and not included in the build.
+
 ## Testing
 
 Run the standard quality gates before PR:
