@@ -4,6 +4,7 @@ use jsonwebtoken::{
 use rand::{rngs::OsRng, RngCore};
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
+use std::sync::OnceLock;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 /// JWT claims stored in authentication tokens.
@@ -41,32 +42,42 @@ fn current_timestamp_secs() -> u64 {
     }
 }
 
+static CACHED_SECRET: OnceLock<Vec<u8>> = OnceLock::new();
+
 fn read_hmac_secret() -> Result<Vec<u8>, jsonwebtoken::errors::Error> {
     // Load JWT secret from environment with a safe minimum length.
     // Acceptance: allow a development-only fallback when not provided.
+    if let Some(secret) = CACHED_SECRET.get() {
+        return Ok(secret.clone());
+    }
+
     let min_len_env = std::env::var("JWT_SECRET_MIN_LEN").ok();
     let min_len = min_len_env
         .and_then(|v| v.parse::<usize>().ok())
         .map_or(32, |n| n.max(32));
 
-    if let Ok(secret) = std::env::var("JWT_SECRET") {
+    let secret_bytes = if let Ok(secret) = std::env::var("JWT_SECRET") {
         if secret.len() < min_len {
             return Err(jsonwebtoken::errors::Error::from(ErrorKind::InvalidToken));
         }
-        return Ok(secret.into_bytes());
-    }
+        secret.into_bytes()
+    } else {
+        // Development fallback: only enabled in debug builds or when explicitly allowed.
+        let dev_fallback_allowed = cfg!(debug_assertions)
+            || matches!(std::env::var("JWT_ALLOW_DEV_FALLBACK").as_deref(), Ok("1"));
+        if dev_fallback_allowed {
+            // Use a cryptographically random fallback key in development to avoid predictable tokens.
+            let mut key = vec![0u8; min_len.max(64)];
+            OsRng.fill_bytes(&mut key);
+            key
+        } else {
+            return Err(jsonwebtoken::errors::Error::from(ErrorKind::InvalidToken));
+        }
+    };
 
-    // Development fallback: only enabled in debug builds or when explicitly allowed.
-    let dev_fallback_allowed = cfg!(debug_assertions)
-        || matches!(std::env::var("JWT_ALLOW_DEV_FALLBACK").as_deref(), Ok("1"));
-    if dev_fallback_allowed {
-        // Use a cryptographically random fallback key in development to avoid predictable tokens.
-        let mut key = vec![0u8; min_len.max(64)];
-        OsRng.fill_bytes(&mut key);
-        return Ok(key);
-    }
-
-    Err(jsonwebtoken::errors::Error::from(ErrorKind::InvalidToken))
+    // Cache for subsequent calls within the process
+    let _ = CACHED_SECRET.set(secret_bytes.clone());
+    Ok(secret_bytes)
 }
 
 /// Create a signed JWT for the provided user identifier with a 24-hour expiration.
