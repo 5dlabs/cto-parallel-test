@@ -38,3 +38,11 @@ PR_NUM=$(gh pr list --head feature/task-6-implementation --json number -q '.[0].
 gh api "/repos/5dlabs/cto-parallel-test/code-scanning/alerts?state=open&pr=$PR_NUM" \
   --jq '.[] | {rule: .rule.id, severity: .rule.severity, path: .most_recent_instance.location.path, start: .most_recent_instance.location.start_line}'
 ```
+
+For quick local validation before/after opening a PR, you can also run the helper (not committed to VCS):
+
+```
+bin/local-security-check.sh
+```
+
+This runs gitleaks (workspace), lints/builds the frontend, and writes `audit.json` and `audit-full.json` in the repo root.
