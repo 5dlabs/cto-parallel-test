@@ -49,7 +49,7 @@ gh pr create \
   --head feature/task-4-implementation \
   --title "feat: product catalog module with thread-safe storage, filtering, and tests" \
   --body "Implements thread-safe product catalog with CRUD, inventory, filtering, and tests. Security scans and quality gates passing." \
-  --label task-4 --label service-cto-parallel-test --label run-play-task-4-9rndg
+  --label task-4 --label service-cto-parallel-test --label run-play-task-4-zfnqr
 ```
 
 After the PR is open, check GitHub Code Scanning alerts for the PR:
