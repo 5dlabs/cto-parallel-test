@@ -77,6 +77,29 @@ gh api \
 
 All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
 
+## Verification Snapshot (attempt 57)
+
+- Secrets scan (full repo history): `./gitleaks detect --no-banner -v -c .gitleaks.toml -f json -r gitleaks-report.json`
+  - Output: `[]` (no leaks) – see `gitleaks-report.json`
+- Dependency audit (runtime only): `cd frontend && npm audit --omit=dev --audit-level=moderate --json > ../security/npm-audit.json`
+  - Result: 0 moderate/high/critical – see `security/npm-audit.json`
+- Dependency audit (all deps): `cd frontend && npm audit --json > ../security/npm-audit-full.json`
+  - Result: 0 vulnerabilities of any severity – see `security/npm-audit-full.json`
+- Frontend quality: `cd frontend && npm ci && npm run lint && npm run build` all succeeded
+- Cargo gates: N/A for this repository (no `Cargo.toml` present) — skipping `cargo fmt/clippy/test` per coding-guidelines applicability
+
+GitHub code scanning alerts check is blocked by CLI auth in this environment. Re-run after authenticating and creating/identifying the PR for `feature/task-6-implementation`:
+
+```
+gh auth login -h github.com
+# Create PR with required labels
+bash task/gh-pr-create.sh feature/task-6-implementation main
+# Then query Code Scanning alerts for that PR
+bash task/gh-code-scan.sh feature/task-6-implementation
+```
+
+All MEDIUM/HIGH/CRITICAL findings must be resolved before merge.
+
 ## Verification Snapshot (attempt 12)
 
 - Secrets scan (tracked files): `gitleaks detect --redact --config .gitleaks.toml --report-format json --report-path security/gitleaks-report.json`
