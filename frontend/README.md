@@ -2,6 +2,10 @@
 
 Production-ready e-commerce frontend using React, Vite, Tailwind CSS, and shadcn/ui. Implements secure defaults with parameterized API endpoints and client-side input validation.
 
+This implementation follows the repository coding and GitHub practices:
+- See `coding-guidelines.md` for code quality, structure, and security conventions
+- See `github-guidelines.md` for PR flow, labels, and CI expectations
+
 ## Quick Start
 
 - cp .env.example .env and set `VITE_API_BASE_URL` (e.g., `https://fakestoreapi.com`)
