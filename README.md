@@ -23,6 +23,39 @@ Environment overrides with safe clamps are supported:
 - `CATALOG_MAX_DESCRIPTION_LEN` (default 1_000, clamp 1..=50_000)
 - `CATALOG_MAX_STOCK` (default 1_000_000, clamp 0..=10_000_000)
 
+## Quickstart
+
+```rust
+use cto_parallel_test::catalog::{NewProduct, ProductFilter, ProductService};
+use rust_decimal::Decimal;
+
+fn main() {
+    // Initialize service (thread-safe in-memory store)
+    let svc = ProductService::new();
+
+    // Create a product with exact decimal precision price
+    let apple = svc.create(&NewProduct {
+        name: "Apple".to_string(),
+        description: "Crisp and fresh".to_string(),
+        price: Decimal::new(199, 2), // 1.99
+        inventory_count: 10,
+    });
+
+    // Update inventory
+    let _updated = svc.update_inventory(apple.id, 5);
+
+    // Filter by case-insensitive name, price range and in-stock
+    let results = svc.filter(ProductFilter {
+        name_contains: Some("app".into()),
+        min_price: Some(Decimal::new(100, 2)),
+        max_price: Some(Decimal::new(300, 2)),
+        in_stock: Some(true),
+    });
+
+    assert_eq!(1, results.len());
+}
+```
+
 ## Development
 
 - Format: `cargo fmt --all -- --check`
