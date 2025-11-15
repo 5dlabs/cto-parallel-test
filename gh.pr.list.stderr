@@ -1,2 +1,1 @@
-HTTP 401: Requires authentication (https://api.github.com/graphql)
-Try authenticating with:  gh auth login
+gh: API rate limit exceeded for 162.156.130.178. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) (HTTP 403)
