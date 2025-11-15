@@ -1,52 +1,54 @@
-Task 1 – Database Schema Setup (Final Verification)
+Task 1: Diesel/Postgres schema + security hardening (cto-parallel-test)
 
-- Verified Diesel/Postgres database layer is complete and production-ready:
-  - Dependencies in Cargo.toml include diesel (postgres, r2d2, chrono, numeric), bigdecimal, serde, dotenvy
-  - Migrations for users, products, carts, cart_items present with FK cascades and integrity constraints
-  - src/schema.rs auto-generated via Diesel CLI
-  - src/models.rs defines all ORM structs with appropriate derives, BigDecimal for NUMERIC, and password_hash skipped in serialization
-  - src/config/db.rs provides r2d2 pooling with secure, parameterized env-driven configuration
+Summary
+- Implemented Diesel ORM + PostgreSQL database layer
+- Added integrity constraints and case-insensitive uniqueness for users
+- Verified with migrations, fmt, clippy, tests
+- Performed local security scans (cargo-audit, gitleaks)
 
-- Security alignment per coding-guidelines.md and github-guidelines.md:
-  - No hardcoded secrets in code; .env is gitignored
-  - Parameterized queries (Diesel), safe defaults, and DB-level constraints (non-negative price/inventory, positive quantity, unique cart lines)
-  - Replaced unmaintained dotenv with dotenvy to address RUSTSEC-2021-0141
-  - CI includes CodeQL, clippy+fmt+tests, cargo-audit, and gitleaks
+Security Changes
+- CHECK constraints: username/email/product name lengths
+- UNIQUE indexes on LOWER(username/email) to prevent case-only duplicates
+- Existing constraints retained: NUMERIC price, non-negative amounts, FK cascades, cart item uniqueness
 
-- Local execution and validation:
-  - Spun up local Postgres via scripts/db/setup-local.sh (Docker) and applied migrations
-  - diesel migration redo successful
-  - Quality gates passed locally:
-    - cargo fmt --all -- --check
-    - cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic
-    - cargo test --workspace --all-features
-  - Security scans:
-    - gitleaks detect (working tree): no leaks found
-    - cargo audit: no vulnerable crates detected
+Quality Gates
+- cargo fmt --all -- --check: pass
+- cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic: pass
+- cargo test --workspace --all-features: pass
+- diesel migration redo: pass
+- cargo-audit: clean
+- gitleaks (working tree only): no leaks
 
-- GitHub Code Scanning / PR status:
-  - Current branch: feature/task-1-implementation
-  - Unable to create PR or query Code Scanning due to missing GH_TOKEN in environment (HTTP 401 from GitHub API)
-  - To open PR with labels (task-1, service-cto-parallel-test, run-play-task-1-gh7g9):
-    gh pr create \
-      --title "feat(db): Diesel/Postgres schema, migrations, models, pool [task-1]" \
-      --body-file docs/run-logs/task-1-gh7g9-complete.md \
-      --base main \
-      --head feature/task-1-implementation \
-      --label task-1 \
-      --label service-cto-parallel-test \
-      --label run-play-task-1-gh7g9
+GitHub Code Scanning / PR (auth blocked here)
+The environment lacked a GH_TOKEN for GitHub CLI. Use the exact commands below locally/CI:
 
-- Commands used for verification:
-  cargo fmt --all -- --check
-  cargo clippy --workspace --all-targets --all-features -- -D warnings -W clippy::pedantic
-  cargo test --workspace --all-features -- --nocapture
-  cargo install diesel_cli --no-default-features --features postgres
-  bash scripts/db/setup-local.sh
-  diesel migration redo
-  cargo install cargo-audit --locked
-  cargo audit
-  gitleaks detect --no-banner --no-git --source .
+1) Ensure token is available to gh and curl
+   export GH_TOKEN=<github_app_token>
 
-Result: All local security scans show zero MEDIUM/HIGH/CRITICAL issues; quality gates pass; DB schema, migrations, models, and pooling are complete and aligned with secure defaults. Pending PR creation only due to missing GitHub token in this environment.
+2) Push branch (already pushed by the agent)
+   git checkout feature/task-1-implementation
+   git push -u origin feature/task-1-implementation
+
+3) Create PR with required labels
+   gh pr create \
+     --title "Task 1: Diesel/Postgres schema + security hardening" \
+     --body-file docs/run-logs/task-1-gh7g9-complete.md \
+     --label task-1 \
+     --label service-cto-parallel-test \
+     --label run-play-task-1-gh7g9
+
+4) Discover PR number for branch and check code scanning alerts
+   PR_NUMBER=$(gh pr list --head feature/task-1-implementation --json number -q '.[0].number')
+   OWNER_REPO=5dlabs/cto-parallel-test
+
+   gh api -H "Authorization: Bearer ${GH_TOKEN}" \
+     "/repos/${OWNER_REPO}/code-scanning/alerts?state=open&pr=${PR_NUMBER}"
+
+   # Fallback to curl if needed
+   curl -sfL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+     "https://api.github.com/repos/${OWNER_REPO}/code-scanning/alerts?state=open&pr=${PR_NUMBER}" | jq
+
+Notes
+- No MEDIUM/HIGH/CRITICAL issues found in local scans. CI CodeQL and cargo-audit will re-verify on PR.
+- All configs and endpoints are env-driven. No hardcoded secrets committed.
 
