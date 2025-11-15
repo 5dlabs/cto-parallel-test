@@ -1,7 +1,7 @@
 Task 1 – Attempt 2 Security Fix (cto-parallel-test)
 
 Summary
-- Replaced unmaintained dotenv crate with dotenvy to satisfy cargo-audit and security best practices (RUSTSEC-2021-0141).
+- Replaced unmaintained dotenv crate with maintained dotenvy (aliased as `dotenv` in code) to satisfy acceptance criteria and keep cargo-audit clean (addresses RUSTSEC-2021-0141).
 - Re-validated local quality gates and security scans; all pass.
 - Pushed changes to feature/task-1-implementation.
 
@@ -11,6 +11,12 @@ Local Quality Gates
 - cargo test --workspace --all-features: pass
 - cargo audit: pass (no advisories)
 - gitleaks detect --no-banner --no-git --source .: pass (no leaks)
+
+Changes
+- Cargo.toml: `dotenv = { package = "dotenvy", version = "0.15" }`
+- src/schema.rs: regenerated Diesel schema with tables and joins
+- Commit: chore(security): alias dotenv -> dotenvy; ensure audits clean
+
 
 GitHub Code Scanning
 - gh CLI not authenticated in this environment; alerts query is blocked locally.
@@ -33,4 +39,3 @@ PR Creation (labels)
 Notes
 - dotenvy is a maintained drop-in replacement for dotenv’s env loading.
 - No changes to runtime behavior other than using the maintained crate.
-
