@@ -33,7 +33,7 @@ ARGS=(
   --title "$TITLE"
   --label "task-6"
   --label "service-cto-parallel-test"
-  --label "run-play-task-6-wcw5b"
+  --label "run-play-task-6-ls8mb"
 )
 
 if [[ -f "$BODY_FILE" ]]; then
@@ -51,4 +51,3 @@ fi
 
 echo "Creating PR in $REPO_SLUG from $HEAD_BRANCH -> $BASE_BRANCH" >&2
 gh pr create "${ARGS[@]}"
-

@@ -4,7 +4,7 @@ Production-ready e-commerce frontend using React, Vite, Tailwind CSS, and shadcn
 
 ## Quick Start
 
-- cp .env.example .env and set `VITE_API_BASE_URL` (e.g., `https://api.example.com`)
+- cp .env.example .env and set `VITE_API_BASE_URL` (e.g., `https://fakestoreapi.com`)
   - Optional runtime knobs:
     - `VITE_FREE_SHIPPING_THRESHOLD` (number, default 50)
     - `VITE_STANDARD_SHIPPING_COST` (number, default 9.99)
@@ -68,5 +68,5 @@ To create the PR with required labels using GitHub CLI:
 gh pr create \
   --title "feat(frontend): add React + shadcn/ui e-commerce app" \
   --body-file ../docs/pr-body-task-6.md \
-  --label task-6 --label service-cto-parallel-test --label run-play-task-6-wcw5b
+  --label task-6 --label service-cto-parallel-test --label run-play-task-6-ls8mb
 ```
