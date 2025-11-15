@@ -1,8 +1,8 @@
 use jsonwebtoken::{
     decode, encode, errors::ErrorKind, Algorithm, DecodingKey, EncodingKey, Header, Validation,
 };
-use serde::{Deserialize, Serialize};
 use rand::{rngs::OsRng, RngCore};
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
