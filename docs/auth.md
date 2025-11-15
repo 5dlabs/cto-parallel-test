@@ -15,9 +15,9 @@ This crate provides a foundational, secure authentication module:
     ```bash
     export JWT_SECRET="your_secure_random_secret_key_minimum_32_characters"
     ```
-  - Development-only fallback: in debug builds (or when `JWT_ALLOW_DEV_FALLBACK=1`),
-    a cryptographically random key is generated once per-process and cached. This is
-    provided strictly for local development convenience; always set `JWT_SECRET` in CI and production.
+  - Development-only fallback: in debug builds only, a cryptographically random key is
+    generated once per-process and cached. This is provided strictly for local development
+    convenience; always set `JWT_SECRET` in CI and production.
 - `JWT_TTL_SECS` (optional): Token lifetime in seconds. Defaults to `86400` (24 hours).
   - Example: `export JWT_TTL_SECS=7200`  # 2 hours
 - `JWT_SECRET_MIN_LEN` (optional): Minimum secret length to enforce; cannot be lower than 32.
